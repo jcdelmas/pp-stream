@@ -1,18 +1,22 @@
 import {
   Source,
+  Sink,
   Flow
 } from '../lib/index';
 
-Source.fromList([3, 2, 6, 1, 5])
+Source.from([3, 2, 6, 1, 5])
   .map(i => i + 1)
   .filter(i => i > 5)
-  .via(new Flow())
-  .each(item => console.log(item))
+  .via(Flow.create())
+  .forEach(item => console.log(item))
   .then(() => console.log('done'))
   .catch(e => console.error(e.stack));
 
-Source.fromList([3, 2, 6, 1, 5])
-  .via(Flow.map(i => i + 1).filter(i => i > 5))
-  .each(item => console.log(item))
+Source.from([3, 2, 6, 1, 5])
+  .runWith(
+    Flow.map(i => i + 1)
+      .filter(i => i > 5)
+      .to(Sink.forEach(item => console.log(item)))
+  )
   .then(() => console.log('done'))
   .catch(e => console.error(e.stack));

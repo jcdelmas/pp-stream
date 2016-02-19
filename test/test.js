@@ -5,7 +5,7 @@ import {
   Source,
   Sink,
   Flow
-} from '../lib/index';
+} from '../src/index';
 
 describe('Source', () => {
   it('#from(list)', async () => {

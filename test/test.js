@@ -21,6 +21,10 @@ describe('Source', () => {
     const result = await Source.from([1, 2, 3]).to(Sink.toList()).run();
     result.should.be.eql([1, 2, 3]);
   });
+  it('empty', async () => {
+    const result = await Source.empty().toList();
+    result.should.be.eql([]);
+  });
 });
 
 describe('FlowOps', () => {

@@ -14,6 +14,17 @@ export default class Source extends FlowOps {
   }
 
   /**
+   * @returns {Source}
+   */
+  static empty() {
+    return new Source(new Stage({
+      onPull() {
+        this.finish();
+      }
+    }));
+  }
+
+  /**
    * @param {Stage} last
    */
   constructor(last) {

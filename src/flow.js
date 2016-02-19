@@ -328,8 +328,6 @@ class Take extends Stage {
   }
 }
 
-
-
 class Drop extends Stage {
 
   constructor(nbr) {
@@ -345,6 +343,5 @@ class Drop extends Stage {
     } else {
       this.push(x);
     }
-
   }
 }

@@ -48,6 +48,11 @@ export default class Stage {
     });
   }
 
+  pushAndFinish(x) {
+    this.push(x);
+    this.finish();
+  }
+
   pull() {
     this.input.onPull();
   }

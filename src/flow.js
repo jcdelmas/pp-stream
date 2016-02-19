@@ -260,8 +260,6 @@ class Grouped extends Stage {
    */
   buffer = [];
 
-  finishOnNextPull = false;
-
   onPush(x) {
     this.buffer.push(x);
     if (this.buffer.length >= this.size) {
@@ -275,18 +273,8 @@ class Grouped extends Stage {
   onUpstreamFinish() {
     if (this.buffer.length) {
       this.push(this.buffer);
-      this.finishOnNextPull = true;
-    } else {
-      this.finish();
     }
-  }
-
-  onPull() {
-    if (this.finishOnNextPull) {
-      this.finish();
-    } else {
-      this.pull();
-    }
+    this.finish();
   }
 }
 
@@ -300,8 +288,6 @@ class Sliding extends Stage {
   pendingData = false;
 
   buffer = [];
-
-  finishOnNextPull = false;
 
   onPush(x) {
     this.buffer.push(x);
@@ -319,18 +305,8 @@ class Sliding extends Stage {
   onUpstreamFinish() {
     if (this.pendingData) {
       this.push(this.buffer);
-      this.finishOnNextPull = true;
-    } else {
-      this.finish();
     }
-  }
-
-  onPull() {
-    if (this.finishOnNextPull) {
-      this.finish();
-    } else {
-      this.pull();
-    }
+    this.finish();
   }
 }
 

@@ -2,8 +2,6 @@ import { EventEmitter } from 'events';
 
 export default class Stage {
 
-  events = new EventEmitter();
-
   constructor({ onPush, onPull, onUpstreamFinish, onDownstreamFinish, onError } = {}) {
     if (onPush) this.onPush = onPush.bind(this);
     if (onPull) this.onPull = onPull.bind(this);
@@ -59,32 +57,20 @@ export default class Stage {
 
   error(e) {
     setImmediate(() => {
-      if (this.output) {
-        this.output.onError(e);
-      } else {
-        this.events.emit('error', e);
-      }
+      this.output.onError(e);
     });
   }
 
-  finish(result) {
+  finish() {
     this.finished = true;
-    setImmediate(() => {
-      this.events.emit('finish', result);
-      if (this.input && !this.input.finished) {
-        this.input.onDownstreamFinish();
-      }
-      if (this.output && !this.output.finished) {
-        this.output.onUpstreamFinish();
-      }
-    });
-  }
-
-  getResult() {
-    return new Promise((resolve, reject) => {
-      this.events.on('finish', resolve);
-      this.events.on('error', reject);
-    });
+    if (this.input && !this.input.finished) {
+      this.input.onDownstreamFinish();
+    }
+    if (this.output && !this.output.finished) {
+      setImmediate(() => {
+          this.output.onUpstreamFinish();
+      });
+    }
   }
 
   /**
@@ -111,5 +97,33 @@ export default class Stage {
 
   onDownstreamFinish() {
     this.finish();
+  }
+}
+
+export class SinkStage extends Stage {
+
+  constructor(methods = {}) {
+    super(methods);
+    this.resultPromise = new Promise((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject;
+    });
+  }
+
+  finish(result) {
+    super.finish();
+    this.resolve(result);
+  }
+
+  error(e) {
+    this.reject(e);
+  }
+
+  getResult() {
+    return this.resultPromise;
+  }
+
+  wireOutput(output) {
+    throw new Error('Cannot wire output on sink stage');
   }
 }

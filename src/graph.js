@@ -1,5 +1,10 @@
+import { SinkStage } from './stage';
+
 export default class Graph {
 
+  /**
+   * @param {SinkStage} last
+   */
   constructor(last) {
     this.last = last;
   }

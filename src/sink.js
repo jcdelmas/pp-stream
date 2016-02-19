@@ -1,9 +1,9 @@
-import Stage from './stage';
+import Stage, { SinkStage } from './stage';
 
 export default class Sink {
   /**
    * @param {Stage} first
-   * @param {Stage?} last
+   * @param {SinkStage?} last
    */
   constructor(first, last) {
     this.first = first;
@@ -11,7 +11,7 @@ export default class Sink {
   }
 
   static create(stageMethods) {
-    const stage = new Stage(stageMethods);
+    const stage = new SinkStage(stageMethods);
     return new Sink(stage);
   }
 
@@ -33,7 +33,7 @@ export default class Sink {
   }
 }
 
-class BasicSinkStage extends Stage {
+class BasicSinkStage extends SinkStage {
 
   onPush(x) {
     this.onNext(x);

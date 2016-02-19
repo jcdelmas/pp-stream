@@ -36,6 +36,10 @@ describe('Route', () => {
     const result = await Source.from([1, 1, 1]).scan((acc, x) => acc + x, 0).toList();
     result.should.be.eql([1, 2, 3]);
   });
+  it('#mapConcat', async () => {
+    const result = await Source.from([1, 2, 3]).mapConcat(x => [x, x]).toList();
+    result.should.be.eql([1, 1, 2, 2, 3, 3]);
+  });
 });
 
 describe('Flow', () => {

@@ -40,6 +40,10 @@ describe('Route', () => {
     const result = await Source.from([1, 2, 3]).mapConcat(x => [x, x]).toList();
     result.should.be.eql([1, 1, 2, 2, 3, 3]);
   });
+  it('#grouped', async () => {
+    const result = await Source.from([1, 2, 3, 4, 5]).grouped(2).toList();
+    result.should.be.eql([[1, 2], [3, 4], [5]]);
+  });
 });
 
 describe('Flow', () => {

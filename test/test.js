@@ -44,6 +44,14 @@ describe('Route', () => {
     const result = await Source.from([1, 2, 3, 4, 5]).grouped(2).toList();
     result.should.be.eql([[1, 2], [3, 4], [5]]);
   });
+  it('#sliding', async () => {
+    const result = await Source.from([1, 2, 3, 4, 5]).sliding(3).toList();
+    result.should.be.eql([[1, 2, 3], [2, 3, 4], [3, 4, 5]]);
+  });
+  it('#sliding - 2', async () => {
+    const result = await Source.from([1, 2, 3, 4]).sliding(3, 2).toList();
+    result.should.be.eql([[1, 2, 3], [3, 4]]);
+  });
 });
 
 describe('Flow', () => {

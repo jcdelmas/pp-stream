@@ -23,7 +23,7 @@ describe('Source', () => {
   });
 });
 
-describe('Route', () => {
+describe('FlowOps', () => {
   it('#map', async () => {
     const result = await Source.from([1, 2, 3]).map(x => x + 1).toList();
     result.should.be.eql([2, 3, 4]);
@@ -51,6 +51,14 @@ describe('Route', () => {
   it('#sliding - 2', async () => {
     const result = await Source.from([1, 2, 3, 4]).sliding(3, 2).toList();
     result.should.be.eql([[1, 2, 3], [3, 4]]);
+  });
+  it('#take - 1', async () => {
+    const result = await Source.from([1, 2, 3, 4]).take(2).toList();
+    result.should.be.eql([1, 2]);
+  });
+  it('#take - 2', async () => {
+    const result = await Source.from([1, 2]).take(4).toList();
+    result.should.be.eql([1, 2]);
   });
 });
 

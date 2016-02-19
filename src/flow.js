@@ -53,6 +53,14 @@ export class FlowOps {
   }
 
   /**
+   * @param {number} n
+   * @returns {FlowOps}
+   */
+  take(n) {
+    return this.via(Flow.take(n));
+  }
+
+  /**
    * @param {Flow} flow
    * @returns {FlowOps}
    */
@@ -132,6 +140,14 @@ export default class Flow extends FlowOps {
    */
   static sliding(n, step = 1) {
     return new Flow(new Sliding(n, step));
+  }
+
+  /**
+   * @param {number} n
+   * @returns {Flow}
+   */
+  static take(n) {
+    return new Flow(new Take(n));
   }
 
   /**
@@ -298,6 +314,29 @@ class Sliding extends Stage {
       this.finish();
     } else {
       this.pull();
+    }
+  }
+}
+
+class Take extends Stage {
+
+  constructor(nbr) {
+    super();
+    this.nbr = nbr;
+  }
+
+  count = 0;
+
+  onPush(x) {
+    this.count++;
+    this.push(x);
+  }
+
+  onPull() {
+    if (this.count < this.nbr) {
+      this.pull();
+    } else {
+      this.finish();
     }
   }
 }

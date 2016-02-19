@@ -61,6 +61,14 @@ export class FlowOps {
   }
 
   /**
+   * @param {number} n
+   * @returns {FlowOps}
+   */
+  drop(n) {
+    return this.via(Flow.drop(n));
+  }
+
+  /**
    * @param {Flow} flow
    * @returns {FlowOps}
    */
@@ -148,6 +156,14 @@ export default class Flow extends FlowOps {
    */
   static take(n) {
     return new Flow(new Take(n));
+  }
+
+  /**
+   * @param {number} n
+   * @returns {Flow}
+   */
+  static drop(n) {
+    return new Flow(new Drop(n));
   }
 
   /**
@@ -327,16 +343,32 @@ class Take extends Stage {
 
   count = 0;
 
-  onPush(x) {
-    this.count++;
-    this.push(x);
-  }
-
   onPull() {
-    if (this.count < this.nbr) {
+    if (this.count++ < this.nbr) {
       this.pull();
     } else {
       this.finish();
     }
+  }
+}
+
+
+
+class Drop extends Stage {
+
+  constructor(nbr) {
+    super();
+    this.nbr = nbr;
+  }
+
+  count = 0;
+
+  onPush(x) {
+    if (this.count++ < this.nbr) {
+      this.pull();
+    } else {
+      this.push(x);
+    }
+
   }
 }

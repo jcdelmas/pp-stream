@@ -60,6 +60,14 @@ describe('FlowOps', () => {
     const result = await Source.from([1, 2]).take(4).toList();
     result.should.be.eql([1, 2]);
   });
+  it('#drop - 1', async () => {
+    const result = await Source.from([1, 2, 3, 4]).drop(2).toList();
+    result.should.be.eql([3, 4]);
+  });
+  it('#drop - 2', async () => {
+    const result = await Source.from([1, 2]).drop(4).toList();
+    result.should.be.eql([]);
+  });
 });
 
 describe('Flow', () => {

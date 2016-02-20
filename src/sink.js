@@ -6,8 +6,8 @@ export default class Sink {
    * @param {SinkStage?} last
    */
   constructor(first, last) {
-    this.first = first;
-    this.last = last || first;
+    this._first = first;
+    this._last = last || first;
   }
 
   static create(stageMethods) {
@@ -30,6 +30,14 @@ export default class Sink {
 
   static toList() {
     return Sink.reduce((xs, x) => xs.concat([x]), []);
+  }
+
+  first() {
+    return this._first;
+  }
+
+  last() {
+    return this._last;
   }
 }
 

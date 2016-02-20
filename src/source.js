@@ -30,27 +30,31 @@ export default class Source extends FlowOps {
   constructor(last) {
     super();
     if (!last) throw new Error('No output');
-    this.last = last;
+    this._last = last;
   }
 
   /**
-   * @param {Flow} flow
+   * @param {Flow|Stage} flow
    * @returns {Source}
    */
   via(flow) {
-    this.last.wireOutput(flow.first);
-    flow.first.wireInput(this.last);
-    return new Source(flow.last);
+    this.last().wireOutput(flow.first());
+    flow.first().wireInput(this.last());
+    return new Source(flow.last());
   }
 
   /**
-   * @param {Sink} sink
+   * @param {Sink|Stage} sink
    * @returns {Graph}
    */
   to(sink) {
-    this.last.wireOutput(sink.first);
-    sink.first.wireInput(this.last);
-    return new Graph(sink.last);
+    this.last().wireOutput(sink.first());
+    sink.first().wireInput(this.last());
+    return new Graph(sink.last());
+  }
+
+  last() {
+    return this._last;
   }
 
   forEach(cb) {

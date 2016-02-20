@@ -2,6 +2,7 @@ import Stage from './stage';
 import Sink from './sink';
 
 export class FlowOps {
+
   /**
    * @param fn
    * @returns {FlowOps}
@@ -15,7 +16,7 @@ export class FlowOps {
    * @returns {FlowOps}
    */
   filter(fn) {
-    return this.via(Flow.filter(fn));
+    return this.via(Flow.filter(fn));;
   }
 
   /**
@@ -24,7 +25,7 @@ export class FlowOps {
    * @returns {FlowOps}
    */
   scan(fn, zero) {
-    return this.via(Flow.scan(fn, zero));
+    return this.via(new Scan(fn, zero));
   }
 
   /**
@@ -32,7 +33,7 @@ export class FlowOps {
    * @returns {FlowOps}
    */
   mapConcat(fn) {
-    return this.via(Flow.mapConcat(fn));
+    return this.via(new MapConcat(fn));
   }
 
   /**
@@ -40,7 +41,7 @@ export class FlowOps {
    * @returns {FlowOps}
    */
   grouped(n) {
-    return this.via(Flow.grouped(n));
+    return this.via(new Grouped(n));
   }
 
   /**
@@ -49,7 +50,7 @@ export class FlowOps {
    * @returns {FlowOps}
    */
   sliding(n, step = 1) {
-    return this.via(Flow.sliding(n, step));
+    return this.via(new Sliding(n, step));
   }
 
   /**
@@ -57,7 +58,7 @@ export class FlowOps {
    * @returns {FlowOps}
    */
   take(n) {
-    return this.via(Flow.take(n));
+    return this.via(new Take(n));
   }
 
   /**
@@ -65,11 +66,11 @@ export class FlowOps {
    * @returns {FlowOps}
    */
   drop(n) {
-    return this.via(Flow.drop(n));
+    return this.via(new Drop(n));
   }
 
   /**
-   * @param {Flow} flow
+   * @param {Flow|Stage} flow
    * @returns {FlowOps}
    */
   via(flow) {
@@ -173,28 +174,36 @@ export default class Flow extends FlowOps {
   constructor(first, last) {
     super();
     if (!first) throw new Error('No first');
-    this.first = first;
-    this.last = last || first;
+    this._first = first;
+    this._last = last || first;
   }
 
   /**
-   * @param {Flow} flow
+   * @param {Flow|Stage} flow
    * @returns {Flow}
    */
   via(flow) {
-    this.last.wireOutput(flow.first);
-    flow.first.wireInput(this.last);
-    return new Flow(this.first, flow.last);
+    this.last().wireOutput(flow.first());
+    flow.first().wireInput(this.last());
+    return new Flow(this.first(), flow.last());
   }
 
   /**
-   * @param {Sink} sink
+   * @param {Sink|Stage} sink
    * @returns {Sink}
    */
   to(sink) {
-    this.last.wireOutput(sink.first);
-    sink.first.wireInput(this.last);
-    return new Sink(this.first, sink.last);
+    this.last().wireOutput(sink.first());
+    sink.first().wireInput(this.last());
+    return new Sink(this.first(), sink.last());
+  }
+
+  first() {
+    return this._first;
+  }
+
+  last() {
+    return this._last;
   }
 }
 

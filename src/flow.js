@@ -96,8 +96,8 @@ export default class Flow extends FlowOps {
    */
   static map(fn) {
     return Flow.create({
-      onPush(item) {
-        this.push(fn(item))
+      onPush() {
+        this.push(fn(this.grab()))
       },
     });
   }
@@ -108,9 +108,10 @@ export default class Flow extends FlowOps {
    */
   static filter(fn) {
     return Flow.create({
-      onPush(item) {
-        if (fn(item)) {
-          this.push(item)
+      onPush() {
+        const x = this.grab();
+        if (fn(x)) {
+          this.push(x)
         } else {
           this.pull();
         }
@@ -217,8 +218,8 @@ class Scan extends SimpleStage {
     this.acc = zero;
   }
 
-  onPush(x) {
-    this.acc = this.fn(this.acc, x);
+  onPush() {
+    this.acc = this.fn(this.acc, this.grab());
     this.push(this.acc);
   }
 }
@@ -239,8 +240,8 @@ class MapConcat extends SimpleStage {
    */
   current = null;
 
-  onPush(x) {
-    this.current = this.fn(x);
+  onPush() {
+    this.current = this.fn(this.grab());
     this._pushNextOrPull();
   }
 
@@ -272,8 +273,8 @@ class Grouped extends SimpleStage {
    */
   buffer = [];
 
-  onPush(x) {
-    this.buffer.push(x);
+  onPush() {
+    this.buffer.push(this.grab());
     if (this.buffer.length >= this.size) {
       this.push(this.buffer);
       this.buffer = [];
@@ -301,8 +302,8 @@ class Sliding extends SimpleStage {
 
   buffer = [];
 
-  onPush(x) {
-    this.buffer.push(x);
+  onPush() {
+    this.buffer.push(this.grab());
     if (this.buffer.length === this.size) {
       const newBuffer = this.buffer.slice(this.step);
       this.push(this.buffer);
@@ -349,11 +350,11 @@ class Drop extends SimpleStage {
 
   count = 0;
 
-  onPush(x) {
+  onPush() {
     if (this.count++ < this.nbr) {
       this.pull();
     } else {
-      this.push(x);
+      this.push(this.grab());
     }
   }
 }
@@ -371,8 +372,8 @@ export class Concat extends Stage {
 
   createInHandler(index) {
     return {
-      onPush: x => {
-        this.outputs[0].push(x)
+      onPush: () => {
+        this.outputs[0].push(this.inputs[index].grab())
       },
       onUpstreamFinish: () => {
         this.sourceIndex++;

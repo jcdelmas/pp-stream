@@ -12,14 +12,50 @@ export class Inlet {
     this._wire = wire;
   }
 
+  _available = false;
+  _pendingElement = null;
+
+  isAvailable() {
+    return this._available;
+  }
+
+  grab() {
+    if (!this._available) {
+      throw new Error('No element available');
+    }
+    const el = this._pendingElement;
+    this._resetElement();
+    return el;
+  }
+
   pull() {
-    this._wire.in._available = true;
+    if (this._outlet().isAvailable()) {
+      throw new Error('Input already pulled');
+    }
+    this._outlet()._available = true;
+    if (this._available) {
+      this._resetElement();
+    }
     this._handler.onPull();
   }
 
   cancel() {
-    this._wire.in._available = false;
+    this._outlet()._available = false;
     this._handler.onDownstreamFinish();
+  }
+
+  _onPush(x) {
+    this._available = true;
+    this._pendingElement = x;
+  }
+
+  _outlet() {
+    return this._wire.in;
+  }
+
+  _resetElement() {
+    this._available = false;
+    this._pendingElement = null;
   }
 }
 
@@ -44,10 +80,14 @@ export class Outlet {
   }
 
   push(x) {
+    if (!this._available) {
+      throw new Error('Output not available');
+    }
     this._available = false;
+    this._inlet()._onPush(x);
     setImmediate(() => {
       try {
-        this._handler.onPush(x);
+        this._handler.onPush();
       } catch (e) {
         this.error(e);
       }
@@ -71,6 +111,10 @@ export class Outlet {
     setImmediate(() => {
       this._handler.onUpstreamFinish();
     });
+  }
+
+  _inlet() {
+    return this._wire.out;
   }
 }
 
@@ -223,6 +267,10 @@ export class SimpleStage extends Stage {
     return this;
   }
 
+  grab() {
+    return this.inputs[0].grab();
+  }
+
   pull() {
     this.inputs[0].pull();
   }
@@ -257,8 +305,8 @@ export class SimpleStage extends Stage {
   /**
    * @param item
    */
-  onPush(item) {
-    this.push(item);
+  onPush() {
+    this.push(this.grab());
   }
 
   onPull() {

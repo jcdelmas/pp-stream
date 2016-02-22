@@ -18,8 +18,8 @@ export default class Sink extends Graph {
 
   static forEach(cb) {
     return Sink.create({
-      onPush(item) {
-        cb(item);
+      onPush() {
+        cb(this.grab());
         this.pull();
       }
     });
@@ -44,8 +44,8 @@ export default class Sink extends Graph {
 
 class BasicSinkStage extends SinkStage {
 
-  onPush(x) {
-    this.onNext(x);
+  onPush() {
+    this.onNext(this.grab());
     this.pull();
   }
 

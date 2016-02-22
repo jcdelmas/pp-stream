@@ -48,19 +48,19 @@ export default class Source extends FlowOps {
   }
 
   /**
-   * @param {Flow|Stage} flow
+   * @param {GraphInterface} flow
    * @returns {Source}
    */
   via(flow) {
-    return this.wire(flow, Source);
+    return this._wire(flow, Source);
   }
 
   /**
-   * @param {Sink|Stage} sink
+   * @param {GraphInterface} sink
    * @returns {RunnableGraph}
    */
   to(sink) {
-    return this.wire(sink, RunnableGraph);
+    return this._wire(sink, RunnableGraph);
   }
 
   forEach(cb) {
@@ -80,6 +80,10 @@ export default class Source extends FlowOps {
    */
   runWith(sink) {
     return this.to(sink).run();
+  }
+
+  _nextInput() {
+    throw new Error('Not allowed on runnable graph');
   }
 }
 

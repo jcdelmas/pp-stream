@@ -3,12 +3,23 @@
  */
 export class Inlet {
 
+  /**
+   * @param {OutHandler} handler
+   * @param {Wire} wire
+   */
+  constructor(handler, wire) {
+    this._handler = handler;
+    this._wire = wire;
+  }
+
   pull() {
-    throw new Error('Not implemented');
+    this._wire.in._available = true;
+    this._handler.onPull();
   }
 
   cancel() {
-    throw new Error('Not implemented');
+    this._wire.in._available = false;
+    this._handler.onDownstreamFinish();
   }
 }
 
@@ -17,52 +28,26 @@ export class Inlet {
  */
 export class Outlet {
 
-  isAvailable() {
-    throw new Error('Not implemented');
-  }
-
-  push(x) {
-    throw new Error('Not implemented');
-  }
-
-  pushAndFinish(x) {
-    throw new Error('Not implemented');
-  }
-
-  error(e) {
-    throw new Error('Not implemented');
-  }
-
-  complete() {
-    throw new Error('Not implemented');
-  }
-}
-
-/**
- * @implements {Inlet}
- * @implements {Outlet}
- */
-export class Wire {
   /**
-   * @param {OutHandler} outHandler
-   * @param {InHandler} inHandler
+   * @param {InHandler} handler
+   * @param {Wire} wire
    */
-  constructor(outHandler, inHandler) {
-    this.outHandler = outHandler;
-    this.inHandler = inHandler;
+  constructor(handler, wire) {
+    this._handler = handler;
+    this._wire = wire;
   }
 
-  available = false;
+  _available = false;
 
   isAvailable() {
-    return this.available;
+    return this._available;
   }
 
   push(x) {
-    this.available = false;
+    this._available = false;
     setImmediate(() => {
       try {
-        this.inHandler.onPush(x);
+        this._handler.onPush(x);
       } catch (e) {
         this.error(e);
       }
@@ -75,27 +60,34 @@ export class Wire {
   }
 
   error(e) {
-    this.available = false;
+    this._available = false;
     setImmediate(() => {
-      this.inHandler.onError(e);
+      this._handler.onError(e);
     });
   }
 
   complete() {
-    this.available = false;
+    this._available = false;
     setImmediate(() => {
-      this.inHandler.onUpstreamFinish();
+      this._handler.onUpstreamFinish();
     });
   }
+}
 
-  pull() {
-    this.available = true;
-    this.outHandler.onPull();
-  }
+export function wire(output, input) {
+  const wire = new Wire(output.handler, input.handler);
+  output.plug(wire.in);
+  input.plug(wire.out);
+}
 
-  cancel() {
-    this.available = false;
-    this.outHandler.onDownstreamFinish();
+class Wire {
+  /**
+   * @param {OutHandler} outHandler
+   * @param {InHandler} inHandler
+   */
+  constructor(outHandler, inHandler) {
+    this.in = new Outlet(inHandler, this);
+    this.out = new Inlet(outHandler, this);
   }
 }
 
@@ -148,6 +140,9 @@ export class OutHandler {
   }
 }
 
+/**
+ * @implements {GraphInterface}
+ */
 export class Stage {
 
   /**
@@ -160,19 +155,19 @@ export class Stage {
    */
   outputs = [];
 
-  nextInput() {
+  _nextInput() {
     const index = this.inputs.length;
     return {
       handler: this.createInHandler(index),
-      setInlet: inlet => this.inputs.push(inlet)
+      plug: inlet => this.inputs.push(inlet)
     };
   }
 
-  nextOutput() {
+  _nextOutput() {
     const index = this.outputs.length;
     return {
       handler: this.createOutHandler(index),
-      setOutlet: outlet => this.outputs.push(outlet)
+      plug: outlet => this.outputs.push(outlet)
     };
   }
 
@@ -188,14 +183,6 @@ export class Stage {
    */
   createOutHandler(index) {
     throw new Error('Not implemented');
-  }
-
-  first() {
-    return this;
-  }
-
-  last() {
-    return this;
   }
 }
 
@@ -227,14 +214,6 @@ export class SimpleStage extends Stage {
     if (index > 0) {
       throw new Error('Output already exist');
     }
-    return this;
-  }
-
-  first() {
-    return this;
-  }
-
-  last() {
     return this;
   }
 
@@ -347,11 +326,15 @@ export class SinkStage extends SimpleStage {
     this.reject(e);
   }
 
-  getResult() {
+  _getResult() {
     return this.resultPromise;
   }
 
-  nextOutput(input) {
+  _getLastStage() {
+    return this;
+  }
+
+  _nextOutput(input) {
     throw new Error('Cannot add output to sink stage');
   }
 

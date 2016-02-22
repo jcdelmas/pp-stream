@@ -181,7 +181,7 @@ export default class Flow extends FlowOps {
    * @returns {Flow}
    */
   via(flow) {
-    return this.wire(flow, Flow);
+    return this._wire(flow, Flow);
   }
 
   /**
@@ -189,7 +189,7 @@ export default class Flow extends FlowOps {
    * @returns {Sink}
    */
   to(sink) {
-    return this.wire(sink, Sink);
+    return this._wire(sink, Sink);
   }
 }
 

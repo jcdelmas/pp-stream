@@ -4,6 +4,7 @@ import { SinkStage } from './stage';
 export default class RunnableGraph extends Graph {
 
   /**
+   * @param {Stage} first
    * @param {SinkStage} last
    */
   constructor(first, last) {
@@ -14,12 +15,21 @@ export default class RunnableGraph extends Graph {
    * @returns {Promise}
    */
   run() {
-    this.last().pull();
-    return this.last().getResult();
+    const lastStage = this._getLastStage();
+    lastStage.pull();
+    return lastStage._getResult();
   }
 
-  wire(graph, classConstructor) {
+  _wire(graph, classConstructor) {
     throw new Error('Wiring is not allowed for runnable graph');
+  }
+
+  _nextInput() {
+    throw new Error('Not allowed on runnable graph');
+  }
+
+  _nextOutput() {
+    throw new Error('Not allowed on runnable graph');
   }
 
 }

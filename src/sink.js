@@ -33,8 +33,12 @@ export default class Sink extends Graph {
     return Sink.reduce((xs, x) => xs.concat([x]), []);
   }
 
-  wire(graph, classConstructor) {
-    throw new Error('Wiring is not allowed for sinks');
+  _wire(graph, classConstructor) {
+    throw new Error('Wiring is not allowed on sink');
+  }
+
+  _nextOutput() {
+    throw new Error('Not allowed on sink');
   }
 }
 

@@ -1,4 +1,4 @@
-import { Wire } from './stage';
+import { wire } from './stage';
 
 /**
  * @interface StageInterface
@@ -24,14 +24,14 @@ import { Wire } from './stage';
 
 /**
  * @function
- * @name GraphInterface#first
- * @returns {StageInterface}
+ * @name GraphInterface#_nextOutput
+ * @returns {OutHandler}
  */
 
 /**
  * @function
- * @name GraphInterface#last
- * @returns {StageInterface}
+ * @name GraphInterface#_nextInput
+ * @returns {InHandler}
  */
 
 /**
@@ -45,23 +45,23 @@ export default class Graph {
   }
 
   /**
-   * @param {Graph} graph
+   * @param {GraphInterface} graph
    * @param classConstructor
    */
-  wire(graph, classConstructor) {
-    const output = this.last().nextOutput();
-    const input = graph.first().nextInput();
-    const wire = new Wire(output.handler, input.handler);
-    output.setOutlet(wire);
-    input.setInlet(wire);
-    return new classConstructor(this.first(), graph.last());
+  _wire(graph, classConstructor) {
+    wire(this._nextOutput(), graph._nextInput());
+    return new classConstructor(this, graph);
   }
 
-  first() {
-    return this._first;
+  _nextInput() {
+    return this._first._nextInput();
   }
 
-  last() {
-    return this._last;
+  _nextOutput() {
+    return this._last._nextOutput();
+  }
+
+  _getLastStage() {
+    return this._last._getLastStage();
   }
 }

@@ -28,7 +28,9 @@ export default class Source extends FlowOps {
    * @param {Source[]} sources
    */
   static concat(...sources) {
-    return new Source(new Concat(sources));
+    const concat = new Concat();
+    sources.forEach(s => wire(s, concat));
+    return new Source(concat);
   }
 
   /**

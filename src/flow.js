@@ -178,8 +178,7 @@ export default class Flow extends FlowOps {
    * @returns {Flow}
    */
   static concat(source) {
-    const left = new SimpleStage();
-    return new Flow(left, new Concat([left, source]));
+    return Flow.empty().concat(source);
   }
 
   /**
@@ -219,7 +218,10 @@ export default class Flow extends FlowOps {
    * @returns {Flow}
    */
   concat(source) {
-    return new Flow(this, new Concat([this, source]));
+    const concat = new Concat();
+    wire(this, concat);
+    wire(source, concat);
+    return new Flow(this, concat);
   }
 
   /**
@@ -383,13 +385,6 @@ class Drop extends SimpleStage {
 }
 
 export class Concat extends Stage {
-  /**
-   * @param {GraphInterface[]} sources
-   */
-  constructor(sources) {
-    super();
-    sources.forEach(source => wire(source, this));
-  }
 
   sourceIndex = 0;
 

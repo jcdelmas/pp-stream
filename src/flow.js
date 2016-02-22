@@ -90,6 +90,10 @@ export default class Flow extends FlowOps {
     return new Flow(stage);
   }
 
+  static empty() {
+    return new Flow(new SimpleStage());
+  }
+
   /**
    * @param fn
    * @returns {Flow}
@@ -179,6 +183,14 @@ export default class Flow extends FlowOps {
   }
 
   /**
+   * @param {Source|SourceStage} source
+   * @returns {Flow}
+   */
+  static zip(source) {
+    return Flow.empty().zip(source);
+  }
+
+  /**
    * @param {GraphInterface} first
    * @param {GraphInterface?} last
    */
@@ -208,6 +220,17 @@ export default class Flow extends FlowOps {
    */
   concat(source) {
     return new Flow(this, new Concat([this, source]));
+  }
+
+  /**
+   * @param {Source|SourceStage} source
+   * @returns {Flow}
+   */
+  zip(source) {
+    const zip = new Zip();
+    wire(this, zip);
+    wire(source, zip);
+    return new Flow(this, zip);
   }
 }
 
@@ -395,5 +418,50 @@ export class Concat extends Stage {
       onPull: () => this.inputs[this.sourceIndex].pull(),
       onDownstreamFinish: () => this.inputs.slice(this.sourceIndex).forEach(input => input.cancel())
     };
+  }
+}
+
+export class Zip extends Stage {
+
+  finished = false;
+
+  createInHandler(index) {
+    return {
+      onPush: () => {
+        if (this.inputs.every(i => i.isAvailable())) {
+          this.outputs[0].push(this.inputs.map(i => i.grab()));
+
+          if (this.inputs.some(i => i.isClosed())) {
+            this.finish();
+          }
+        }
+      },
+      onUpstreamFinish: () => {
+        if (!this.finished && !this.inputs[index].isAvailable()) {
+          this.finish();
+        }
+      },
+      onError: e => this.outputs[0].onError(e)
+    };
+  }
+
+  createOutHandler(index) {
+    if (index > 0) {
+      throw new Error('Output already exist')
+    }
+    return {
+      onPull: () => this.inputs.forEach(i => i.pull()),
+      onDownstreamFinish: () => this.cancelAll()
+    };
+  }
+
+  finish() {
+    this.finished = true;
+    this.cancelAll();
+    this.outputs[0].complete();
+  }
+
+  cancelAll() {
+    this.inputs.filter(input => !input.isClosed()).forEach(input => input.cancel());
   }
 }

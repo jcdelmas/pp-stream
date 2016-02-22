@@ -1,5 +1,5 @@
-import { Stage, SourceStage } from './stage';
-import Flow, { FlowOps, Concat } from './flow';
+import { Stage, SourceStage, wire } from './stage';
+import Flow, { FlowOps, Concat, Zip } from './flow';
 import Sink from './sink';
 import RunnableGraph from './runnable-graph';
 
@@ -32,6 +32,16 @@ export default class Source extends FlowOps {
   }
 
   /**
+   * @param {Source[]|SourceStage[]} sources
+   * @returns {Flow}
+   */
+  static zip(...sources) {
+    const zip = new Zip();
+    sources.forEach(s => wire(s, zip));
+    return new Source(zip);
+  }
+
+  /**
    * @param {Stage} first
    * @param {Stage?} last
    */
@@ -45,6 +55,14 @@ export default class Source extends FlowOps {
    */
   concat(source) {
     return Source.concat(this, source);
+  }
+
+  /**
+   * @param {Source|SourceStage} source
+   * @returns {Source}
+   */
+  zip(source) {
+    return Source.zip(this, source);
   }
 
   /**

@@ -13,10 +13,20 @@ export class Inlet {
   }
 
   _available = false;
+  _hasBeenPulled = false;
+  _closed = false;
   _pendingElement = null;
 
   isAvailable() {
     return this._available;
+  }
+
+  hasBeenPulled() {
+    return this._hasBeenPulled;
+  }
+
+  isClosed() {
+    return this._closed;
   }
 
   grab() {
@@ -29,24 +39,46 @@ export class Inlet {
   }
 
   pull() {
-    if (this._outlet().isAvailable()) {
+    if (this._hasBeenPulled) {
       throw new Error('Input already pulled');
     }
-    this._outlet()._available = true;
+    if (this._closed) {
+      throw new Error('Input closed');
+    }
+    this._outlet()._onPull();
     if (this._available) {
       this._resetElement();
     }
+    this._hasBeenPulled = true;
     this._handler.onPull();
   }
 
   cancel() {
-    this._outlet()._available = false;
+    if (this._closed) {
+      throw new Error('Input already closed');
+    }
+    this._outlet()._onCancel();
+    if (this._available) {
+      this._resetElement();
+    }
+    this._closed = true;
+    this._available = false;
+    this._hasBeenPulled = false;
     this._handler.onDownstreamFinish();
   }
 
   _onPush(x) {
+    if (!this._hasBeenPulled) {
+      throw new Error('Output not pulled');
+    }
     this._available = true;
+    this._hasBeenPulled = false;
     this._pendingElement = x;
+  }
+
+  _onComplete() {
+    this._closed = true;
+    this._hasBeenPulled = false;
   }
 
   _outlet() {
@@ -74,17 +106,25 @@ export class Outlet {
   }
 
   _available = false;
+  _closed = false;
 
   isAvailable() {
     return this._available;
+  }
+
+  isClosed() {
+    return this._closed;
   }
 
   push(x) {
     if (!this._available) {
       throw new Error('Output not available');
     }
-    this._available = false;
+    if (this._closed) {
+      throw new Error('Output closed');
+    }
     this._inlet()._onPush(x);
+    this._available = false;
     setImmediate(() => {
       try {
         this._handler.onPush();
@@ -94,9 +134,9 @@ export class Outlet {
     });
   }
 
-  pushAndFinish(x) {
+  pushAndComplete(x) {
     this.push(x);
-    this.finish();
+    this.complete();
   }
 
   error(e) {
@@ -107,10 +147,31 @@ export class Outlet {
   }
 
   complete() {
+    if (this._closed) {
+      throw new Error('Output already closed');
+    }
+    this._inlet()._onComplete();
+
     this._available = false;
+    this._closed = true;
     setImmediate(() => {
       this._handler.onUpstreamFinish();
     });
+  }
+
+  _onPull() {
+    if (this._available) {
+      throw new Error('Input already pulled');
+    }
+    this._available = true;
+  }
+
+  _onCancel() {
+    if (this._closed) {
+      throw new Error('Input already closed');
+    }
+    this._available = false;
+    this._closed = true;
   }
 
   _inlet() {
@@ -237,8 +298,8 @@ export class Stage {
 }
 
 /**
- * @implements InHandler
- * @implements OutHandler
+ * @implements {InHandler}
+ * @implements {OutHandler}
  */
 export class SimpleStage extends Stage {
 

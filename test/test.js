@@ -12,6 +12,10 @@ describe('Source', () => {
     const result = await Source.from([1, 2, 3]).toList();
     result.should.be.eql([1, 2, 3]);
   });
+  it('single', async () => {
+    const result = await Source.single(5).toList();
+    result.should.be.eql([5]);
+  });
   it('forEach', async () => {
     const xs = [];
     await Source.from([1, 2, 3]).forEach(x => xs.push(x));

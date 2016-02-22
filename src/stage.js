@@ -345,8 +345,8 @@ export class SimpleStage extends Stage {
     this.outputs[0].push(x);
   }
 
-  pushAndFinish(x) {
-    this.outputs[0].pushAndFinish(x);
+  pushAndComplete(x) {
+    this.outputs[0].pushAndComplete(x);
   }
 
   error(e) {

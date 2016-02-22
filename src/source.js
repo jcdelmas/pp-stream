@@ -25,6 +25,17 @@ export default class Source extends FlowOps {
   }
 
   /**
+   * @returns {Source}
+   */
+  static single(x) {
+    return new Source(new SourceStage({
+      onPull() {
+        this.pushAndComplete(x);
+      }
+    }));
+  }
+
+  /**
    * @param {Source[]} sources
    */
   static concat(...sources) {

@@ -128,6 +128,9 @@ class Concat extends Stage {
   }
 
   createOutHandler(index) {
+    if (index > 0) {
+      throw new Error('Output already exist')
+    }
     return {
       onPull: () => this.inputs[this.sourceIndex].pull(),
       onDownstreamFinish: () => this.inputs.slice(this.sourceIndex).forEach(input => input.cancel())

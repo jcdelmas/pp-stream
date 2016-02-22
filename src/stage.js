@@ -218,14 +218,14 @@ export class SimpleStage extends Stage {
 
   createInHandler(index) {
     if (index > 0) {
-      throw new Error('Input already exist !');
+      throw new Error('Input already exist');
     }
     return this;
   }
 
   createOutHandler(index) {
     if (index > 0) {
-      throw new Error('Output already exist !');
+      throw new Error('Output already exist');
     }
     return this;
   }

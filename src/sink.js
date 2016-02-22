@@ -1,13 +1,14 @@
 import Stage, { SinkStage } from './stage';
+import Graph from './graph';
 
-export default class Sink {
+export default class Sink extends Graph {
+
   /**
    * @param {Stage} first
    * @param {SinkStage?} last
    */
   constructor(first, last) {
-    this._first = first;
-    this._last = last || first;
+    super(first, last || first);
   }
 
   static create(stageMethods) {
@@ -32,12 +33,8 @@ export default class Sink {
     return Sink.reduce((xs, x) => xs.concat([x]), []);
   }
 
-  first() {
-    return this._first;
-  }
-
-  last() {
-    return this._last;
+  wire(graph, classConstructor) {
+    throw new Error('Wiring is not allowed for sinks');
   }
 }
 

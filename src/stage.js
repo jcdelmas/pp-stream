@@ -15,25 +15,25 @@ export default class Stage {
   /**
    * @type {Stage|null}
    */
-  inlet = null;
+  input = null;
 
   /**
    * @type {Stage|null}
    */
-  outlet = null;
+  output = null;
 
   wireInput(input) {
-    if (this.inlet) {
+    if (this.input) {
       throw new Error('Input already exist !');
     }
-    this.inlet = input;
+    this.input = input;
   }
 
   wireOutput(output) {
-    if (this.outlet) {
+    if (this.output) {
       throw new Error('Output already exist !');
     }
-    this.outlet = output;
+    this.output = output;
   }
 
   first() {
@@ -47,7 +47,7 @@ export default class Stage {
   push(x) {
     setImmediate(() => {
       try {
-        this.outlet.onPush(x);
+        this.output.onPush(x);
       } catch (e) {
         this.error(e);
       }
@@ -60,23 +60,23 @@ export default class Stage {
   }
 
   pull() {
-    this.inlet.onPull();
+    this.input.onPull();
   }
 
   error(e) {
     setImmediate(() => {
-      this.outlet.onError(e);
+      this.output.onError(e);
     });
   }
 
   finish() {
     this.finished = true;
-    if (this.inlet && !this.inlet.finished) {
-      this.inlet.onDownstreamFinish();
+    if (this.input && !this.input.finished) {
+      this.input.onDownstreamFinish();
     }
-    if (this.outlet && !this.outlet.finished) {
+    if (this.output && !this.output.finished) {
       setImmediate(() => {
-          this.outlet.onUpstreamFinish();
+          this.output.onUpstreamFinish();
       });
     }
   }

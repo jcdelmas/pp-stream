@@ -1,7 +1,7 @@
 import Stage from './stage';
 import Flow, { FlowOps } from './flow';
 import Sink from './sink';
-import Graph from './graph';
+import RunnableGraph from './runnable-graph';
 
 export default class Source extends FlowOps {
 
@@ -27,10 +27,8 @@ export default class Source extends FlowOps {
   /**
    * @param {Stage} last
    */
-  constructor(last) {
-    super();
-    if (!last) throw new Error('No output');
-    this._last = last;
+  constructor(first, last) {
+    super(first, last || first);
   }
 
   /**
@@ -38,23 +36,15 @@ export default class Source extends FlowOps {
    * @returns {Source}
    */
   via(flow) {
-    this.last().wireOutput(flow.first());
-    flow.first().wireInput(this.last());
-    return new Source(flow.last());
+    return this.wire(flow, Source);
   }
 
   /**
    * @param {Sink|Stage} sink
-   * @returns {Graph}
+   * @returns {RunnableGraph}
    */
   to(sink) {
-    this.last().wireOutput(sink.first());
-    sink.first().wireInput(this.last());
-    return new Graph(sink.last());
-  }
-
-  last() {
-    return this._last;
+    return this.wire(sink, RunnableGraph);
   }
 
   forEach(cb) {

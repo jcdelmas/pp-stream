@@ -1,7 +1,8 @@
 import Stage from './stage';
 import Sink from './sink';
+import Graph from './graph';
 
-export class FlowOps {
+export class FlowOps extends Graph {
 
   /**
    * @param fn
@@ -172,10 +173,7 @@ export default class Flow extends FlowOps {
    * @param {Stage?} last
    */
   constructor(first, last) {
-    super();
-    if (!first) throw new Error('No first');
-    this._first = first;
-    this._last = last || first;
+    super(first, last || first);
   }
 
   /**
@@ -183,9 +181,7 @@ export default class Flow extends FlowOps {
    * @returns {Flow}
    */
   via(flow) {
-    this.last().wireOutput(flow.first());
-    flow.first().wireInput(this.last());
-    return new Flow(this.first(), flow.last());
+    return this.wire(flow, Flow);
   }
 
   /**
@@ -193,17 +189,7 @@ export default class Flow extends FlowOps {
    * @returns {Sink}
    */
   to(sink) {
-    this.last().wireOutput(sink.first());
-    sink.first().wireInput(this.last());
-    return new Sink(this.first(), sink.last());
-  }
-
-  first() {
-    return this._first;
-  }
-
-  last() {
-    return this._last;
+    return this.wire(sink, Sink);
   }
 }
 

@@ -1,4 +1,4 @@
-import Stage, { SinkStage } from './stage';
+import { Stage, SinkStage } from './stage';
 import Graph from './graph';
 
 export default class Sink extends Graph {
@@ -63,6 +63,6 @@ class Reduce extends BasicSinkStage {
   }
 
   onUpstreamFinish() {
-    this.finish(this.acc);
+    this.complete(this.acc);
   }
 }

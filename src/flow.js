@@ -1,4 +1,4 @@
-import Stage from './stage';
+import { Stage, SimpleStage } from './stage';
 import Sink from './sink';
 import Graph from './graph';
 
@@ -86,7 +86,7 @@ export default class Flow extends FlowOps {
    * @returns {Flow}
    */
   static create(stageMethods) {
-    const stage = new Stage(stageMethods);
+    const stage = new SimpleStage(stageMethods);
     return new Flow(stage);
   }
 
@@ -193,7 +193,7 @@ export default class Flow extends FlowOps {
   }
 }
 
-class Scan extends Stage {
+class Scan extends SimpleStage {
   constructor(fn, zero) {
     super();
     this.fn = fn;
@@ -206,7 +206,7 @@ class Scan extends Stage {
   }
 }
 
-class MapConcat extends Stage {
+class MapConcat extends SimpleStage {
   constructor(fn) {
     super();
     this.fn = fn;
@@ -244,7 +244,7 @@ class MapConcat extends Stage {
   }
 }
 
-class Grouped extends Stage {
+class Grouped extends SimpleStage {
   constructor(size) {
     super();
     this.size = size;
@@ -269,11 +269,11 @@ class Grouped extends Stage {
     if (this.buffer.length) {
       this.push(this.buffer);
     }
-    this.finish();
+    this.complete();
   }
 }
 
-class Sliding extends Stage {
+class Sliding extends SimpleStage {
   constructor(size, step = 1) {
     super();
     this.size = size;
@@ -301,11 +301,11 @@ class Sliding extends Stage {
     if (this.pendingData) {
       this.push(this.buffer);
     }
-    this.finish();
+    this.complete();
   }
 }
 
-class Take extends Stage {
+class Take extends SimpleStage {
 
   constructor(nbr) {
     super();
@@ -323,7 +323,7 @@ class Take extends Stage {
   }
 }
 
-class Drop extends Stage {
+class Drop extends SimpleStage {
 
   constructor(nbr) {
     super();

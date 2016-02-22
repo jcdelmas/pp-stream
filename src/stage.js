@@ -1,53 +1,68 @@
-import { EventEmitter } from 'events';
+/**
+ * @interface
+ */
+export class Inlet {
 
-export default class Stage {
-
-  constructor({ onPush, onPull, onUpstreamFinish, onDownstreamFinish, onError } = {}) {
-    if (onPush) this.onPush = onPush.bind(this);
-    if (onPull) this.onPull = onPull.bind(this);
-    if (onUpstreamFinish) this.onUpstreamFinish = onUpstreamFinish.bind(this);
-    if (onDownstreamFinish) this.onUpstreamFinish = onDownstreamFinish.bind(this);
-    if (onError) this.onError = onError.bind(this);
+  pull() {
+    throw new Error('Not implemented');
   }
 
-  finished = false;
-
-  /**
-   * @type {Stage|null}
-   */
-  input = null;
-
-  /**
-   * @type {Stage|null}
-   */
-  output = null;
-
-  wireInput(input) {
-    if (this.input) {
-      throw new Error('Input already exist !');
-    }
-    this.input = input;
+  cancel() {
+    throw new Error('Not implemented');
   }
+}
 
-  wireOutput(output) {
-    if (this.output) {
-      throw new Error('Output already exist !');
-    }
-    this.output = output;
-  }
+/**
+ * @interface
+ */
+export class Outlet {
 
-  first() {
-    return this;
-  }
-
-  last() {
-    return this;
+  isAvailable() {
+    throw new Error('Not implemented');
   }
 
   push(x) {
+    throw new Error('Not implemented');
+  }
+
+  pushAndFinish(x) {
+    throw new Error('Not implemented');
+  }
+
+  error(e) {
+    throw new Error('Not implemented');
+  }
+
+  complete() {
+    throw new Error('Not implemented');
+  }
+}
+
+/**
+ * @implements {Inlet}
+ * @implements {Outlet}
+ */
+export class Wire {
+  /**
+   * @param {OutHandler} outHandler
+   * @param {InHandler} inHandler
+   */
+  constructor(outHandler, inHandler) {
+    this.outHandler = outHandler;
+    this.inHandler = inHandler;
+  }
+
+  available = false;
+
+  isAvailable() {
+    return this.available;
+  }
+
+  push(x) {
+    this.available = false;
     setImmediate(() => {
       try {
-        this.output.onPush(x);
+        this.inHandler.onPush(x);
       } catch (e) {
         this.error(e);
       }
@@ -59,26 +74,199 @@ export default class Stage {
     this.finish();
   }
 
-  pull() {
-    this.input.onPull();
-  }
-
   error(e) {
+    this.available = false;
     setImmediate(() => {
-      this.output.onError(e);
+      this.inHandler.onError(e);
     });
   }
 
-  finish() {
+  complete() {
+    this.available = false;
+    setImmediate(() => {
+      this.inHandler.onUpstreamFinish();
+    });
+  }
+
+  pull() {
+    this.available = true;
+    this.outHandler.onPull();
+  }
+
+  cancel() {
+    this.available = false;
+    this.outHandler.onDownstreamFinish();
+  }
+}
+
+/**
+ * @interface
+ */
+export class InHandler {
+
+  constructor({ onPush, onUpstreamFinish, onError } = {}) {
+    if (onPush) this.onPush = onPush;
+    if (onUpstreamFinish) this.onUpstreamFinish = onUpstreamFinish;
+    if (onError) this.onError = onError;
+  }
+
+  /**
+   * @param item
+   */
+  onPush(item) {
+    throw new Error('Not implemented');
+  }
+
+  /**
+   * @param {Error} e
+   */
+  onError(e) {
+    throw new Error('Not implemented');
+  }
+
+  onUpstreamFinish() {
+    throw new Error('Not implemented');
+  }
+}
+
+/**
+ * @interface
+ */
+export class OutHandler {
+
+  constructor({ onPull, onDownstreamFinish } = {}) {
+    if (onPull) this.onPull = onPull;
+    if (onDownstreamFinish) this.onUpstreamFinish = onDownstreamFinish;
+  }
+
+  onPull() {
+    throw new Error('Not implemented');
+  }
+
+  onDownstreamFinish() {
+    throw new Error('Not implemented');
+  }
+}
+
+export class Stage {
+
+  /**
+   * @type {Inlet[]}
+   */
+  inputs = [];
+
+  /**
+   * @type {Outlet[]}
+   */
+  outputs = [];
+
+  nextInput() {
+    const index = this.inputs.length;
+    return {
+      handler: this.createInHandler(index),
+      setInlet: inlet => this.inputs.push(inlet)
+    };
+  }
+
+  nextOutput() {
+    const index = this.outputs.length;
+    return {
+      handler: this.createOutHandler(index),
+      setOutlet: outlet => this.outputs.push(outlet)
+    };
+  }
+
+  /**
+   * @return {InHandler}
+   */
+  createInHandler(index) {
+    throw new Error('Not implemented');
+  }
+
+  /**
+   * @return {OutHandler}
+   */
+  createOutHandler(index) {
+    throw new Error('Not implemented');
+  }
+
+  first() {
+    return this;
+  }
+
+  last() {
+    return this;
+  }
+}
+
+/**
+ * @implements InHandler
+ * @implements OutHandler
+ */
+export class SimpleStage extends Stage {
+
+  constructor({ onPush, onPull, onUpstreamFinish, onDownstreamFinish, onError } = {}) {
+    super();
+    if (onPush) this.onPush = onPush.bind(this);
+    if (onPull) this.onPull = onPull.bind(this);
+    if (onUpstreamFinish) this.onUpstreamFinish = onUpstreamFinish.bind(this);
+    if (onDownstreamFinish) this.onUpstreamFinish = onDownstreamFinish.bind(this);
+    if (onError) this.onError = onError.bind(this);
+  }
+
+  finished = false;
+
+  createInHandler(index) {
+    if (index > 0) {
+      throw new Error('Input already exist !');
+    }
+    return this;
+  }
+
+  createOutHandler(index) {
+    if (index > 0) {
+      throw new Error('Output already exist !');
+    }
+    return this;
+  }
+
+  first() {
+    return this;
+  }
+
+  last() {
+    return this;
+  }
+
+  pull() {
+    this.inputs[0].pull();
+  }
+
+  cancel() {
     this.finished = true;
-    if (this.input && !this.input.finished) {
-      this.input.onDownstreamFinish();
-    }
-    if (this.output && !this.output.finished) {
-      setImmediate(() => {
-          this.output.onUpstreamFinish();
-      });
-    }
+    this.inputs[0].cancel();
+  }
+
+  push(x) {
+    this.outputs[0].push(x);
+  }
+
+  pushAndFinish(x) {
+    this.outputs[0].pushAndFinish(x);
+  }
+
+  error(e) {
+    this.outputs[0].error(e);
+  }
+
+  complete() {
+    this.finished = true;
+    this.outputs[0].complete();
+  }
+
+  finish() {
+    this.cancel();
+    this.complete();
   }
 
   /**
@@ -100,15 +288,38 @@ export default class Stage {
   }
 
   onUpstreamFinish() {
-    this.finish();
+    this.complete();
   }
 
   onDownstreamFinish() {
-    this.finish();
+    this.cancel();
   }
 }
 
-export class SinkStage extends Stage {
+export class SourceStage extends SimpleStage {
+
+  onPull() {
+    throw new Error('Not implemented');
+  }
+
+  onDownstreamFinish() {
+    this.finished = true;
+  }
+
+  pull() {
+    throw new Error('Not allowed');
+  }
+
+  cancel() {
+    throw new Error('Not allowed');
+  }
+
+  finish() {
+    throw new Error('Not allowed');
+  }
+}
+
+export class SinkStage extends SimpleStage {
 
   constructor(methods = {}) {
     super(methods);
@@ -118,9 +329,18 @@ export class SinkStage extends Stage {
     });
   }
 
-  finish(result) {
-    super.finish();
+  onPush() {
+    throw new Error('Not implemented');
+  }
+
+  complete(result) {
+    this.finished = true;
     this.resolve(result);
+  }
+
+  finish(result) {
+    this.cancel();
+    this.complete(result);
   }
 
   error(e) {
@@ -131,7 +351,11 @@ export class SinkStage extends Stage {
     return this.resultPromise;
   }
 
-  wireOutput(output) {
-    throw new Error('Cannot wire output on sink stage');
+  nextOutput(input) {
+    throw new Error('Cannot add output to sink stage');
+  }
+
+  push() {
+    throw new Error('Not allowed');
   }
 }

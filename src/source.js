@@ -1,4 +1,4 @@
-import Stage from './stage';
+import { Stage, SourceStage, InHandler, OutHandler } from './stage';
 import Flow, { FlowOps } from './flow';
 import Sink from './sink';
 import RunnableGraph from './runnable-graph';
@@ -17,18 +17,34 @@ export default class Source extends FlowOps {
    * @returns {Source}
    */
   static empty() {
-    return new Source(new Stage({
+    return new Source(new SourceStage({
       onPull() {
-        this.finish();
+        this.complete();
       }
     }));
   }
 
   /**
-   * @param {Stage} last
+   * @param {Source[]} sources
+   */
+  static concat(...sources) {
+    return new Source(new Concat(sources));
+  }
+
+  /**
+   * @param {Stage} first
+   * @param {Stage?} last
    */
   constructor(first, last) {
     super(first, last || first);
+  }
+
+  /**
+   * @param {Source|SourceStage} source
+   * @returns {Source}
+   */
+  concat(source) {
+    return Source.concat(this, source);
   }
 
   /**
@@ -67,7 +83,7 @@ export default class Source extends FlowOps {
   }
 }
 
-class ListSource extends Stage {
+class ListSource extends SourceStage {
   constructor(items) {
     super();
     this.index = 0;
@@ -78,7 +94,43 @@ class ListSource extends Stage {
     if (this.index < this.items.length) {
       this.push(this.items[this.index++]);
     } else {
-      this.finish();
+      this.complete();
     }
+  }
+}
+
+class Concat extends Stage {
+  /**
+   * @param {Source[]} sources
+   */
+  constructor(sources) {
+    super();
+    sources.forEach(source => source.via(this));
+  }
+
+  sourceIndex = 0;
+
+  createInHandler(index) {
+    return {
+      onPush: x => {
+        this.outputs[0].push(x)
+      },
+      onUpstreamFinish: () => {
+        this.sourceIndex++;
+        if (this.sourceIndex >= this.inputs.length) {
+          this.outputs[0].complete();
+        } else if (this.outputs[0].isAvailable()) {
+          this.inputs[this.sourceIndex].pull();
+        }
+      },
+      onError: e => this.outputs[0].onError(e)
+    };
+  }
+
+  createOutHandler(index) {
+    return {
+      onPull: () => this.inputs[this.sourceIndex].pull(),
+      onDownstreamFinish: () => this.inputs.slice(this.sourceIndex).forEach(input => input.cancel())
+    };
   }
 }

@@ -1,11 +1,23 @@
 import Source from './source';
 import Flow from './flow';
 import Sink from './sink';
-import Stage from './stage';
+import {
+  Stage,
+  SimpleStage,
+  SourceStage,
+  SinkStage,
+  OutHandler,
+  InHandler
+} from './stage';
 
 export {
   Source,
   Flow,
   Sink,
-  Stage
+  Stage,
+  SimpleStage,
+  SourceStage,
+  SinkStage,
+  OutHandler,
+  InHandler
 }

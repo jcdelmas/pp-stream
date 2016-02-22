@@ -1,3 +1,5 @@
+import { Wire } from './stage';
+
 /**
  * @interface StageInterface
  */
@@ -47,8 +49,11 @@ export default class Graph {
    * @param classConstructor
    */
   wire(graph, classConstructor) {
-    this.last().wireOutput(graph.first());
-    graph.first().wireInput(this.last());
+    const output = this.last().nextOutput();
+    const input = graph.first().nextInput();
+    const wire = new Wire(output.handler, input.handler);
+    output.setOutlet(wire);
+    input.setInlet(wire);
     return new classConstructor(this.first(), graph.last());
   }
 

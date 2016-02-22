@@ -72,6 +72,12 @@ describe('FlowOps', () => {
     const result = await Source.from([1, 2]).drop(4).toList();
     result.should.be.eql([]);
   });
+
+  // Fan in ops
+  it('concat', async () => {
+    const result = await Source.from([1, 2]).concat(Source.from([3, 4])).toList();
+    result.should.be.eql([1, 2, 3, 4]);
+  })
 });
 
 describe('Flow', () => {

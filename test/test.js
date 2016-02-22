@@ -75,17 +75,27 @@ describe('FlowOps', () => {
 
   // Fan in ops
   describe('concat', () => {
-    it('1', async () => {
+    it('with source', async () => {
       const result = await Source.from([1, 2]).concat(Source.from([3, 4])).toList();
       result.should.be.eql([1, 2, 3, 4]);
     });
-    it('1', async () => {
+    it('with multiple sources', async () => {
       const result = await Source.concat(
         Source.from([1, 2]),
         Source.from([3, 4]),
         Source.from([5, 6])
       ).toList();
       result.should.be.eql([1, 2, 3, 4, 5, 6]);
+    });
+
+    it('with flow', async () => {
+      const result = await Source.from([1, 2]).via(Flow.concat(Source.from([3, 4]))).toList();
+      result.should.be.eql([1, 2, 3, 4]);
+    });
+
+    it('with flow 2', async () => {
+      const result = await Source.from([3, 4]).via(Flow.map(x => x - 2).concat(Source.from([3, 4]))).toList();
+      result.should.be.eql([1, 2, 3, 4]);
     });
   });
 });

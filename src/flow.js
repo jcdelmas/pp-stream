@@ -1,4 +1,4 @@
-import { Stage, SimpleStage } from './stage';
+import { Stage, SimpleStage, wire } from './stage';
 import Sink from './sink';
 import Graph from './graph';
 
@@ -169,8 +169,17 @@ export default class Flow extends FlowOps {
   }
 
   /**
-   * @param {Stage} first
-   * @param {Stage?} last
+   * @param {Source|SourceStage} source
+   * @returns {Flow}
+   */
+  static concat(source) {
+    const left = new SimpleStage();
+    return new Flow(left, new Concat([left, source]));
+  }
+
+  /**
+   * @param {GraphInterface} first
+   * @param {GraphInterface?} last
    */
   constructor(first, last) {
     super(first, last || first);
@@ -190,6 +199,14 @@ export default class Flow extends FlowOps {
    */
   to(sink) {
     return this._wire(sink, Sink);
+  }
+
+  /**
+   * @param {Source|SourceStage} source
+   * @returns {Flow}
+   */
+  concat(source) {
+    return new Flow(this, new Concat([this, source]));
   }
 }
 
@@ -338,5 +355,44 @@ class Drop extends SimpleStage {
     } else {
       this.push(x);
     }
+  }
+}
+
+export class Concat extends Stage {
+  /**
+   * @param {GraphInterface[]} sources
+   */
+  constructor(sources) {
+    super();
+    sources.forEach(source => wire(source, this));
+  }
+
+  sourceIndex = 0;
+
+  createInHandler(index) {
+    return {
+      onPush: x => {
+        this.outputs[0].push(x)
+      },
+      onUpstreamFinish: () => {
+        this.sourceIndex++;
+        if (this.sourceIndex >= this.inputs.length) {
+          this.outputs[0].complete();
+        } else if (this.outputs[0].isAvailable()) {
+          this.inputs[this.sourceIndex].pull();
+        }
+      },
+      onError: e => this.outputs[0].onError(e)
+    };
+  }
+
+  createOutHandler(index) {
+    if (index > 0) {
+      throw new Error('Output already exist')
+    }
+    return {
+      onPull: () => this.inputs[this.sourceIndex].pull(),
+      onDownstreamFinish: () => this.inputs.slice(this.sourceIndex).forEach(input => input.cancel())
+    };
   }
 }

@@ -49,7 +49,7 @@ export default class Graph {
    * @param classConstructor
    */
   _wire(graph, classConstructor) {
-    wire(this._nextOutput(), graph._nextInput());
+    wire(this, graph);
     return new classConstructor(this, graph);
   }
 

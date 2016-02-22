@@ -1,5 +1,5 @@
-import { Stage, SourceStage, InHandler, OutHandler } from './stage';
-import Flow, { FlowOps } from './flow';
+import { Stage, SourceStage } from './stage';
+import Flow, { FlowOps, Concat } from './flow';
 import Sink from './sink';
 import RunnableGraph from './runnable-graph';
 
@@ -100,44 +100,5 @@ class ListSource extends SourceStage {
     } else {
       this.complete();
     }
-  }
-}
-
-class Concat extends Stage {
-  /**
-   * @param {Source[]} sources
-   */
-  constructor(sources) {
-    super();
-    sources.forEach(source => source.via(this));
-  }
-
-  sourceIndex = 0;
-
-  createInHandler(index) {
-    return {
-      onPush: x => {
-        this.outputs[0].push(x)
-      },
-      onUpstreamFinish: () => {
-        this.sourceIndex++;
-        if (this.sourceIndex >= this.inputs.length) {
-          this.outputs[0].complete();
-        } else if (this.outputs[0].isAvailable()) {
-          this.inputs[this.sourceIndex].pull();
-        }
-      },
-      onError: e => this.outputs[0].onError(e)
-    };
-  }
-
-  createOutHandler(index) {
-    if (index > 0) {
-      throw new Error('Output already exist')
-    }
-    return {
-      onPull: () => this.inputs[this.sourceIndex].pull(),
-      onDownstreamFinish: () => this.inputs.slice(this.sourceIndex).forEach(input => input.cancel())
-    };
   }
 }

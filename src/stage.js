@@ -74,7 +74,13 @@ export class Outlet {
   }
 }
 
-export function wire(output, input) {
+/**
+ * @param {GraphInterface} left
+ * @param {GraphInterface} right
+ */
+export function wire(left, right) {
+  const output = left._nextOutput();
+  const input = right._nextInput();
   const wire = new Wire(output.handler, input.handler);
   output.plug(wire.in);
   input.plug(wire.out);

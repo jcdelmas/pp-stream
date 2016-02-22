@@ -128,7 +128,8 @@ class ListSource extends SourceStage {
   onPull() {
     if (this.index < this.items.length) {
       this.push(this.items[this.index++]);
-    } else {
+    }
+    if (this.index == this.items.length) {
       this.complete();
     }
   }

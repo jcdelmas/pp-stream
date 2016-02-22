@@ -274,6 +274,12 @@ class MapConcat extends SimpleStage {
     this._pushNextOrPull();
   }
 
+  onUpstreamFinish() {
+    if (!this.current) {
+      this.complete();
+    }
+  }
+
   _pushNextOrPull() {
     if (this.current) {
       this.push(this.current[this.index++]);
@@ -281,8 +287,10 @@ class MapConcat extends SimpleStage {
         this.current = null;
         this.index = 0;
       }
-    } else {
+    } else if (!this.inputs[0].isClosed()) {
       this.pull();
+    } else {
+      this.complete();
     }
   }
 }

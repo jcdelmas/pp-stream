@@ -45,6 +45,9 @@ export class Inlet {
     if (this._closed) {
       throw new Error('Input closed');
     }
+    if (this._outlet().isClosed()) {
+      return;
+    }
     this._outlet()._onPull();
     if (this._available) {
       this._resetElement();
@@ -57,6 +60,9 @@ export class Inlet {
     if (this._closed) {
       throw new Error('Input already closed');
     }
+    if (this._outlet().isClosed()) {
+      return;
+    }
     this._outlet()._onCancel();
     if (this._available) {
       this._resetElement();
@@ -67,10 +73,13 @@ export class Inlet {
     this._handler.onDownstreamFinish();
   }
 
-  _onPush(x) {
+  _pushCheck(x) {
     if (!this._hasBeenPulled) {
       throw new Error('Output not pulled');
     }
+  }
+
+  _onPush(x) {
     this._available = true;
     this._hasBeenPulled = false;
     this._pendingElement = x;
@@ -123,10 +132,11 @@ export class Outlet {
     if (this._closed) {
       throw new Error('Output closed');
     }
-    this._inlet()._onPush(x);
+    this._inlet()._pushCheck();
     this._available = false;
     setImmediate(() => {
       try {
+        this._inlet()._onPush(x);
         this._handler.onPush();
       } catch (e) {
         this.error(e);
@@ -150,11 +160,11 @@ export class Outlet {
     if (this._closed) {
       throw new Error('Output already closed');
     }
-    this._inlet()._onComplete();
 
     this._available = false;
     this._closed = true;
     setImmediate(() => {
+      this._inlet()._onComplete();
       this._handler.onUpstreamFinish();
     });
   }

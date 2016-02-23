@@ -332,8 +332,6 @@ export class SimpleStage extends Stage {
     if (onError) this.onError = onError.bind(this);
   }
 
-  finished = false;
-
   createInHandler(index) {
     if (index > 0) {
       throw new Error('Input already exist');
@@ -357,7 +355,6 @@ export class SimpleStage extends Stage {
   }
 
   cancel() {
-    this.finished = true;
     this.inputs[0].cancel();
   }
 
@@ -374,7 +371,6 @@ export class SimpleStage extends Stage {
   }
 
   complete() {
-    this.finished = true;
     this.outputs[0].complete();
   }
 
@@ -421,7 +417,6 @@ export class SourceStage extends SimpleStage {
   }
 
   onCancel() {
-    this.finished = true;
   }
 
   pull() {
@@ -460,7 +455,6 @@ export class SinkStage extends SimpleStage {
   }
 
   complete(result) {
-    this.finished = true;
     this.resolve(result);
   }
 

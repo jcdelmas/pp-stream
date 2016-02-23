@@ -425,14 +425,6 @@ export class SimpleStage extends Stage {
     this.inputs[0].isInputHasBeenPulled();
   }
 
-  cancel() {
-    this.inputs[0].cancel();
-  }
-
-  cancel() {
-    this.inputs[0].cancel();
-  }
-
   push(x) {
     this.outputs[0].push(x);
   }
@@ -457,9 +449,6 @@ export class SimpleStage extends Stage {
     return this.outputs[0].isClosed();
   }
 
-  /**
-   * @param item
-   */
   onPush() {
     this.push(this.grab());
   }

@@ -71,7 +71,7 @@ export default class Source extends FlowOps {
 
   /**
    * @param {Source[]|SourceStage[]} sources
-   * @returns {Flow}
+   * @returns {Source}
    */
   static zip(...sources) {
     const zip = new Zip();

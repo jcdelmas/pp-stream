@@ -365,10 +365,11 @@ class Take extends SimpleStage {
 
   count = 0;
 
-  onPull() {
+  onPush() {
     if (this.count++ < this.nbr) {
-      this.pull();
-    } else {
+      this.push(this.grab());
+    }
+    if (this.count === this.nbr) {
       this.completeStage();
     }
   }

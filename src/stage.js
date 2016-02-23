@@ -107,6 +107,8 @@ class Wire {
 
   _pendingElement = null;
 
+  _asyncRequired = false;
+
   grab() {
     if (!this.hasPendingElement) {
       throw new Error('No element available');
@@ -131,8 +133,10 @@ class Wire {
     }
     this.hasBeenPulled = true;
 
-    this.waitingForPush = true;
-    this.outHandler.onPull();
+    this._asyncIfRequired(() => {
+      this.waitingForPush = true;
+      this.outHandler.onPull();
+    });
   }
 
   cancel() {
@@ -143,14 +147,15 @@ class Wire {
       return;
     }
     this.hasBeenPulled = false;
-    this.waitingForPush = false;
     this.canceled = true;
-    this.closed = true;
-
     if (this.hasPendingElement) {
       this._resetElement();
     }
-    this.outHandler.onDownstreamFinish();
+    this._asyncIfRequired(() => {
+      this.closed = true;
+      this.waitingForPush = false;
+      this.outHandler.onDownstreamFinish();
+    });
   }
 
   push(x) {
@@ -164,7 +169,7 @@ class Wire {
       return;
     }
     this.waitingForPush = false;
-    setImmediate(() => {
+    this._asyncIfRequired(() => {
       try {
         this.hasBeenPulled = false;
         this.hasPendingElement = true;
@@ -182,7 +187,7 @@ class Wire {
       return;
     }
     this.waitingForPush = false;
-    setImmediate(() => {
+    this._asyncIfRequired(() => {
       this.hasBeenPulled = false;
       this.inHandler.onError(e);
     });
@@ -198,7 +203,7 @@ class Wire {
 
     this.waitingForPush = false;
     this.completed = true;
-    setImmediate(() => {
+    this._asyncIfRequired(() => {
       this.closed = true;
       this.hasBeenPulled = false;
       this.inHandler.onUpstreamFinish();
@@ -208,6 +213,16 @@ class Wire {
   _resetElement() {
     this.hasPendingElement = false;
     this._pendingElement = null;
+  }
+
+  _asyncIfRequired(cb) {
+    if (this._asyncRequired) {
+      setImmediate(cb);
+    } else {
+      this._asyncRequired = true;
+      cb();
+      this._asyncRequired = false;
+    }
   }
 }
 

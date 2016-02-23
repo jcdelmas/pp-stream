@@ -170,14 +170,10 @@ class Wire {
     }
     this.waitingForPush = false;
     this._asyncIfRequired(() => {
-      try {
-        this.hasBeenPulled = false;
-        this.hasPendingElement = true;
-        this._pendingElement = x;
-        this.inHandler.onPush();
-      } catch (e) {
-        this.error(e);
-      }
+      this.hasBeenPulled = false;
+      this.hasPendingElement = true;
+      this._pendingElement = x;
+      this.inHandler.onPush();
     });
   }
 
@@ -217,11 +213,24 @@ class Wire {
 
   _asyncIfRequired(cb) {
     if (this._asyncRequired) {
-      setImmediate(cb);
+      setImmediate(() => {
+        try {
+          cb()
+        } catch (e) {
+          this.error(e);
+        }
+      });
     } else {
       this._asyncRequired = true;
-      cb();
-      this._asyncRequired = false;
+      try {
+        try {
+          cb()
+        } finally {
+          this._asyncRequired = false;
+        }
+      } catch (e) {
+        this.error(e);
+      }
     }
   }
 }

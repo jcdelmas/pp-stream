@@ -154,7 +154,7 @@ class Wire {
     this._asyncIfRequired(() => {
       this.closed = true;
       this.waitingForPush = false;
-      this.outHandler.onDownstreamFinish();
+      this.outHandler.onCancel();
     });
   }
 
@@ -202,7 +202,7 @@ class Wire {
     this._asyncIfRequired(() => {
       this.closed = true;
       this.hasBeenPulled = false;
-      this.inHandler.onUpstreamFinish();
+      this.inHandler.onComplete();
     });
   }
 
@@ -240,9 +240,9 @@ class Wire {
  */
 export class InHandler {
 
-  constructor({ onPush, onUpstreamFinish, onError } = {}) {
+  constructor({ onPush, onComplete, onError } = {}) {
     if (onPush) this.onPush = onPush;
-    if (onUpstreamFinish) this.onUpstreamFinish = onUpstreamFinish;
+    if (onComplete) this.onComplete = onComplete;
     if (onError) this.onError = onError;
   }
 
@@ -260,7 +260,7 @@ export class InHandler {
     throw new Error('Not implemented');
   }
 
-  onUpstreamFinish() {
+  onComplete() {
     throw new Error('Not implemented');
   }
 }
@@ -270,16 +270,16 @@ export class InHandler {
  */
 export class OutHandler {
 
-  constructor({ onPull, onDownstreamFinish } = {}) {
+  constructor({ onPull, onCancel } = {}) {
     if (onPull) this.onPull = onPull;
-    if (onDownstreamFinish) this.onUpstreamFinish = onDownstreamFinish;
+    if (onCancel) this.onComplete = onCancel;
   }
 
   onPull() {
     throw new Error('Not implemented');
   }
 
-  onDownstreamFinish() {
+  onCancel() {
     throw new Error('Not implemented');
   }
 }
@@ -336,12 +336,12 @@ export class Stage {
  */
 export class SimpleStage extends Stage {
 
-  constructor({ onPush, onPull, onUpstreamFinish, onDownstreamFinish, onError } = {}) {
+  constructor({ onPush, onPull, onComplete, onCancel, onError } = {}) {
     super();
     if (onPush) this.onPush = onPush.bind(this);
     if (onPull) this.onPull = onPull.bind(this);
-    if (onUpstreamFinish) this.onUpstreamFinish = onUpstreamFinish.bind(this);
-    if (onDownstreamFinish) this.onUpstreamFinish = onDownstreamFinish.bind(this);
+    if (onComplete) this.onComplete = onComplete.bind(this);
+    if (onCancel) this.onComplete = onCancel.bind(this);
     if (onError) this.onError = onError.bind(this);
   }
 
@@ -414,11 +414,11 @@ export class SimpleStage extends Stage {
     this.error(e);
   }
 
-  onUpstreamFinish() {
+  onComplete() {
     this.complete();
   }
 
-  onDownstreamFinish() {
+  onCancel() {
     this.cancel();
   }
 }
@@ -429,7 +429,7 @@ export class SourceStage extends SimpleStage {
     throw new Error('Not implemented');
   }
 
-  onDownstreamFinish() {
+  onCancel() {
     this.finished = true;
   }
 

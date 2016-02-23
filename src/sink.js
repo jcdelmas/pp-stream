@@ -66,7 +66,7 @@ class Reduce extends BasicSinkStage {
     this.acc = this.fn(this.acc, x);
   }
 
-  onUpstreamFinish() {
+  onComplete() {
     this.complete(this.acc);
   }
 }

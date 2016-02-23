@@ -274,7 +274,7 @@ class MapConcat extends SimpleStage {
     this._pushNextOrPull();
   }
 
-  onUpstreamFinish() {
+  onComplete() {
     if (!this.current) {
       this.complete();
     }
@@ -316,7 +316,7 @@ class Grouped extends SimpleStage {
     }
   }
 
-  onUpstreamFinish() {
+  onComplete() {
     if (this.buffer.length) {
       this.push(this.buffer);
     }
@@ -348,7 +348,7 @@ class Sliding extends SimpleStage {
     }
   }
 
-  onUpstreamFinish() {
+  onComplete() {
     if (this.pendingData) {
       this.push(this.buffer);
     }
@@ -401,7 +401,7 @@ export class Concat extends Stage {
       onPush: () => {
         this.outputs[0].push(this.inputs[index].grab())
       },
-      onUpstreamFinish: () => {
+      onComplete: () => {
         this.sourceIndex++;
         if (this.sourceIndex >= this.inputs.length) {
           this.outputs[0].complete();
@@ -419,7 +419,7 @@ export class Concat extends Stage {
     }
     return {
       onPull: () => this.inputs[this.sourceIndex].pull(),
-      onDownstreamFinish: () => this.inputs.slice(this.sourceIndex).forEach(input => input.cancel())
+      onCancel: () => this.inputs.slice(this.sourceIndex).forEach(input => input.cancel())
     };
   }
 }
@@ -439,7 +439,7 @@ export class Zip extends Stage {
           }
         }
       },
-      onUpstreamFinish: () => {
+      onComplete: () => {
         if (!this.finished && !this.inputs[index].isAvailable()) {
           this.finish();
         }
@@ -454,7 +454,7 @@ export class Zip extends Stage {
     }
     return {
       onPull: () => this.inputs.forEach(i => i.pull()),
-      onDownstreamFinish: () => this.cancelAll()
+      onCancel: () => this.cancelAll()
     };
   }
 

@@ -4,99 +4,34 @@
 export class Inlet {
 
   /**
-   * @param {OutHandler} handler
    * @param {Wire} wire
    */
-  constructor(handler, wire) {
-    this._handler = handler;
+  constructor(wire) {
     this._wire = wire;
   }
 
-  _available = false;
-  _hasBeenPulled = false;
-  _closed = false;
-  _pendingElement = null;
-
   isAvailable() {
-    return this._available;
+    return this._wire.hasPendingElement;
   }
 
   hasBeenPulled() {
-    return this._hasBeenPulled;
+    return this._wire.hasBeenPulled;
   }
 
   isClosed() {
-    return this._closed;
+    return this._wire.closed || this._wire.canceled;
   }
 
   grab() {
-    if (!this._available) {
-      throw new Error('No element available');
-    }
-    const el = this._pendingElement;
-    this._resetElement();
-    return el;
+    return this._wire.grab();
   }
 
   pull() {
-    if (this._hasBeenPulled) {
-      throw new Error('Input already pulled');
-    }
-    if (this._closed) {
-      throw new Error('Input closed');
-    }
-    if (this._outlet().isClosed()) {
-      return;
-    }
-    this._outlet()._onPull();
-    if (this._available) {
-      this._resetElement();
-    }
-    this._hasBeenPulled = true;
-    this._handler.onPull();
+    this._wire.pull();
   }
 
   cancel() {
-    if (this._closed) {
-      throw new Error('Input already closed');
-    }
-    if (this._outlet().isClosed()) {
-      return;
-    }
-    this._outlet()._onCancel();
-    if (this._available) {
-      this._resetElement();
-    }
-    this._closed = true;
-    this._available = false;
-    this._hasBeenPulled = false;
-    this._handler.onDownstreamFinish();
-  }
-
-  _pushCheck(x) {
-    if (!this._hasBeenPulled) {
-      throw new Error('Output not pulled');
-    }
-  }
-
-  _onPush(x) {
-    this._available = true;
-    this._hasBeenPulled = false;
-    this._pendingElement = x;
-  }
-
-  _onComplete() {
-    this._closed = true;
-    this._hasBeenPulled = false;
-  }
-
-  _outlet() {
-    return this._wire.in;
-  }
-
-  _resetElement() {
-    this._available = false;
-    this._pendingElement = null;
+    this._wire.cancel();
   }
 }
 
@@ -106,42 +41,22 @@ export class Inlet {
 export class Outlet {
 
   /**
-   * @param {InHandler} handler
    * @param {Wire} wire
    */
-  constructor(handler, wire) {
-    this._handler = handler;
+  constructor(wire) {
     this._wire = wire;
   }
 
-  _available = false;
-  _closed = false;
-
   isAvailable() {
-    return this._available;
+    return this._wire.waitingForPush;
   }
 
   isClosed() {
-    return this._closed;
+    return this._wire.closed || this._wire.completed;
   }
 
   push(x) {
-    if (!this._available) {
-      throw new Error('Output not available');
-    }
-    if (this._closed) {
-      throw new Error('Output closed');
-    }
-    this._inlet()._pushCheck();
-    this._available = false;
-    setImmediate(() => {
-      try {
-        this._inlet()._onPush(x);
-        this._handler.onPush();
-      } catch (e) {
-        this.error(e);
-      }
-    });
+    this._wire.push(x);
   }
 
   pushAndComplete(x) {
@@ -150,42 +65,11 @@ export class Outlet {
   }
 
   error(e) {
-    this._available = false;
-    setImmediate(() => {
-      this._handler.onError(e);
-    });
+    this._wire.error(e);
   }
 
   complete() {
-    if (this._closed) {
-      throw new Error('Output already closed');
-    }
-
-    this._available = false;
-    this._closed = true;
-    setImmediate(() => {
-      this._inlet()._onComplete();
-      this._handler.onUpstreamFinish();
-    });
-  }
-
-  _onPull() {
-    if (this._available) {
-      throw new Error('Input already pulled');
-    }
-    this._available = true;
-  }
-
-  _onCancel() {
-    if (this._closed) {
-      throw new Error('Input already closed');
-    }
-    this._available = false;
-    this._closed = true;
-  }
-
-  _inlet() {
-    return this._wire.out;
+    this._wire.complete();
   }
 }
 
@@ -207,8 +91,123 @@ class Wire {
    * @param {InHandler} inHandler
    */
   constructor(outHandler, inHandler) {
-    this.in = new Outlet(inHandler, this);
-    this.out = new Inlet(outHandler, this);
+    this.inHandler = inHandler;
+    this.outHandler = outHandler;
+    this.in = new Outlet(this);
+    this.out = new Inlet(this);
+  }
+
+  hasPendingElement = false;
+  waitingForPush = false;
+  hasBeenPulled = false;
+
+  completed = false;
+  canceled = false;
+  closed = false;
+
+  _pendingElement = null;
+
+  grab() {
+    if (!this.hasPendingElement) {
+      throw new Error('No element available');
+    }
+    const el = this._pendingElement;
+    this._resetElement();
+    return el;
+  }
+
+  pull() {
+    if (this.closed || this.canceled) {
+      throw new Error('Input closed');
+    }
+    if (this.hasBeenPulled) {
+      throw new Error('Input already pulled');
+    }
+    if (this.completed) {
+      return;
+    }
+    if (this.hasPendingElement) {
+      this._resetElement();
+    }
+    this.hasBeenPulled = true;
+
+    this.waitingForPush = true;
+    this.outHandler.onPull();
+  }
+
+  cancel() {
+    if (this.closed || this.canceled) {
+      throw new Error('Input already closed');
+    }
+    if (this.completed) {
+      return;
+    }
+    this.hasBeenPulled = false;
+    this.waitingForPush = false;
+    this.canceled = true;
+    this.closed = true;
+
+    if (this.hasPendingElement) {
+      this._resetElement();
+    }
+    this.outHandler.onDownstreamFinish();
+  }
+
+  push(x) {
+    if (this.closed || this.completed) {
+      throw new Error('Output closed');
+    }
+    if (!this.waitingForPush) {
+      throw new Error('Output not available');
+    }
+    if (this.canceled) {
+      return;
+    }
+    this.waitingForPush = false;
+    setImmediate(() => {
+      try {
+        this.hasBeenPulled = false;
+        this.hasPendingElement = true;
+        this._pendingElement = x;
+        this.inHandler.onPush();
+      } catch (e) {
+        this.error(e);
+      }
+    });
+  }
+
+  error(e) {
+    this.waitingForPush = false;
+    if (this.canceled) {
+      return;
+    }
+    this.waitingForPush = false;
+    setImmediate(() => {
+      this.hasBeenPulled = false;
+      this.inHandler.onError(e);
+    });
+  }
+
+  complete() {
+    if (this.completed || this.closed) {
+      throw new Error('Output already closed');
+    }
+    if (this.canceled) {
+      return;
+    }
+
+    this.waitingForPush = false;
+    this.completed = true;
+    setImmediate(() => {
+      this.closed = true;
+      this.hasBeenPulled = false;
+      this.inHandler.onUpstreamFinish();
+    });
+  }
+
+  _resetElement() {
+    this.hasPendingElement = false;
+    this._pendingElement = null;
   }
 }
 

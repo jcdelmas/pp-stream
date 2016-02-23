@@ -10,7 +10,17 @@ export default class Source extends FlowOps {
    * @returns {Source}
    */
   static from(items) {
-    return new Source(new ListSource(items));
+    let index = 0;
+    return Source.create({
+      onPull() {
+        if (index < items.length) {
+          this.push(items[index++]);
+        }
+        if (index == items.length) {
+          this.complete();
+        }
+      }
+    });
   }
 
   static create(methods) {
@@ -134,22 +144,5 @@ export default class Source extends FlowOps {
 
   _onSubscribe(input) {
     throw new Error('Not allowed on source');
-  }
-}
-
-class ListSource extends SourceStage {
-  constructor(items) {
-    super();
-    this.index = 0;
-    this.items = items;
-  }
-
-  onPull() {
-    if (this.index < this.items.length) {
-      this.push(this.items[this.index++]);
-    }
-    if (this.index == this.items.length) {
-      this.complete();
-    }
   }
 }

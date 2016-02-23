@@ -5,6 +5,10 @@ import RunnableGraph from './runnable-graph';
 
 export default class Source extends FlowOps {
 
+  static create(methods) {
+    return new Source(new SourceStage(methods));
+  }
+
   /**
    * @param items
    * @returns {Source}
@@ -21,10 +25,6 @@ export default class Source extends FlowOps {
         }
       }
     });
-  }
-
-  static create(methods) {
-    return new Source(new SourceStage(methods));
   }
 
   /**

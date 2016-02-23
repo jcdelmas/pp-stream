@@ -1,4 +1,4 @@
-import { Stage, SimpleStage, wire } from './stage';
+import { Stage, SimpleStage } from './stage';
 import Sink from './sink';
 import Graph from './graph';
 
@@ -219,8 +219,8 @@ export default class Flow extends FlowOps {
    */
   concat(source) {
     const concat = new Concat();
-    wire(this, concat);
-    wire(source, concat);
+    this._subscribe(concat);
+    source._subscribe(concat);
     return new Flow(this, concat);
   }
 
@@ -230,8 +230,8 @@ export default class Flow extends FlowOps {
    */
   zip(source) {
     const zip = new Zip();
-    wire(this, zip);
-    wire(source, zip);
+    this._subscribe(zip);
+    source._subscribe(zip);
     return new Flow(this, zip);
   }
 }

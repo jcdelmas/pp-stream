@@ -1,37 +1,23 @@
-import { wire } from './stage';
-
-/**
- * @interface StageInterface
- */
-
-/**
- * @function
- * @name GraphInterface#wireInput
- * @param {StageInterface}
- * @returns
- */
-
-/**
- * @function
- * @name GraphInterface#wireOutput
- * @param {StageInterface}
- * @returns
- */
-
 /**
  * @interface GraphInterface
  */
 
 /**
  * @function
- * @name GraphInterface#_nextOutput
- * @returns {OutHandler}
+ * @name GraphInterface#_subscribe
+ * @param {GraphInterface} subscriber
  */
 
 /**
  * @function
- * @name GraphInterface#_nextInput
+ * @name GraphInterface#_nextHandler
  * @returns {InHandler}
+ */
+
+/**
+ * @function
+ * @name GraphInterface#_onSubscribe
+ * @returns {Inlet}
  */
 
 /**
@@ -49,16 +35,20 @@ export default class Graph {
    * @param classConstructor
    */
   _wire(graph, classConstructor) {
-    wire(this, graph);
+    this._subscribe(graph);
     return new classConstructor(this, graph);
   }
 
-  _nextInput() {
-    return this._first._nextInput();
+  _subscribe(subscriber) {
+    return this._last._subscribe(subscriber);
   }
 
-  _nextOutput() {
-    return this._last._nextOutput();
+  _nextHandler() {
+    return this._first._nextHandler();
+  }
+
+  _onSubscribe(input) {
+    return this._first._onSubscribe(input);
   }
 
   _getLastStage() {

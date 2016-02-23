@@ -24,11 +24,15 @@ export default class RunnableGraph extends Graph {
     throw new Error('Wiring is not allowed for runnable graph');
   }
 
-  _nextInput() {
+  _subscribe(subscriber) {
     throw new Error('Not allowed on runnable graph');
   }
 
-  _nextOutput() {
+  _nextHandler() {
+    throw new Error('Not allowed on runnable graph');
+  }
+
+  _onSubscribe(input) {
     throw new Error('Not allowed on runnable graph');
   }
 

@@ -37,7 +37,7 @@ export default class Sink extends Graph {
     throw new Error('Wiring is not allowed on sink');
   }
 
-  _nextOutput() {
+  _subscribe(subscriber) {
     throw new Error('Not allowed on sink');
   }
 }

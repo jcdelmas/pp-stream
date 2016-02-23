@@ -1,4 +1,4 @@
-import { Stage, SourceStage, wire } from './stage';
+import { Stage, SourceStage } from './stage';
 import Flow, { FlowOps, Concat, Zip } from './flow';
 import Sink from './sink';
 import RunnableGraph from './runnable-graph';
@@ -40,7 +40,7 @@ export default class Source extends FlowOps {
    */
   static concat(...sources) {
     const concat = new Concat();
-    sources.forEach(s => wire(s, concat));
+    sources.forEach(s => s._subscribe(concat));
     return new Source(concat);
   }
 
@@ -50,7 +50,7 @@ export default class Source extends FlowOps {
    */
   static zip(...sources) {
     const zip = new Zip();
-    sources.forEach(s => wire(s, zip));
+    sources.forEach(s => s._subscribe(zip));
     return new Source(zip);
   }
 
@@ -113,8 +113,12 @@ export default class Source extends FlowOps {
     return this.to(sink).run();
   }
 
-  _nextInput() {
-    throw new Error('Not allowed on runnable graph');
+  _nextHandler() {
+    throw new Error('Not allowed on source');
+  }
+
+  _onSubscribe(input) {
+    throw new Error('Not allowed on source');
   }
 }
 

@@ -73,18 +73,6 @@ export class Outlet {
   }
 }
 
-/**
- * @param {GraphInterface} left
- * @param {GraphInterface} right
- */
-export function wire(left, right) {
-  const output = left._nextOutput();
-  const input = right._nextInput();
-  const wire = new Wire(output.handler, input.handler);
-  output.plug(wire.in);
-  input.plug(wire.out);
-}
-
 class Wire {
   /**
    * @param {OutHandler} outHandler
@@ -299,20 +287,19 @@ export class Stage {
    */
   outputs = [];
 
-  _nextInput() {
-    const index = this.inputs.length;
-    return {
-      handler: this.createInHandler(index),
-      plug: inlet => this.inputs.push(inlet)
-    };
+  _subscribe(subscriber) {
+    const index = this.outputs.length;
+    const wire = new Wire(this.createOutHandler(index), subscriber._nextHandler());
+    this.outputs.push(wire.in);
+    subscriber._onSubscribe(wire.out);
   }
 
-  _nextOutput() {
-    const index = this.outputs.length;
-    return {
-      handler: this.createOutHandler(index),
-      plug: outlet => this.outputs.push(outlet)
-    };
+  _nextHandler() {
+    return this.createInHandler(this.inputs.length);
+  }
+
+  _onSubscribe(input) {
+    this.inputs.push(input)
   }
 
   /**
@@ -341,7 +328,7 @@ export class SimpleStage extends Stage {
     if (onPush) this.onPush = onPush.bind(this);
     if (onPull) this.onPull = onPull.bind(this);
     if (onComplete) this.onComplete = onComplete.bind(this);
-    if (onCancel) this.onComplete = onCancel.bind(this);
+    if (onCancel) this.onCancel = onCancel.bind(this);
     if (onError) this.onError = onError.bind(this);
   }
 
@@ -421,6 +408,10 @@ export class SimpleStage extends Stage {
   onCancel() {
     this.cancel();
   }
+
+  nextSubscriber() {
+    throw new Error('Not allowed on simple stage');
+  }
 }
 
 export class SourceStage extends SimpleStage {
@@ -443,6 +434,14 @@ export class SourceStage extends SimpleStage {
 
   finish() {
     throw new Error('Not allowed');
+  }
+
+  _nextHandler() {
+    throw new Error('Not allowed on source');
+  }
+
+  _onSubscribe(input) {
+    throw new Error('Not allowed on source');
   }
 }
 
@@ -482,8 +481,8 @@ export class SinkStage extends SimpleStage {
     return this;
   }
 
-  _nextOutput(input) {
-    throw new Error('Cannot add output to sink stage');
+  _subscribe(subscriber) {
+    throw new Error('Not allowed on sink');
   }
 
   push() {

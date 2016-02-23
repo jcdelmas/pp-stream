@@ -330,6 +330,48 @@ export class Stage {
   }
 }
 
+export class FanInStage extends Stage {
+
+  createOutHandler(index) {
+    if (index > 0) {
+      throw new Error('Output already exist');
+    }
+    return this;
+  }
+
+  push(x) {
+    this.outputs[0].push(x);
+  }
+
+  pushAndComplete(x) {
+    this.outputs[0].pushAndComplete(x);
+  }
+
+  error(e) {
+    this.outputs[0].error(e);
+  }
+
+  complete() {
+    this.outputs[0].complete();
+  }
+
+  isOutputAvailable() {
+    return this.outputs[0].isAvailable();
+  }
+
+  isOutputClosed() {
+    return this.outputs[0].isClosed();
+  }
+
+  onPull() {
+    this.pull()
+  }
+
+  onCancel() {
+    this.cancel();
+  }
+}
+
 /**
  * @implements {InHandler}
  * @implements {OutHandler}
@@ -371,6 +413,26 @@ export class SimpleStage extends Stage {
     this.inputs[0].cancel();
   }
 
+  isInputAvailable() {
+    this.inputs[0].isAvailable();
+  }
+
+  isInputClosed() {
+    this.inputs[0].isClosed();
+  }
+
+  isInputHasBeenPulled() {
+    this.inputs[0].isInputHasBeenPulled();
+  }
+
+  cancel() {
+    this.inputs[0].cancel();
+  }
+
+  cancel() {
+    this.inputs[0].cancel();
+  }
+
   push(x) {
     this.outputs[0].push(x);
   }
@@ -385,6 +447,14 @@ export class SimpleStage extends Stage {
 
   complete() {
     this.outputs[0].complete();
+  }
+
+  isOutputAvailable() {
+    return this.outputs[0].isAvailable();
+  }
+
+  isOutputClosed() {
+    return this.outputs[0].isClosed();
   }
 
   /**

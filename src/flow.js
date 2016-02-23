@@ -426,8 +426,6 @@ export class Concat extends Stage {
 
 export class Zip extends Stage {
 
-  finished = false;
-
   createInHandler(index) {
     return {
       onPush: () => {
@@ -440,7 +438,7 @@ export class Zip extends Stage {
         }
       },
       onComplete: () => {
-        if (!this.finished && !this.inputs[index].isAvailable()) {
+        if (!this.outputs[0].isClosed() && !this.inputs[index].isAvailable()) {
           this.finish();
         }
       },
@@ -459,7 +457,6 @@ export class Zip extends Stage {
   }
 
   finish() {
-    this.finished = true;
     this.cancelAll();
     this.outputs[0].complete();
   }

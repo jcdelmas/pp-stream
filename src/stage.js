@@ -287,6 +287,19 @@ export class Stage {
    */
   outputs = [];
 
+  completeStage() {
+    this.cancelAll();
+    this.completeAll();
+  }
+
+  cancelAll() {
+    this.inputs.filter(input => !input.isClosed()).forEach(input => input.cancel());
+  }
+
+  completeAll() {
+    this.outputs.filter(output => !output.isClosed()).forEach(output => output.complete());
+  }
+
   _subscribe(subscriber) {
     const index = this.outputs.length;
     const wire = new Wire(this.createOutHandler(index), subscriber._nextHandler());
@@ -374,11 +387,6 @@ export class SimpleStage extends Stage {
     this.outputs[0].complete();
   }
 
-  finish() {
-    this.cancel();
-    this.complete();
-  }
-
   /**
    * @param item
    */
@@ -427,7 +435,7 @@ export class SourceStage extends SimpleStage {
     throw new Error('Not allowed');
   }
 
-  finish() {
+  completeStage() {
     throw new Error('Not allowed');
   }
 
@@ -455,12 +463,10 @@ export class SinkStage extends SimpleStage {
   }
 
   complete(result) {
+    if (!this.inputs[0].isClosed()) {
+      this.cancel();
+    }
     this.resolve(result);
-  }
-
-  finish(result) {
-    this.cancel();
-    this.complete(result);
   }
 
   error(e) {

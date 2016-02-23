@@ -369,7 +369,7 @@ class Take extends SimpleStage {
     if (this.count++ < this.nbr) {
       this.pull();
     } else {
-      this.finish();
+      this.completeStage();
     }
   }
 }
@@ -433,13 +433,13 @@ export class Zip extends Stage {
           this.outputs[0].push(this.inputs.map(i => i.grab()));
 
           if (this.inputs.some(i => i.isClosed())) {
-            this.finish();
+            this.completeStage();
           }
         }
       },
       onComplete: () => {
         if (!this.outputs[0].isClosed() && !this.inputs[index].isAvailable()) {
-          this.finish();
+          this.completeStage();
         }
       },
       onError: e => this.outputs[0].onError(e)
@@ -454,14 +454,5 @@ export class Zip extends Stage {
       onPull: () => this.inputs.forEach(i => i.pull()),
       onCancel: () => this.cancelAll()
     };
-  }
-
-  finish() {
-    this.cancelAll();
-    this.outputs[0].complete();
-  }
-
-  cancelAll() {
-    this.inputs.filter(input => !input.isClosed()).forEach(input => input.cancel());
   }
 }

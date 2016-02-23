@@ -51,6 +51,9 @@ export default class Graph {
     return this._first._onSubscribe(input);
   }
 
+  /**
+   * @returns {SinkStage}
+   */
   _getLastStage() {
     return this._last._getLastStage();
   }

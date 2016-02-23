@@ -1,4 +1,5 @@
-import { Stage, FanInStage, SimpleStage } from './stage';
+import { Stage, FanInStage, FanOutStage, SimpleStage, CompoundSinkStage } from './stage';
+import { Broadcast } from './fan-out';
 import Sink from './sink';
 import Graph from './graph';
 
@@ -233,6 +234,14 @@ export default class Flow extends FlowOps {
     this._subscribe(zip);
     source._subscribe(zip);
     return new Flow(this, zip);
+  }
+
+  /**
+   * @param {Sink...} sinks
+   * @returns {Sink}
+   */
+  broadcast(...sinks) {
+    return this.to(Sink.broadcast(...sinks));
   }
 }
 

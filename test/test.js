@@ -35,7 +35,7 @@ describe('Source', () => {
   });
 });
 
-describe('FlowOps', () => {
+describe('Flow stages', () => {
   it('map', async () => {
     const result = await Source.from([1, 2, 3]).map(x => x + 1).toList();
     result.should.be.eql([2, 3, 4]);
@@ -80,8 +80,9 @@ describe('FlowOps', () => {
     const result = await Source.from([1, 2]).drop(4).toList();
     result.should.be.eql([]);
   });
+});
 
-  // Fan in ops
+describe('Fan in stages', () => {
   describe('concat', () => {
     it('with source', async () => {
       const result = await Source.from([1, 2]).concat(Source.from([3, 4])).toList();
@@ -138,7 +139,42 @@ describe('FlowOps', () => {
   });
 });
 
-describe('Flow', () => {
+describe('Fan out stages', () => {
+  describe('broadcast', () => {
+    it('with source', async () => {
+      const result = await Source.from([1, 2, 3]).broadcast(
+        Flow.map(x => x + 1).to(Sink.toList()),
+        Flow.map(x => x + 2).to(Sink.toList())
+      ).run();
+      result.should.be.eql([[2, 3, 4], [3, 4, 5]]);
+    });
+    it('with early cancel', async () => {
+      const result = await Source.from([1, 2, 3]).broadcast(
+        Flow.take(2).to(Sink.toList()),
+        Flow.map(x => x + 1).to(Sink.toList())
+      ).run();
+      result.should.be.eql([[1, 2], [2, 3, 4]]);
+    });
+    it('with flow', async () => {
+      const sink = Flow.map(x => x + 1).broadcast(
+        Flow.map(x => x + 1).to(Sink.toList()),
+        Flow.map(x => x + 2).to(Sink.toList())
+      );
+      const result = await Source.from([1, 2, 3]).runWith(sink);
+      result.should.be.eql([[3, 4, 5], [4, 5, 6]]);
+    });
+    it('with sink', async () => {
+      const sink = Sink.broadcast(
+        Flow.map(x => x + 1).to(Sink.toList()),
+        Flow.map(x => x + 2).to(Sink.toList())
+      );
+      const result = await Source.from([1, 2, 3]).map(x => x + 1).runWith(sink);
+      result.should.be.eql([[3, 4, 5], [4, 5, 6]]);
+    });
+  });
+});
+
+describe('routing', () => {
   it('simple', async () => {
     const result = await Source.from([1, 2, 3]).via(Flow.map(x => x + 1)).toList();
     result.should.be.eql([2, 3, 4]);

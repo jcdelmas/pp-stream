@@ -372,6 +372,59 @@ export class FanInStage extends Stage {
   }
 }
 
+export class FanOutStage extends Stage {
+
+  createInHandler(index) {
+    if (index > 0) {
+      throw new Error('Input already exist');
+    }
+    return this;
+  }
+
+  grab() {
+    return this.inputs[0].grab();
+  }
+
+  pull() {
+    this.inputs[0].pull();
+  }
+
+  cancel() {
+    this.inputs[0].cancel();
+  }
+
+  isInputAvailable() {
+    this.inputs[0].isAvailable();
+  }
+
+  isInputClosed() {
+    this.inputs[0].isClosed();
+  }
+
+  isInputHasBeenPulled() {
+    this.inputs[0].isInputHasBeenPulled();
+  }
+
+  onPush() {
+    this.push(this.grab());
+  }
+
+  /**
+   * @param {Error} e
+   */
+  onError(e) {
+    this.outputs[0].error(e);
+  }
+
+  onComplete() {
+    this.completeAll();
+  }
+
+  nextSubscriber() {
+    throw new Error('Not allowed on simple stage');
+  }
+}
+
 /**
  * @implements {InHandler}
  * @implements {OutHandler}
@@ -546,5 +599,25 @@ export class SinkStage extends SimpleStage {
 
   push() {
     throw new Error('Not allowed');
+  }
+}
+
+export class CompoundSinkStage extends SinkStage {
+
+  /**
+   *
+   * @param {SinkStage[]} sinks
+   */
+  constructor(sinks) {
+    super();
+    this.sinks = sinks;
+  }
+
+  pull() {
+    this.sinks.forEach(s => s.pull());
+  }
+
+  _getResult() {
+    return Promise.all(this.sinks.map(s => s._getResult()));
   }
 }

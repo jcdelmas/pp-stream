@@ -12,9 +12,17 @@ describe('Source', () => {
     const result = await Source.from([1, 2, 3]).toList();
     result.should.be.eql([1, 2, 3]);
   });
+  it('empty', async () => {
+    const result = await Source.empty().toList();
+    result.should.be.eql([]);
+  });
   it('single', async () => {
     const result = await Source.single(5).toList();
     result.should.be.eql([5]);
+  });
+  it('repeat', async () => {
+    const result = await Source.repeat(7).take(3).toList();
+    result.should.be.eql([7, 7, 7]);
   });
   it('forEach', async () => {
     const xs = [];
@@ -24,10 +32,6 @@ describe('Source', () => {
   it('to', async () => {
     const result = await Source.from([1, 2, 3]).to(Sink.toList()).run();
     result.should.be.eql([1, 2, 3]);
-  });
-  it('empty', async () => {
-    const result = await Source.empty().toList();
-    result.should.be.eql([]);
   });
 });
 

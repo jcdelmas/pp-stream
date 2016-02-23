@@ -13,26 +13,41 @@ export default class Source extends FlowOps {
     return new Source(new ListSource(items));
   }
 
+  static create(methods) {
+    return new Source(new SourceStage(methods));
+  }
+
   /**
    * @returns {Source}
    */
   static empty() {
-    return new Source(new SourceStage({
+    return Source.create({
       onPull() {
         this.complete();
       }
-    }));
+    });
   }
 
   /**
    * @returns {Source}
    */
   static single(x) {
-    return new Source(new SourceStage({
+    return Source.create({
       onPull() {
         this.pushAndComplete(x);
       }
-    }));
+    });
+  }
+
+  /**
+   * @returns {Source}
+   */
+  static repeat(x) {
+    return Source.create({
+      onPull() {
+        this.push(x);
+      }
+    });
   }
 
   /**

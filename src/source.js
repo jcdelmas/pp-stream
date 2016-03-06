@@ -1,5 +1,4 @@
 import { Stage, SourceStage, CompoundSinkStage } from './stage';
-import { Broadcast } from './fan-out';
 import Flow, { FlowOps, Concat, Zip } from './flow';
 import Sink from './sink';
 import RunnableGraph from './runnable-graph';
@@ -110,6 +109,14 @@ export default class Source extends FlowOps {
    */
   broadcast(...sinks) {
     return this.to(Sink.broadcast(...sinks));
+  }
+
+  /**
+   * @param {Sink...} sinks
+   * @returns {RunnableGraph}
+   */
+  balance(...sinks) {
+    return this.to(Sink.balance(...sinks));
   }
 
   /**

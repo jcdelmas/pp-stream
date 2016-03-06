@@ -2,15 +2,9 @@ import { FanOutStage } from './stage';
 
 export class Broadcast extends FanOutStage {
 
-  started = false;
-
   createOutHandler(index) {
-    if (this.started) {
-      throw new Error('The graph is already started');
-    }
     return {
       onPull: () => {
-        this.started = true;
         this.pullIfReady();
       },
       onCancel: () => {
@@ -40,5 +34,42 @@ export class Broadcast extends FanOutStage {
 
   openOutputs() {
     return this.outputs.filter(output => !output.isClosed());
+  }
+}
+
+export class Balance extends FanOutStage {
+
+  createOutHandler(index) {
+    return {
+      onPull: () => {
+        if (!this.isInputHasBeenPulled()) {
+          this.pull();
+        }
+      },
+      onCancel: () => {
+        if (!this.openOutputs().length) {
+          this.cancel();
+        }
+      }
+    };
+  }
+
+  onPush() {
+    this.firstAvailableOutput().push(this.grab());
+    if (this.firstAvailableOutput()) {
+      this.pull();
+    }
+  }
+
+  onError(e) {
+    this.openOutputs().forEach(output => output.error(e));
+  }
+
+  openOutputs() {
+    return this.outputs.filter(output => !output.isClosed());
+  }
+
+  firstAvailableOutput() {
+    return this.outputs.find(output => output.isAvailable());
   }
 }

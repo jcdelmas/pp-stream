@@ -394,15 +394,15 @@ export class FanOutStage extends Stage {
   }
 
   isInputAvailable() {
-    this.inputs[0].isAvailable();
+    return this.inputs[0].isAvailable();
   }
 
   isInputClosed() {
-    this.inputs[0].isClosed();
+    return this.inputs[0].isClosed();
   }
 
   isInputHasBeenPulled() {
-    this.inputs[0].isInputHasBeenPulled();
+    return this.inputs[0].hasBeenPulled();
   }
 
   onPush() {

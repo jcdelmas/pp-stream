@@ -1,5 +1,4 @@
 import { Stage, FanInStage, FanOutStage, SimpleStage, CompoundSinkStage } from './stage';
-import { Broadcast } from './fan-out';
 import Sink from './sink';
 import Graph from './graph';
 
@@ -69,6 +68,14 @@ export class FlowOps extends Graph {
    */
   drop(n) {
     return this.via(new Drop(n));
+  }
+
+  /**
+   * @param {number} duration
+   * @returns {FlowOps}
+   */
+  delay(duration) {
+    return this.via(new Delay(duration));
   }
 
   /**
@@ -175,6 +182,14 @@ export default class Flow extends FlowOps {
   }
 
   /**
+   * @param {number} duration
+   * @returns {Flow}
+   */
+  static delay(duration) {
+    return new Flow(new Delay(duration));
+  }
+
+  /**
    * @param {Source|SourceStage} source
    * @returns {Flow}
    */
@@ -242,6 +257,14 @@ export default class Flow extends FlowOps {
    */
   broadcast(...sinks) {
     return this.to(Sink.broadcast(...sinks));
+  }
+
+  /**
+   * @param {Sink...} sinks
+   * @returns {Sink}
+   */
+  balance(...sinks) {
+    return this.to(Sink.balance(...sinks));
   }
 }
 
@@ -399,6 +422,42 @@ class Drop extends SimpleStage {
     } else {
       this.push(this.grab());
     }
+  }
+}
+
+export class Delay extends SimpleStage {
+
+  constructor(duration) {
+    super();
+    this.duration = duration;
+  }
+
+  currentTimeout = null;
+  pendingComplete = false;
+
+  onPush() {
+    this.currentTimeout = setTimeout(() => {
+      this.push(this.grab());
+      if (this.pendingComplete) {
+        this.complete();
+      }
+      this.currentTimeout = null;
+    }, this.duration);
+  }
+
+  onComplete() {
+    if (!this.currentTimeout) {
+      this.complete();
+    } else {
+      this.pendingComplete = true;
+    }
+  }
+
+  onCancel() {
+    if (this.currentTimeout) {
+      clearTimeout(this.currentTimeout);
+    }
+    this.cancel();
   }
 }
 

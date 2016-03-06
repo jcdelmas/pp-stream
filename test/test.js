@@ -172,6 +172,40 @@ describe('Fan out stages', () => {
       result.should.be.eql([[3, 4, 5], [4, 5, 6]]);
     });
   });
+
+  describe('balance', () => {
+    const DELAY = 50;
+    it('with source', async () => {
+      const result = await Source.from([1, 2, 3, 4]).balance(
+        Flow.delay(DELAY).to(Sink.toList()),
+        Flow.delay(DELAY).to(Sink.toList())
+      ).run();
+      result.should.be.eql([[1, 3], [2, 4]]);
+    });
+    it('with early cancel', async () => {
+      const result = await Source.from([1, 2, 3, 4]).balance(
+        Flow.take(1).delay(DELAY).to(Sink.toList()),
+        Flow.delay(DELAY).to(Sink.toList())
+      ).run();
+      result.should.be.eql([[1], [2, 3, 4]]);
+    });
+    it('with flow', async () => {
+      const sink = Flow.map(x => x + 1).balance(
+        Flow.delay(DELAY).to(Sink.toList()),
+        Flow.delay(DELAY).to(Sink.toList())
+      );
+      const result = await Source.from([1, 2, 3, 4]).runWith(sink);
+      result.should.be.eql([[2, 4], [3, 5]]);
+    });
+    it('with sink', async () => {
+      const sink = Sink.balance(
+        Flow.delay(DELAY).to(Sink.toList()),
+        Flow.delay(DELAY).to(Sink.toList())
+      );
+      const result = await Source.from([1, 2, 3, 4]).runWith(sink);
+      result.should.be.eql([[1, 3], [2, 4]]);
+    });
+  });
 });
 
 describe('routing', () => {

@@ -1,5 +1,5 @@
 import { Stage, SinkStage, CompoundSinkStage } from './stage';
-import { Broadcast } from './fan-out';
+import { Broadcast, Balance } from './fan-out';
 import Graph from './graph';
 
 export default class Sink extends Graph {
@@ -32,6 +32,16 @@ export default class Sink extends Graph {
    */
   static broadcast(...sinks) {
     const b = new Broadcast();
+    sinks.forEach(s => b._subscribe(s));
+    return new Sink(b, new CompoundSinkStage(sinks.map(s => s._getLastStage())));
+  }
+
+  /**
+   * @param {Sink...} sinks
+   * @returns {Sink}
+   */
+  static balance(...sinks) {
+    const b = new Balance();
     sinks.forEach(s => b._subscribe(s));
     return new Sink(b, new CompoundSinkStage(sinks.map(s => s._getLastStage())));
   }

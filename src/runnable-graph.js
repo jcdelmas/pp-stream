@@ -3,37 +3,25 @@ import { SinkStage } from './stage';
 
 export default class RunnableGraph extends Graph {
 
-  /**
-   * @param {Stage} first
-   * @param {SinkStage} last
-   */
-  constructor(first, last) {
-    super(first, last || first);
+  constructor(materializer) {
+    super(materializer);
   }
 
   /**
    * @returns {Promise}
    */
   run() {
-    const lastStage = this._getLastStage();
-    lastStage.pull();
-    return lastStage._getResult();
+    const promises = this._materialize().run();
+
+    if (promises.length > 1) {
+      return Promise.all(promises);
+    } else {
+      return promises[0];
+    }
   }
 
   _wire(graph, classConstructor) {
     throw new Error('Wiring is not allowed for runnable graph');
-  }
-
-  _subscribe(subscriber) {
-    throw new Error('Not allowed on runnable graph');
-  }
-
-  _nextHandler() {
-    throw new Error('Not allowed on runnable graph');
-  }
-
-  _onSubscribe(input) {
-    throw new Error('Not allowed on runnable graph');
   }
 
 }

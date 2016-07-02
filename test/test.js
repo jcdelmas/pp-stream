@@ -33,6 +33,14 @@ describe('Source', () => {
     const result = await Source.from([1, 2, 3]).to(Sink.toList()).run();
     result.should.be.eql([1, 2, 3]);
   });
+
+  it('no side effects', async () => {
+    const src = Source.from([1, 2, 3]);
+    const result1 = await src.toList();
+    const result2 = await src.toList();
+    result1.should.be.eql([1, 2, 3]);
+    result1.should.be.eql(result2);
+  });
 });
 
 describe('Flow stages', () => {

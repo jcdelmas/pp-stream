@@ -1,60 +1,35 @@
-/**
- * @interface GraphInterface
- */
 
-/**
- * @function
- * @name GraphInterface#_subscribe
- * @param {GraphInterface} subscriber
- */
+import Module from './module';
 
-/**
- * @function
- * @name GraphInterface#_nextHandler
- * @returns {InHandler}
- */
-
-/**
- * @function
- * @name GraphInterface#_onSubscribe
- * @returns {Inlet}
- */
-
-/**
- * @implements {GraphInterface}
- */
 export default class Graph {
 
-  constructor(first, last) {
-    this._first = first;
-    this._last = last || first;
+  /**
+   * @param materializer
+   */
+  constructor(materializer) {
+    if (typeof materializer !== 'function') {
+      throw new Error('Invalid materializer');
+    }
+    this._materializer = materializer;
   }
 
   /**
-   * @param {GraphInterface} graph
+   * @param {Graph} graph
    * @param classConstructor
    */
   _wire(graph, classConstructor) {
-    this._subscribe(graph);
-    return new classConstructor(this, graph);
-  }
-
-  _subscribe(subscriber) {
-    return this._last._subscribe(subscriber);
-  }
-
-  _nextHandler() {
-    return this._first._nextHandler();
-  }
-
-  _onSubscribe(input) {
-    return this._first._onSubscribe(input);
+    if (!(graph instanceof Graph)) {
+      throw new Error('Invalid graph argument: ' + graph);
+    }
+    return new classConstructor(() => {
+      return this._materialize().wire(graph._materialize())
+    });
   }
 
   /**
-   * @returns {SinkStage}
+   * @returns {Module}
    */
-  _getLastStage() {
-    return this._last._getLastStage();
+  _materialize() {
+    return this._materializer();
   }
 }

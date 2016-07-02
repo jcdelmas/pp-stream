@@ -1,20 +1,22 @@
 import { Stage, SinkStage, CompoundSinkStage } from './stage';
 import { Broadcast, Balance } from './fan-out';
 import Graph from './graph';
+import Module from './module';
+import _ from 'lodash';
 
 export default class Sink extends Graph {
 
   /**
-   * @param {Stage} first
-   * @param {SinkStage?} last
+   * @param stageProvider
+   * @returns {Sink}
+   * @private
    */
-  constructor(first, last) {
-    super(first, last || first);
+  static _simple(stageProvider) {
+    return new Sink(() => Module.simpleSink(stageProvider()))
   }
 
   static create(stageMethods) {
-    const stage = new SinkStage(stageMethods);
-    return new Sink(stage);
+    return Sink._simple(() => new SinkStage(stageMethods));
   }
 
   static forEach(cb) {
@@ -31,9 +33,10 @@ export default class Sink extends Graph {
    * @returns {Sink}
    */
   static broadcast(...sinks) {
-    const b = new Broadcast();
-    sinks.forEach(s => b._subscribe(s));
-    return new Sink(b, new CompoundSinkStage(sinks.map(s => s._getLastStage())));
+    return new Sink(() => {
+      return Module.simpleFlow(new Broadcast())
+        .wire(Module.merge(...sinks.map(s => s._materialize())));
+    });
   }
 
   /**
@@ -41,25 +44,26 @@ export default class Sink extends Graph {
    * @returns {Sink}
    */
   static balance(...sinks) {
-    const b = new Balance();
-    sinks.forEach(s => b._subscribe(s));
-    return new Sink(b, new CompoundSinkStage(sinks.map(s => s._getLastStage())));
+    return new Sink(() => {
+      return Module.simpleFlow(new Balance())
+        .wire(Module.merge(...sinks.map(s => s._materialize())));
+    });
   }
 
   static reduce(fn, zero) {
-    return new Sink(new Reduce(fn, zero));
+    return Sink._simple(() => new Reduce(fn, zero));
   }
 
   static toList() {
     return Sink.reduce((xs, x) => xs.concat([x]), []);
   }
 
-  _wire(graph, classConstructor) {
-    throw new Error('Wiring is not allowed on sink');
+  constructor(materializer) {
+    super(materializer);
   }
 
-  _subscribe(subscriber) {
-    throw new Error('Not allowed on sink');
+  _wire(graph, classConstructor) {
+    throw new Error('Wiring is not allowed on sink');
   }
 }
 

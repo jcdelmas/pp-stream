@@ -1,12 +1,17 @@
 import { Stage, SourceStage, CompoundSinkStage } from './stage';
 import Flow, { FlowOps, Concat, Zip } from './flow';
 import Sink from './sink';
+import Module from './module';
 import RunnableGraph from './runnable-graph';
 
 export default class Source extends FlowOps {
 
+  static _simple(stageProvider) {
+    return new Source(() => Module.simpleSource(stageProvider()))
+  }
+
   static create(methods) {
-    return new Source(new SourceStage(methods));
+    return Source._simple(() => new SourceStage(methods));
   }
 
   /**
@@ -14,17 +19,7 @@ export default class Source extends FlowOps {
    * @returns {Source}
    */
   static from(items) {
-    let index = 0;
-    return Source.create({
-      onPull() {
-        if (index < items.length) {
-          this.push(items[index++]);
-        }
-        if (index == items.length) {
-          this.complete();
-        }
-      }
-    });
+    return Source._simple(() => new ArraySourceStage(items));
   }
 
   /**
@@ -64,9 +59,10 @@ export default class Source extends FlowOps {
    * @param {Source[]} sources
    */
   static concat(...sources) {
-    const concat = new Concat();
-    sources.forEach(s => s._subscribe(concat));
-    return new Source(concat);
+    return new Source(() => {
+      return Module.merge(...sources.map(s => s._materialize()))
+        .wire(Module.simpleFlow(new Concat()));
+    });
   }
 
   /**
@@ -74,17 +70,14 @@ export default class Source extends FlowOps {
    * @returns {Source}
    */
   static zip(...sources) {
-    const zip = new Zip();
-    sources.forEach(s => s._subscribe(zip));
-    return new Source(zip);
+    return new Source(() => {
+      return Module.merge(...sources.map(s => s._materialize()))
+        .wire(Module.simpleFlow(new Zip()));
+    });
   }
 
-  /**
-   * @param {Stage} first
-   * @param {Stage?} last
-   */
-  constructor(first, last) {
-    super(first, last || first);
+  constructor(materializer) {
+    super(materializer);
   }
 
   /**
@@ -120,7 +113,7 @@ export default class Source extends FlowOps {
   }
 
   /**
-   * @param {GraphInterface} flow
+   * @param {Flow} flow
    * @returns {Source}
    */
   via(flow) {
@@ -128,7 +121,7 @@ export default class Source extends FlowOps {
   }
 
   /**
-   * @param {Sink|GraphInterface} sink
+   * @param {Sink} sink
    * @returns {RunnableGraph}
    */
   to(sink) {
@@ -160,5 +153,24 @@ export default class Source extends FlowOps {
 
   _onSubscribe(input) {
     throw new Error('Not allowed on source');
+  }
+}
+
+class ArraySourceStage extends SourceStage {
+
+  index = 0;
+
+  constructor(items) {
+    super();
+    this.items = items;
+  }
+
+  onPull() {
+    if (this.index < this.items.length) {
+      this.push(this.items[this.index++]);
+    }
+    if (this.index == this.items.length) {
+      this.complete();
+    }
   }
 }

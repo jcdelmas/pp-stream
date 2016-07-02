@@ -1,8 +1,13 @@
 import { Stage, FanInStage, FanOutStage, SimpleStage, CompoundSinkStage } from './stage';
 import Sink from './sink';
 import Graph from './graph';
+import Module from './module';
 
 export class FlowOps extends Graph {
+
+  constructor(materializer) {
+    super(materializer);
+  }
 
   /**
    * @param fn
@@ -26,7 +31,7 @@ export class FlowOps extends Graph {
    * @returns {FlowOps}
    */
   scan(fn, zero) {
-    return this.via(new Scan(fn, zero));
+    return this._viaStage(() => new Scan(fn, zero));
   }
 
   /**
@@ -34,7 +39,7 @@ export class FlowOps extends Graph {
    * @returns {FlowOps}
    */
   mapConcat(fn) {
-    return this.via(new MapConcat(fn));
+    return this._viaStage(() => new MapConcat(fn));
   }
 
   /**
@@ -42,7 +47,7 @@ export class FlowOps extends Graph {
    * @returns {FlowOps}
    */
   grouped(n) {
-    return this.via(new Grouped(n));
+    return this._viaStage(() => new Grouped(n));
   }
 
   /**
@@ -51,7 +56,7 @@ export class FlowOps extends Graph {
    * @returns {FlowOps}
    */
   sliding(n, step = 1) {
-    return this.via(new Sliding(n, step));
+    return this._viaStage(() => new Sliding(n, step));
   }
 
   /**
@@ -59,7 +64,7 @@ export class FlowOps extends Graph {
    * @returns {FlowOps}
    */
   take(n) {
-    return this.via(new Take(n));
+    return this._viaStage(() => new Take(n));
   }
 
   /**
@@ -67,7 +72,7 @@ export class FlowOps extends Graph {
    * @returns {FlowOps}
    */
   drop(n) {
-    return this.via(new Drop(n));
+    return this._viaStage(() => new Drop(n));
   }
 
   /**
@@ -75,7 +80,7 @@ export class FlowOps extends Graph {
    * @returns {FlowOps}
    */
   delay(duration) {
-    return this.via(new Delay(duration));
+    return this._viaStage(() => new Delay(duration));
   }
 
   /**
@@ -85,21 +90,28 @@ export class FlowOps extends Graph {
   via(flow) {
     throw new Error('Not implemented');
   }
+
+  _viaStage(stageProvider) {
+    return this.via(Flow._simple(stageProvider))
+  }
 }
 
 export default class Flow extends FlowOps {
+
+  static _simple(stageProvider) {
+    return new Flow(() => Module.simpleFlow(stageProvider()))
+  }
 
   /**
    * @param stageMethods
    * @returns {Flow}
    */
   static create(stageMethods) {
-    const stage = new SimpleStage(stageMethods);
-    return new Flow(stage);
+    return Flow._simple(() => new SimpleStage(stageMethods));
   }
 
   static empty() {
-    return new Flow(new SimpleStage());
+    return Flow._simple(() => new SimpleStage());
   }
 
   /**
@@ -137,7 +149,7 @@ export default class Flow extends FlowOps {
    * @returns {Flow}
    */
   static scan(fn, zero) {
-    return new Flow(new Scan(fn, zero));
+    return Flow._simple(() => new Scan(fn, zero));
   }
 
   /**
@@ -145,7 +157,7 @@ export default class Flow extends FlowOps {
    * @returns {Flow}
    */
   static mapConcat(fn) {
-    return new Flow(new MapConcat(fn));
+    return Flow._simple(() => new MapConcat(fn));
   }
 
   /**
@@ -153,7 +165,7 @@ export default class Flow extends FlowOps {
    * @returns {Flow}
    */
   static grouped(n) {
-    return new Flow(new Grouped(n));
+    return Flow._simple(() => new Grouped(n));
   }
 
   /**
@@ -162,7 +174,7 @@ export default class Flow extends FlowOps {
    * @returns {Flow}
    */
   static sliding(n, step = 1) {
-    return new Flow(new Sliding(n, step));
+    return Flow._simple(() => new Sliding(n, step));
   }
 
   /**
@@ -170,7 +182,7 @@ export default class Flow extends FlowOps {
    * @returns {Flow}
    */
   static take(n) {
-    return new Flow(new Take(n));
+    return Flow._simple(() => new Take(n));
   }
 
   /**
@@ -178,7 +190,7 @@ export default class Flow extends FlowOps {
    * @returns {Flow}
    */
   static drop(n) {
-    return new Flow(new Drop(n));
+    return Flow._simple(() => new Drop(n));
   }
 
   /**
@@ -186,7 +198,7 @@ export default class Flow extends FlowOps {
    * @returns {Flow}
    */
   static delay(duration) {
-    return new Flow(new Delay(duration));
+    return Flow._simple(() => new Delay(duration));
   }
 
   /**
@@ -194,7 +206,12 @@ export default class Flow extends FlowOps {
    * @returns {Flow}
    */
   static concat(source) {
-    return Flow.empty().concat(source);
+    return new Flow(() => {
+      return Module.merge(
+        Module.simpleFlow(new SimpleStage()),
+        source._materialize()
+      ).wire(Module.simpleFlow(new Concat()));
+    });
   }
 
   /**
@@ -202,19 +219,20 @@ export default class Flow extends FlowOps {
    * @returns {Flow}
    */
   static zip(source) {
-    return Flow.empty().zip(source);
+    return new Flow(() => {
+      return Module.merge(
+        Module.simpleFlow(new SimpleStage()),
+        source._materialize()
+      ).wire(Module.simpleFlow(new Zip()));
+    });
+  }
+
+  constructor(materializer) {
+    super(materializer);
   }
 
   /**
-   * @param {GraphInterface} first
-   * @param {GraphInterface?} last
-   */
-  constructor(first, last) {
-    super(first, last || first);
-  }
-
-  /**
-   * @param {Flow|Stage} flow
+   * @param {Flow} flow
    * @returns {Flow}
    */
   via(flow) {
@@ -222,7 +240,7 @@ export default class Flow extends FlowOps {
   }
 
   /**
-   * @param {Sink|Stage} sink
+   * @param {Sink} sink
    * @returns {Sink}
    */
   to(sink) {
@@ -230,25 +248,19 @@ export default class Flow extends FlowOps {
   }
 
   /**
-   * @param {Source|SourceStage} source
+   * @param {Source} source
    * @returns {Flow}
    */
   concat(source) {
-    const concat = new Concat();
-    this._subscribe(concat);
-    source._subscribe(concat);
-    return new Flow(this, concat);
+    return this.via(Flow.concat(source));
   }
 
   /**
-   * @param {Source|SourceStage} source
+   * @param {Source} source
    * @returns {Flow}
    */
   zip(source) {
-    const zip = new Zip();
-    this._subscribe(zip);
-    source._subscribe(zip);
-    return new Flow(this, zip);
+    return this.via(Flow.zip(source));
   }
 
   /**

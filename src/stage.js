@@ -272,9 +272,6 @@ export class OutHandler {
   }
 }
 
-/**
- * @implements {GraphInterface}
- */
 export class Stage {
 
   /**
@@ -300,6 +297,9 @@ export class Stage {
     this.outputs.filter(output => !output.isClosed()).forEach(output => output.complete());
   }
 
+  /**
+   * @param {Stage} subscriber
+   */
   _subscribe(subscriber) {
     const index = this.outputs.length;
     const wire = new Wire(this.createOutHandler(index), subscriber._nextHandler());
@@ -307,10 +307,17 @@ export class Stage {
     subscriber._onSubscribe(wire.out);
   }
 
+  /**
+   * @returns {InHandler}
+   */
   _nextHandler() {
     return this.createInHandler(this.inputs.length);
   }
 
+  /**
+   * @param {Inlet} input
+   * @private
+   */
   _onSubscribe(input) {
     this.inputs.push(input)
   }

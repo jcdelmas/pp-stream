@@ -99,7 +99,7 @@ export class FlowOps extends Graph {
 export default class Flow extends FlowOps {
 
   static _simple(stageProvider) {
-    return new Flow(() => Module.simpleFlow(stageProvider()))
+    return new Flow(() => Module.flowStage(stageProvider()))
   }
 
   /**
@@ -208,9 +208,9 @@ export default class Flow extends FlowOps {
   static concat(source) {
     return new Flow(() => {
       return Module.merge(
-        Module.simpleFlow(new SimpleStage()),
+        Module.flowStage(new SimpleStage()),
         source._materialize()
-      ).wire(Module.simpleFlow(new Concat()));
+      ).wire(Module.flowStage(new Concat()));
     });
   }
 
@@ -221,9 +221,9 @@ export default class Flow extends FlowOps {
   static zip(source) {
     return new Flow(() => {
       return Module.merge(
-        Module.simpleFlow(new SimpleStage()),
+        Module.flowStage(new SimpleStage()),
         source._materialize()
-      ).wire(Module.simpleFlow(new Zip()));
+      ).wire(Module.flowStage(new Zip()));
     });
   }
 

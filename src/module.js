@@ -3,15 +3,15 @@ import _ from 'lodash';
 
 export default class Module {
 
-  static simpleSource(stage) {
+  static sourceStage(stage) {
     return new Module([], [stage], []);
   }
 
-  static simpleSink(stage) {
+  static sinkStage(stage) {
     return new Module([stage], [], [stage]);
   }
 
-  static simpleFlow(stage) {
+  static flowStage(stage) {
     return new Module([stage], [stage], []);
   }
 

@@ -7,7 +7,7 @@ import RunnableGraph from './runnable-graph';
 export default class Source extends FlowOps {
 
   static _simple(stageProvider) {
-    return new Source(() => Module.simpleSource(stageProvider()))
+    return new Source(() => Module.sourceStage(stageProvider()))
   }
 
   static create(methods) {
@@ -61,7 +61,7 @@ export default class Source extends FlowOps {
   static concat(...sources) {
     return new Source(() => {
       return Module.merge(...sources.map(s => s._materialize()))
-        .wire(Module.simpleFlow(new Concat()));
+        .wire(Module.flowStage(new Concat()));
     });
   }
 
@@ -72,7 +72,7 @@ export default class Source extends FlowOps {
   static zip(...sources) {
     return new Source(() => {
       return Module.merge(...sources.map(s => s._materialize()))
-        .wire(Module.simpleFlow(new Zip()));
+        .wire(Module.flowStage(new Zip()));
     });
   }
 

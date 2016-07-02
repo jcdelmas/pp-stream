@@ -12,7 +12,7 @@ export default class Sink extends Graph {
    * @private
    */
   static _simple(stageProvider) {
-    return new Sink(() => Module.simpleSink(stageProvider()))
+    return new Sink(() => Module.sinkStage(stageProvider()))
   }
 
   static create(stageMethods) {
@@ -34,7 +34,7 @@ export default class Sink extends Graph {
    */
   static broadcast(...sinks) {
     return new Sink(() => {
-      return Module.simpleFlow(new Broadcast())
+      return Module.flowStage(new Broadcast())
         .wire(Module.merge(...sinks.map(s => s._materialize())));
     });
   }
@@ -45,7 +45,7 @@ export default class Sink extends Graph {
    */
   static balance(...sinks) {
     return new Sink(() => {
-      return Module.simpleFlow(new Balance())
+      return Module.flowStage(new Balance())
         .wire(Module.merge(...sinks.map(s => s._materialize())));
     });
   }

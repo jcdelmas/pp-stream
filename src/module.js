@@ -22,9 +22,6 @@ export default class Module {
     return new Module(inputs, outputs, sinks);
   }
 
-  _inputIndex = 0;
-  _outputIndex = 0;
-
   /**
    * @param {Stage[]} inputs
    * @param {Stage[]} outputs

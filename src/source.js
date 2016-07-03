@@ -2,7 +2,7 @@ import { Stage, SourceStage, CompoundSinkStage } from './stage';
 import Flow, { FlowOps, Concat, Zip } from './flow';
 import Sink from './sink';
 import Module from './module';
-import RunnableGraph from './runnable-graph';
+import ClosedGraph from './closed-graph';
 
 export default class Source extends FlowOps {
 
@@ -98,7 +98,7 @@ export default class Source extends FlowOps {
 
   /**
    * @param {Sink...} sinks
-   * @returns {RunnableGraph}
+   * @returns {ClosedGraph}
    */
   broadcast(...sinks) {
     return this.to(Sink.broadcast(...sinks));
@@ -106,7 +106,7 @@ export default class Source extends FlowOps {
 
   /**
    * @param {Sink...} sinks
-   * @returns {RunnableGraph}
+   * @returns {ClosedGraph}
    */
   balance(...sinks) {
     return this.to(Sink.balance(...sinks));
@@ -122,10 +122,10 @@ export default class Source extends FlowOps {
 
   /**
    * @param {Sink} sink
-   * @returns {RunnableGraph}
+   * @returns {ClosedGraph}
    */
   to(sink) {
-    return this._wire(sink, RunnableGraph);
+    return this._wire(sink, ClosedGraph);
   }
 
   forEach(cb) {

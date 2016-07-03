@@ -1,7 +1,7 @@
 import Graph from './graph';
 import { SinkStage } from './stage';
 
-export default class RunnableGraph extends Graph {
+export default class ClosedGraph extends Graph {
 
   constructor(materializer) {
     super(materializer);

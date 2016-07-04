@@ -132,8 +132,8 @@ export default class Source extends FlowOps {
     return this.runWith(Sink.forEach(cb));
   }
 
-  toList() {
-    return this.runWith(Sink.toList());
+  toArray() {
+    return this.runWith(Sink.toArray());
   }
 
   reduce(fn, zero) {

@@ -54,7 +54,7 @@ export default class Sink extends Graph {
     return Sink._simple(() => new Reduce(fn, zero));
   }
 
-  static toList() {
+  static toArray() {
     return Sink.reduce((xs, x) => xs.concat([x]), []);
   }
 

@@ -371,7 +371,6 @@ export default class Stream {
    */
   filter(fn) {
     return this.pipe(Flow.filter(fn));
-    ;
   }
 
   /**

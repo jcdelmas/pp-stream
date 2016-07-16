@@ -16,12 +16,12 @@ import { Broadcast, Balance } from './fan-out';
 
 export const Source = {
 
-  _simple(stageProvider) {
+  create(stageProvider) {
     return new Stream(() => Module.sourceStage(stageProvider()))
   },
 
-  create(methods) {
-    return this._simple(() => new SourceStage(methods));
+  createSimple(methods) {
+    return this.create(() => new SourceStage(methods));
   },
 
   /**
@@ -29,14 +29,14 @@ export const Source = {
    * @returns {Stream}
    */
   from(items) {
-    return this._simple(() => new ArraySourceStage(items));
+    return this.create(() => new ArraySourceStage(items));
   },
 
   /**
    * @returns {Stream}
    */
   empty() {
-    return this.create({
+    return this.createSimple({
       onPull() {
         this.complete();
       }
@@ -47,7 +47,7 @@ export const Source = {
    * @returns {Stream}
    */
   single(x) {
-    return this.create({
+    return this.createSimple({
       onPull() {
         this.pushAndComplete(x);
       }
@@ -58,7 +58,7 @@ export const Source = {
    * @returns {Stream}
    */
   repeat(x) {
-    return this.create({
+    return this.createSimple({
       onPull() {
         this.push(x);
       }
@@ -102,7 +102,7 @@ export const Source = {
 
 export const Flow = {
 
-  _simple(stageProvider) {
+  create(stageProvider) {
     return new Stream(() => Module.flowStage(stageProvider()))
   },
 
@@ -110,12 +110,12 @@ export const Flow = {
    * @param stageMethods
    * @returns {Flow}
    */
-  create(stageMethods) {
-    return this._simple(() => new SimpleStage(stageMethods));
+  createSimple(stageMethods) {
+    return this.create(() => new SimpleStage(stageMethods));
   },
 
   empty() {
-    return this._simple(() => new SimpleStage());
+    return this.create(() => new SimpleStage());
   },
 
   /**
@@ -123,7 +123,7 @@ export const Flow = {
    * @returns {Flow}
    */
   map(fn) {
-    return this.create({
+    return this.createSimple({
       onPush() {
         this.push(fn(this.grab()))
       },
@@ -135,7 +135,7 @@ export const Flow = {
    * @returns {Flow}
    */
   filter(fn) {
-    return this.create({
+    return this.createSimple({
       onPush() {
         const x = this.grab();
         if (fn(x)) {
@@ -153,7 +153,7 @@ export const Flow = {
    * @returns {Flow}
    */
   scan(fn, zero) {
-    return this._simple(() => new Scan(fn, zero));
+    return this.create(() => new Scan(fn, zero));
   },
 
   /**
@@ -161,7 +161,7 @@ export const Flow = {
    * @returns {Flow}
    */
   mapConcat(fn) {
-    return this._simple(() => new MapConcat(fn));
+    return this.create(() => new MapConcat(fn));
   },
 
   /**
@@ -169,7 +169,7 @@ export const Flow = {
    * @returns {Flow}
    */
   grouped(n) {
-    return this._simple(() => new Grouped(n));
+    return this.create(() => new Grouped(n));
   },
 
   /**
@@ -178,7 +178,7 @@ export const Flow = {
    * @returns {Flow}
    */
   sliding(n, step = 1) {
-    return this._simple(() => new Sliding(n, step));
+    return this.create(() => new Sliding(n, step));
   },
 
   /**
@@ -186,7 +186,7 @@ export const Flow = {
    * @returns {Flow}
    */
   take(n) {
-    return this._simple(() => new Take(n));
+    return this.create(() => new Take(n));
   },
 
   /**
@@ -194,7 +194,7 @@ export const Flow = {
    * @returns {Flow}
    */
   drop(n) {
-    return this._simple(() => new Drop(n));
+    return this.create(() => new Drop(n));
   },
 
   /**
@@ -202,7 +202,7 @@ export const Flow = {
    * @returns {Flow}
    */
   delay(duration) {
-    return this._simple(() => new Delay(duration));
+    return this.create(() => new Delay(duration));
   },
 
   /**
@@ -245,21 +245,21 @@ export const Flow = {
 };
 
 export const Sink = {
+
   /**
    * @param stageProvider
    * @returns {Stream}
-   * @private
    */
-  _simple(stageProvider) {
+  create(stageProvider) {
     return new Stream(() => Module.sinkStage(stageProvider()))
   },
 
-  create(stageMethods) {
-    return this._simple(() => new SinkStage(stageMethods));
+  createSimple(stageMethods) {
+    return this.create(() => new SinkStage(stageMethods));
   },
 
   forEach(cb) {
-    return this.create({
+    return this.createSimple({
       onPush() {
         cb(this.grab());
         this.pull();
@@ -268,7 +268,7 @@ export const Sink = {
   },
 
   reduce(fn, zero) {
-    return this._simple(() => new Reduce(fn, zero));
+    return this.create(() => new Reduce(fn, zero));
   },
 
   toArray() {
@@ -307,21 +307,21 @@ export const FanIn = {
    * @return {Stream}
    */
   concat() {
-    return Flow._simple(() => new Concat());
+    return Flow.create(() => new Concat());
   },
 
   /**
    * @return {Stream}
    */
   merge() {
-    return Flow._simple(() => new Merge());
+    return Flow.create(() => new Merge());
   },
 
   /**
    * @return {Stream}
    */
   zip() {
-    return Flow._simple(() => new Zip());
+    return Flow.create(() => new Zip());
   },
 
   /**

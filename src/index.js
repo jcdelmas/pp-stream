@@ -1,6 +1,4 @@
-import Source from './source';
-import Flow from './flow';
-import Sink from './sink';
+
 import {
   Stage,
   SimpleStage,
@@ -10,10 +8,15 @@ import {
   InHandler
 } from './stage';
 
+import Stream, { Source, Flow, Sink, FanIn, FanOut } from './stream';
+
 export {
+  Stream,
   Source,
   Flow,
   Sink,
+  FanIn,
+  FanOut,
   Stage,
   SimpleStage,
   SourceStage,

@@ -4,7 +4,9 @@ import should from 'should';
 import {
   Source,
   Sink,
-  Flow
+  Flow,
+  FanIn,
+  FanOut
 } from '../src/index';
 
 describe('Source', () => {
@@ -30,7 +32,7 @@ describe('Source', () => {
     xs.should.be.eql([1, 2, 3]);
   });
   it('to', async () => {
-    const result = await Source.from([1, 2, 3]).to(Sink.toArray()).run();
+    const result = await Source.from([1, 2, 3]).pipe(Sink.toArray()).run();
     result.should.be.eql([1, 2, 3]);
   });
 
@@ -106,12 +108,12 @@ describe('Fan in stages', () => {
     });
 
     it('with flow', async () => {
-      const result = await Source.from([1, 2]).via(Flow.concat(Source.from([3, 4]))).toArray();
+      const result = await Source.from([1, 2]).pipe(Flow.concat(Source.from([3, 4]))).toArray();
       result.should.be.eql([1, 2, 3, 4]);
     });
 
     it('with flow 2', async () => {
-      const result = await Source.from([3, 4]).via(Flow.map(x => x - 2).concat(Source.from([3, 4]))).toArray();
+      const result = await Source.from([3, 4]).pipe(Flow.map(x => x - 2).concat(Source.from([3, 4]))).toArray();
       result.should.be.eql([1, 2, 3, 4]);
     });
   });
@@ -131,12 +133,12 @@ describe('Fan in stages', () => {
     });
 
     it('with flow', async () => {
-      const result = await Source.from([1, 2]).via(Flow.zip(Source.from([3, 4]))).toArray();
+      const result = await Source.from([1, 2]).pipe(Flow.zip(Source.from([3, 4]))).toArray();
       result.should.be.eql([[1, 3], [2, 4]]);
     });
 
     it('with flow 2', async () => {
-      const result = await Source.from([3, 4]).via(Flow.map(x => x - 2).zip(Source.from([3, 4]))).toArray();
+      const result = await Source.from([3, 4]).pipe(Flow.map(x => x - 2).zip(Source.from([3, 4]))).toArray();
       result.should.be.eql([[1, 3], [2, 4]]);
     });
 
@@ -151,30 +153,30 @@ describe('Fan out stages', () => {
   describe('broadcast', () => {
     it('with source', async () => {
       const result = await Source.from([1, 2, 3]).broadcast(
-        Flow.map(x => x + 1).to(Sink.toArray()),
-        Flow.map(x => x + 2).to(Sink.toArray())
+        Flow.map(x => x + 1).pipe(Sink.toArray()),
+        Flow.map(x => x + 2).pipe(Sink.toArray())
       ).run();
       result.should.be.eql([[2, 3, 4], [3, 4, 5]]);
     });
     it('with early cancel', async () => {
       const result = await Source.from([1, 2, 3]).broadcast(
-        Flow.take(2).to(Sink.toArray()),
-        Flow.map(x => x + 1).to(Sink.toArray())
+        Flow.take(2).pipe(Sink.toArray()),
+        Flow.map(x => x + 1).pipe(Sink.toArray())
       ).run();
       result.should.be.eql([[1, 2], [2, 3, 4]]);
     });
     it('with flow', async () => {
       const sink = Flow.map(x => x + 1).broadcast(
-        Flow.map(x => x + 1).to(Sink.toArray()),
-        Flow.map(x => x + 2).to(Sink.toArray())
+        Flow.map(x => x + 1).pipe(Sink.toArray()),
+        Flow.map(x => x + 2).pipe(Sink.toArray())
       );
       const result = await Source.from([1, 2, 3]).runWith(sink);
       result.should.be.eql([[3, 4, 5], [4, 5, 6]]);
     });
     it('with sink', async () => {
-      const sink = Sink.broadcast(
-        Flow.map(x => x + 1).to(Sink.toArray()),
-        Flow.map(x => x + 2).to(Sink.toArray())
+      const sink = FanOut.broadcast(
+        Flow.map(x => x + 1).pipe(Sink.toArray()),
+        Flow.map(x => x + 2).pipe(Sink.toArray())
       );
       const result = await Source.from([1, 2, 3]).map(x => x + 1).runWith(sink);
       result.should.be.eql([[3, 4, 5], [4, 5, 6]]);
@@ -185,30 +187,30 @@ describe('Fan out stages', () => {
     const DELAY = 50;
     it('with source', async () => {
       const result = await Source.from([1, 2, 3, 4]).balance(
-        Flow.delay(DELAY).to(Sink.toArray()),
-        Flow.delay(DELAY).to(Sink.toArray())
+        Flow.delay(DELAY).pipe(Sink.toArray()),
+        Flow.delay(DELAY).pipe(Sink.toArray())
       ).run();
       result.should.be.eql([[1, 3], [2, 4]]);
     });
     it('with early cancel', async () => {
       const result = await Source.from([1, 2, 3, 4]).balance(
-        Flow.take(1).delay(DELAY).to(Sink.toArray()),
-        Flow.delay(DELAY).to(Sink.toArray())
+        Flow.take(1).delay(DELAY).pipe(Sink.toArray()),
+        Flow.delay(DELAY).pipe(Sink.toArray())
       ).run();
       result.should.be.eql([[1], [2, 3, 4]]);
     });
     it('with flow', async () => {
       const sink = Flow.map(x => x + 1).balance(
-        Flow.delay(DELAY).to(Sink.toArray()),
-        Flow.delay(DELAY).to(Sink.toArray())
+        Flow.delay(DELAY).pipe(Sink.toArray()),
+        Flow.delay(DELAY).pipe(Sink.toArray())
       );
       const result = await Source.from([1, 2, 3, 4]).runWith(sink);
       result.should.be.eql([[2, 4], [3, 5]]);
     });
     it('with sink', async () => {
-      const sink = Sink.balance(
-        Flow.delay(DELAY).to(Sink.toArray()),
-        Flow.delay(DELAY).to(Sink.toArray())
+      const sink = FanOut.balance(
+        Flow.delay(DELAY).pipe(Sink.toArray()),
+        Flow.delay(DELAY).pipe(Sink.toArray())
       );
       const result = await Source.from([1, 2, 3, 4]).runWith(sink);
       result.should.be.eql([[1, 3], [2, 4]]);
@@ -218,18 +220,18 @@ describe('Fan out stages', () => {
 
 describe('routing', () => {
   it('simple', async () => {
-    const result = await Source.from([1, 2, 3]).via(Flow.map(x => x + 1)).toArray();
+    const result = await Source.from([1, 2, 3]).pipe(Flow.map(x => x + 1)).toArray();
     result.should.be.eql([2, 3, 4]);
   });
   it('complex', async () => {
     const result = await Source.from([1, 2, 3, 4, 5])
-      .via(Flow.filter(x => x > 2).map(x => x - 1))
+      .pipe(Flow.filter(x => x > 2).map(x => x - 1))
       .toArray();
     result.should.be.eql([2, 3, 4]);
   });
   it('with Sink', async () => {
     const result = await Source.from([1, 2, 3])
-      .runWith(Flow.map(x => x + 1).to(Sink.toArray()));
+      .runWith(Flow.map(x => x + 1).pipe(Sink.toArray()));
     result.should.be.eql([2, 3, 4]);
   });
 });

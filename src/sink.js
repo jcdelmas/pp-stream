@@ -1,73 +1,6 @@
-import { Stage, SinkStage, CompoundSinkStage } from './stage';
-import { Broadcast, Balance } from './fan-out';
-import Graph from './graph';
-import Module from './module';
-import _ from 'lodash';
+import { SinkStage } from './stage';
 
-export default class Sink extends Graph {
-
-  /**
-   * @param stageProvider
-   * @returns {Sink}
-   * @private
-   */
-  static _simple(stageProvider) {
-    return new Sink(() => Module.sinkStage(stageProvider()))
-  }
-
-  static create(stageMethods) {
-    return Sink._simple(() => new SinkStage(stageMethods));
-  }
-
-  static forEach(cb) {
-    return Sink.create({
-      onPush() {
-        cb(this.grab());
-        this.pull();
-      }
-    });
-  }
-
-  /**
-   * @param {Sink...} sinks
-   * @returns {Sink}
-   */
-  static broadcast(...sinks) {
-    return new Sink(() => {
-      return Module.flowStage(new Broadcast())
-        .wire(Module.merge(...sinks.map(s => s._materialize())));
-    });
-  }
-
-  /**
-   * @param {Sink...} sinks
-   * @returns {Sink}
-   */
-  static balance(...sinks) {
-    return new Sink(() => {
-      return Module.flowStage(new Balance())
-        .wire(Module.merge(...sinks.map(s => s._materialize())));
-    });
-  }
-
-  static reduce(fn, zero) {
-    return Sink._simple(() => new Reduce(fn, zero));
-  }
-
-  static toArray() {
-    return Sink.reduce((xs, x) => xs.concat([x]), []);
-  }
-
-  constructor(materializer) {
-    super(materializer);
-  }
-
-  _wire(graph, classConstructor) {
-    throw new Error('Wiring is not allowed on sink');
-  }
-}
-
-class BasicSinkStage extends SinkStage {
+export class BasicSinkStage extends SinkStage {
 
   onPush() {
     this.onNext(this.grab());
@@ -79,7 +12,7 @@ class BasicSinkStage extends SinkStage {
   }
 }
 
-class Reduce extends BasicSinkStage {
+export class Reduce extends BasicSinkStage {
 
   constructor(fn, zero) {
     super();

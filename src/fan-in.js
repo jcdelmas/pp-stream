@@ -30,6 +30,48 @@ export class Concat extends FanInStage {
   }
 }
 
+export class Merge extends FanInStage {
+
+  completedInputs = 0;
+
+  createInHandler(index) {
+    return {
+      onPush: () => {
+        if (this.isOutputAvailable()) {
+          this.push(this.inputs[index].grab())
+        }
+      },
+      onComplete: () => {
+        this.completedInputs++;
+        if (this.completedInputs >= this.inputs.length) {
+          this.complete();
+        }
+      },
+      onError: e => this.error(e)
+    };
+  }
+
+  onPull() {
+    const availableInput = this.inputs.find(input => input.isAvailable());
+    if (availableInput) {
+      this.push(availableInput.grab());
+      if (!availableInput.isClosed()) {
+        availableInput.pull();
+      }
+    } else {
+      this.inputs.forEach(input => {
+        if (!input.hasBeenPulled() && !input.isClosed()) {
+          input.pull();
+        }
+      });
+    }
+  }
+
+  onCancel() {
+    this.inputs.slice(this.sourceIndex).forEach(input => input.cancel());
+  }
+}
+
 export class Zip extends FanInStage {
 
   createInHandler(index) {

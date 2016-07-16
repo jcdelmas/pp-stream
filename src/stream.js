@@ -11,7 +11,7 @@ import {
   Take
 } from './flow';
 import { Reduce } from './sink';
-import { Concat, Zip } from './fan-in';
+import { Concat, Merge, Zip } from './fan-in';
 import { Broadcast, Balance } from './fan-out';
 
 export const Source = {
@@ -66,24 +66,37 @@ export const Source = {
   },
 
   /**
-   * @param {Source[]} sources
+   * @param stageFactory
+   * @param {Stream[]} sources
+   * @private
    */
-  concat(...sources) {
+  _fanInSource(stageFactory, sources) {
     return new Stream(() => {
       return Module.merge(...sources.map(s => s._materialize()))
-        .wire(Module.flowStage(new Concat()));
+        .wire(Module.flowStage(stageFactory()));
     });
   },
 
   /**
-   * @param {Source[]|SourceStage[]} sources
+   * @param {...Stream} sources
+   */
+  concat(...sources) {
+    return this._fanInSource(() => new Concat(), sources);
+  },
+
+  /**
+   * @param {...Stream} sources
+   */
+  merge(...sources) {
+    return this._fanInSource(() => new Merge(), sources);
+  },
+
+  /**
+   * @param {...Stream} sources
    * @returns {Stream}
    */
   zip(...sources) {
-    return new Stream(() => {
-      return Module.merge(...sources.map(s => s._materialize()))
-        .wire(Module.flowStage(new Zip()));
-    });
+    return this._fanInSource(() => new Zip(), sources);
   }
 };
 
@@ -193,15 +206,16 @@ export const Flow = {
   },
 
   /**
-   * @param {Stream} source
+   * @param source
    * @returns {Stream}
+   * @private
    */
-  concat(source) {
+  _fanInFlow(stageFactory, source) {
     return new Stream(() => {
       return Module.merge(
         Module.flowStage(new SimpleStage()),
         source._materialize()
-      ).wire(Module.flowStage(new Concat()));
+      ).wire(Module.flowStage(stageFactory()));
     });
   },
 
@@ -209,13 +223,24 @@ export const Flow = {
    * @param {Stream} source
    * @returns {Stream}
    */
+  concat(source) {
+    return this._fanInFlow(() => new Concat(), source);
+  },
+
+  /**
+   * @param {Stream} source
+   * @returns {Stream}
+   */
+  merge(source) {
+    return this._fanInFlow(() => new Merge(), source);
+  },
+
+  /**
+   * @param {Stream} source
+   * @returns {Stream}
+   */
   zip(source) {
-    return new Stream(() => {
-      return Module.merge(
-        Module.flowStage(new SimpleStage()),
-        source._materialize()
-      ).wire(Module.flowStage(new Zip()));
-    });
+    return this._fanInFlow(() => new Zip(), source);
   },
 };
 
@@ -282,14 +307,28 @@ export const FanIn = {
    * @return {Stream}
    */
   concat() {
-    return new Stream(() => Flow._simple(() => new Concat()));
+    return Flow._simple(() => new Concat());
+  },
+
+  /**
+   * @return {Stream}
+   */
+  merge() {
+    return Flow._simple(() => new Merge());
   },
 
   /**
    * @return {Stream}
    */
   zip() {
-    return new Stream(() => Flow._simple(() => new Zip()));
+    return Flow._simple(() => new Zip());
+  },
+
+  /**
+   * @return {Stream}
+   */
+  zipWith(fn) {
+    return this.zip().map(xs => fn(...xs))
   }
 };
 
@@ -310,6 +349,9 @@ export default class Stream {
    * @return {Stream}
    */
   pipe(stream) {
+    if (typeof stream._materialize !== 'function') {
+      throw new Error('stream param expected !');
+    }
     return new Stream(() => {
       return this._materialize().wire(stream._materialize())
     });
@@ -391,7 +433,7 @@ export default class Stream {
   }
 
   /**
-   * @param {Stream} source
+   * @param {Stream?} source
    * @returns {Stream}
    */
   concat(source) {
@@ -399,11 +441,27 @@ export default class Stream {
   }
 
   /**
-   * @param {Stream|null} source
+   * @param {Stream?} source
+   * @returns {Stream}
+   */
+  merge(source) {
+    return this.pipe(source ? Flow.merge(source) : FanIn.merge());
+  }
+
+  /**
+   * @param {Stream?} source
    * @returns {Stream}
    */
   zip(source) {
     return this.pipe(source ? Flow.zip(source) : FanIn.zip());
+  }
+
+  /**
+   * @param fn
+   * @return {Stream}
+   */
+  zipWith(fn) {
+    return this.pipe(FanIn.zipWith(fn));
   }
 
   // Fan out methods

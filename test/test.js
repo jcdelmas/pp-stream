@@ -242,3 +242,27 @@ describe('Sink', () => {
     result.should.be.eql(6);
   });
 });
+
+describe('Complex routing', () => {
+  it('scatter and gather', async () => {
+    const result = await Source.from([1, 2, 3])
+        .broadcast(
+          Flow.map(x => x + 1),
+          Flow.map(x => x * 2)
+        )
+        .zipWith((x, y) => x + y)
+        .toArray();
+    result.should.be.eql([4, 7, 10]);
+  });
+
+  it('balance and concat', async () => {
+    const DELAY = 50;
+    const workers = [1, 2, 3].map(x => Flow.delay(DELAY * x).map(x => x + 1));
+
+    const result = await Source.from([1, 2, 3, 4, 5, 6])
+        .balance(...workers)
+        .merge()
+        .toArray();
+    result.sort().should.be.eql([2, 3, 4, 5, 6, 7]);
+  });
+});

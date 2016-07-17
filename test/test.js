@@ -271,8 +271,10 @@ describe('Complex routing', () => {
         .toArray();
     result.sort().should.be.eql([2, 3, 4, 5, 6, 7]);
   });
+});
 
-  it('push only sources', async () => {
+describe('push only sources', () => {
+  it('simple case', async () => {
     const result = await Source.createPushOnly({
       doStart() {
         this.push(1);

@@ -96,6 +96,10 @@ describe('Flow stages', () => {
     const result = await Source.from([1, 2]).drop(4).toArray();
     result.should.be.eql([]);
   });
+  it('distinct', async () => {
+    const result = await Source.from([1, 1, 2, 3, 3, 4, 3, 5]).distinct().toArray();
+    result.should.be.eql([1, 2, 3, 4, 3, 5]);
+  });
 });
 
 describe('Fan in stages', () => {

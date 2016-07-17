@@ -1,8 +1,11 @@
+"use strict";
+
 import Module from './module';
 import { SimpleStage, SourceStage, PushSourceStage, SinkStage } from './stage';
 import { ArraySourceStage } from './source';
 import {
   Delay,
+  Distinct,
   Drop,
   Grouped,
   MapConcat,
@@ -149,6 +152,10 @@ export const Flow = {
         }
       },
     });
+  },
+
+  distinct() {
+    return this.create(() => new Distinct())
   },
 
   /**
@@ -425,6 +432,10 @@ export default class Stream {
    */
   drop(n) {
     return this.pipe(Flow.drop(n));
+  }
+
+  distinct() {
+    return this.pipe(Flow.distinct());
   }
 
   /**

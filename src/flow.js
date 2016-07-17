@@ -192,3 +192,18 @@ export class Delay extends SimpleStage {
     this.cancel();
   }
 }
+
+export class Distinct extends SimpleStage {
+
+  last = null;
+
+  onPush() {
+    const x = this.grab();
+    if (x != this.last) {
+      this.push(x);
+      this.last = x;
+    } else {
+      this.pull();
+    }
+  }
+}

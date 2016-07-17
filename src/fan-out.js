@@ -2,7 +2,7 @@ import { FanOutStage } from './stage';
 
 export class Broadcast extends FanOutStage {
 
-  createOutHandler(index) {
+  createUpstreamHandler(index) {
     return {
       onPull: () => {
         this.pullIfReady();
@@ -39,7 +39,7 @@ export class Broadcast extends FanOutStage {
 
 export class Balance extends FanOutStage {
 
-  createOutHandler(index) {
+  createUpstreamHandler(index) {
     return {
       onPull: () => {
         if (!this.isInputHasBeenPulled()) {

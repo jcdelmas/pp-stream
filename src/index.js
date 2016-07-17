@@ -4,8 +4,8 @@ import {
   SimpleStage,
   SourceStage,
   SinkStage,
-  OutHandler,
-  InHandler
+  UpstreamHandler,
+  DownstreamHandler
 } from './stage';
 
 import Stream, { Source, Flow, Sink, FanIn, FanOut } from './stream';
@@ -21,6 +21,6 @@ export {
   SimpleStage,
   SourceStage,
   SinkStage,
-  OutHandler,
-  InHandler
+  UpstreamHandler,
+  DownstreamHandler
 }

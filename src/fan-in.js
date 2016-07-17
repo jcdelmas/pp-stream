@@ -4,7 +4,7 @@ export class Concat extends FanInStage {
 
   sourceIndex = 0;
 
-  createInHandler(index) {
+  createDownstreamHandler(index) {
     return {
       onPush: () => {
         this.push(this.inputs[index].grab())
@@ -34,7 +34,7 @@ export class Merge extends FanInStage {
 
   completedInputs = 0;
 
-  createInHandler(index) {
+  createDownstreamHandler(index) {
     return {
       onPush: () => {
         if (this.isOutputAvailable()) {
@@ -74,7 +74,7 @@ export class Merge extends FanInStage {
 
 export class Zip extends FanInStage {
 
-  createInHandler(index) {
+  createDownstreamHandler(index) {
     return {
       onPush: () => {
         if (this.inputs.every(i => i.isAvailable())) {

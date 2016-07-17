@@ -75,12 +75,12 @@ export class Outlet {
 
 class Wire {
   /**
-   * @param {OutHandler} outHandler
-   * @param {InHandler} inHandler
+   * @param {UpstreamHandler} upstreamHandler
+   * @param {DownstreamHandler} downstreamHandler
    */
-  constructor(outHandler, inHandler) {
-    this.inHandler = inHandler;
-    this.outHandler = outHandler;
+  constructor(upstreamHandler, downstreamHandler) {
+    this._downstreamHandler = downstreamHandler;
+    this._upstreamHandler = upstreamHandler;
     this.in = new Outlet(this);
     this.out = new Inlet(this);
   }
@@ -123,7 +123,7 @@ class Wire {
 
     this._asyncIfRequired(() => {
       this.waitingForPush = true;
-      this.outHandler.onPull();
+      this._upstreamHandler.onPull();
     });
   }
 
@@ -142,7 +142,7 @@ class Wire {
     this._asyncIfRequired(() => {
       this.closed = true;
       this.waitingForPush = false;
-      this.outHandler.onCancel();
+      this._upstreamHandler.onCancel();
     });
   }
 
@@ -161,7 +161,7 @@ class Wire {
       this.hasBeenPulled = false;
       this.hasPendingElement = true;
       this._pendingElement = x;
-      this.inHandler.onPush();
+      this._downstreamHandler.onPush();
     });
   }
 
@@ -173,7 +173,7 @@ class Wire {
     this.waitingForPush = false;
     this._asyncIfRequired(() => {
       this.hasBeenPulled = false;
-      this.inHandler.onError(e);
+      this._downstreamHandler.onError(e);
     });
   }
 
@@ -190,7 +190,7 @@ class Wire {
     this._asyncIfRequired(() => {
       this.closed = true;
       this.hasBeenPulled = false;
-      this.inHandler.onComplete();
+      this._downstreamHandler.onComplete();
     });
   }
 
@@ -226,7 +226,7 @@ class Wire {
 /**
  * @interface
  */
-export class InHandler {
+export class DownstreamHandler {
 
   constructor({ onPush, onComplete, onError } = {}) {
     if (onPush) this.onPush = onPush;
@@ -256,7 +256,7 @@ export class InHandler {
 /**
  * @interface
  */
-export class OutHandler {
+export class UpstreamHandler {
 
   constructor({ onPull, onCancel } = {}) {
     if (onPull) this.onPull = onPull;
@@ -298,48 +298,48 @@ export class Stage {
   }
 
   /**
-   * @param {Stage} subscriber
+   * @param {Stage} downstreamStage
    */
-  _subscribe(subscriber) {
+  _addDownstreamStage(downstreamStage) {
     const index = this.outputs.length;
-    const wire = new Wire(this.createOutHandler(index), subscriber._nextHandler());
+    const wire = new Wire(this.createUpstreamHandler(index), downstreamStage._createNextDownstreamHandler());
     this.outputs.push(wire.in);
-    subscriber._onSubscribe(wire.out);
+    downstreamStage._addInput(wire.out);
   }
 
   /**
-   * @returns {InHandler}
+   * @returns {DownstreamHandler}
    */
-  _nextHandler() {
-    return this.createInHandler(this.inputs.length);
+  _createNextDownstreamHandler() {
+    return this.createDownstreamHandler(this.inputs.length);
   }
 
   /**
    * @param {Inlet} input
    * @private
    */
-  _onSubscribe(input) {
+  _addInput(input) {
     this.inputs.push(input)
   }
 
   /**
-   * @return {InHandler}
+   * @return {DownstreamHandler}
    */
-  createInHandler(index) {
+  createDownstreamHandler(index) {
     throw new Error('Not implemented');
   }
 
   /**
-   * @return {OutHandler}
+   * @return {UpstreamHandler}
    */
-  createOutHandler(index) {
+  createUpstreamHandler(index) {
     throw new Error('Not implemented');
   }
 }
 
 export class FanInStage extends Stage {
 
-  createOutHandler(index) {
+  createUpstreamHandler(index) {
     if (index > 0) {
       throw new Error('Output already exist');
     }
@@ -381,7 +381,7 @@ export class FanInStage extends Stage {
 
 export class FanOutStage extends Stage {
 
-  createInHandler(index) {
+  createDownstreamHandler(index) {
     if (index > 0) {
       throw new Error('Input already exist');
     }
@@ -433,8 +433,8 @@ export class FanOutStage extends Stage {
 }
 
 /**
- * @implements {InHandler}
- * @implements {OutHandler}
+ * @implements {DownstreamHandler}
+ * @implements {UpstreamHandler}
  */
 export class SimpleStage extends Stage {
 
@@ -447,14 +447,14 @@ export class SimpleStage extends Stage {
     if (onError) this.onError = onError.bind(this);
   }
 
-  createInHandler(index) {
+  createDownstreamHandler(index) {
     if (index > 0) {
       throw new Error('Input already exist');
     }
     return this;
   }
 
-  createOutHandler(index) {
+  createUpstreamHandler(index) {
     if (index > 0) {
       throw new Error('Output already exist');
     }
@@ -558,11 +558,11 @@ export class SourceStage extends SimpleStage {
     throw new Error('Not allowed');
   }
 
-  _nextHandler() {
+  _createNextDownstreamHandler() {
     throw new Error('Not allowed on source');
   }
 
-  _onSubscribe(input) {
+  _addInput(input) {
     throw new Error('Not allowed on source');
   }
 }

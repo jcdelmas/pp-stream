@@ -46,11 +46,11 @@ export default class Module {
     }
 
     if (this._outputs.length === module._inputs.length) {
-      this._outputs.forEach((output, i) => output._subscribe(module._inputs[i]))
+      this._outputs.forEach((output, i) => output._addDownstreamStage(module._inputs[i]))
     } else if (this._outputs.length > 1 && module._inputs.length === 1) {
-      this._outputs.forEach(output => output._subscribe(module._inputs[0]))
+      this._outputs.forEach(output => output._addDownstreamStage(module._inputs[0]))
     } else if (this._outputs.length === 1 && module._inputs.length > 1) {
-      module._inputs.forEach(input => this._outputs[0]._subscribe(input))
+      module._inputs.forEach(input => this._outputs[0]._addDownstreamStage(input))
     } else {
       throw new Error('Outputs inputs number mismatch');
     }

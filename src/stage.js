@@ -22,8 +22,16 @@ export class Inlet {
     return this._wire.closed || this._wire.canceled;
   }
 
+  canBePulled() {
+    return !this.hasBeenPulled() && !this.isClosed();
+  }
+
   grab() {
     return this._wire.grab();
+  }
+
+  start() {
+    this._wire.start();
   }
 
   pull() {
@@ -89,6 +97,7 @@ class Wire {
   waitingForPush = false;
   hasBeenPulled = false;
 
+  started = false;
   completed = false;
   canceled = false;
   closed = false;
@@ -106,7 +115,20 @@ class Wire {
     return el;
   }
 
+  start() {
+    if (this.started) {
+      throw new Error('Already started');
+    }
+    this.started = true;
+    this._asyncIfRequired(() => {
+      this._upstreamHandler.onStart();
+    });
+  }
+
   pull() {
+    if (!this.started) {
+      throw new Error('Not started');
+    }
     if (this.closed || this.canceled) {
       throw new Error('Input closed');
     }
@@ -128,6 +150,9 @@ class Wire {
   }
 
   cancel() {
+    if (!this.started) {
+      throw new Error('Not started');
+    }
     if (this.closed || this.canceled) {
       throw new Error('Input already closed');
     }
@@ -147,6 +172,9 @@ class Wire {
   }
 
   push(x) {
+    if (!this.started) {
+      throw new Error('Not started');
+    }
     if (this.closed || this.completed) {
       throw new Error('Output closed');
     }
@@ -166,6 +194,9 @@ class Wire {
   }
 
   error(e) {
+    if (!this.started) {
+      throw new Error('Not started');
+    }
     this.waitingForPush = false;
     if (this.canceled) {
       return;
@@ -178,6 +209,9 @@ class Wire {
   }
 
   complete() {
+    if (!this.started) {
+      throw new Error('Not started');
+    }
     if (this.completed || this.closed) {
       throw new Error('Output already closed');
     }
@@ -227,13 +261,6 @@ class Wire {
  * @interface
  */
 export class DownstreamHandler {
-
-  constructor({ onPush, onComplete, onError } = {}) {
-    if (onPush) this.onPush = onPush;
-    if (onComplete) this.onComplete = onComplete;
-    if (onError) this.onError = onError;
-  }
-
   /**
    * @param item
    */
@@ -257,10 +284,8 @@ export class DownstreamHandler {
  * @interface
  */
 export class UpstreamHandler {
-
-  constructor({ onPull, onCancel } = {}) {
-    if (onPull) this.onPull = onPull;
-    if (onCancel) this.onComplete = onCancel;
+  onStart() {
+    throw new Error('Not implemented');
   }
 
   onPull() {
@@ -284,6 +309,20 @@ export class Stage {
    */
   outputs = [];
 
+  startedOutputs = 0;
+
+  defaultUpstreamHandler = {
+    onStart: () => {
+      this.startedOutputs++;
+      if (this.startedOutputs == this.outputs.length) {
+        this.doStart();
+        this.inputs.forEach(input => input.start());
+      }
+    }
+  };
+
+  doStart() {}
+
   completeStage() {
     this.cancelAll();
     this.completeAll();
@@ -301,10 +340,23 @@ export class Stage {
    * @param {Stage} downstreamStage
    */
   _addDownstreamStage(downstreamStage) {
-    const index = this.outputs.length;
-    const wire = new Wire(this.createUpstreamHandler(index), downstreamStage._createNextDownstreamHandler());
+    const wire = new Wire(
+      this._createNextUpstreamHandler(),
+      downstreamStage._createNextDownstreamHandler()
+    );
     this.outputs.push(wire.in);
     downstreamStage._addInput(wire.out);
+  }
+
+  /**
+   * @returns {UpstreamHandler}
+   */
+  _createNextUpstreamHandler() {
+    const upstreamHandler = this.createUpstreamHandler(this.outputs.length);
+    if (!upstreamHandler.onStart) {
+      upstreamHandler.onStart = this.defaultUpstreamHandler.onStart;
+    }
+    return upstreamHandler;
   }
 
   /**
@@ -370,12 +422,24 @@ export class FanInStage extends Stage {
     return this.outputs[0].isClosed();
   }
 
+  onStart() {
+    this.inputs.forEach(input => input.start());
+  }
+
   onPull() {
-    this.pull()
+    this.inputs.forEach(input => {
+      if (input.canBePulled()) {
+        input.pull();
+      }
+    });
   }
 
   onCancel() {
-    this.cancel();
+    this.inputs.forEach(input => {
+      if (!input.isClosed()) {
+        input.cancel();
+      }
+    });
   }
 }
 
@@ -390,6 +454,10 @@ export class FanOutStage extends Stage {
 
   grab() {
     return this.inputs[0].grab();
+  }
+
+  start() {
+    this.inputs[0].start();
   }
 
   pull() {
@@ -426,10 +494,6 @@ export class FanOutStage extends Stage {
   onComplete() {
     this.completeAll();
   }
-
-  nextSubscriber() {
-    throw new Error('Not allowed on simple stage');
-  }
 }
 
 /**
@@ -438,8 +502,9 @@ export class FanOutStage extends Stage {
  */
 export class SimpleStage extends Stage {
 
-  constructor({ onPush, onPull, onComplete, onCancel, onError } = {}) {
+  constructor({ onStart, onPush, onPull, onComplete, onCancel, onError } = {}) {
     super();
+    if (onStart) this.onStart = onStart.bind(this);
     if (onPush) this.onPush = onPush.bind(this);
     if (onPull) this.onPull = onPull.bind(this);
     if (onComplete) this.onComplete = onComplete.bind(this);
@@ -463,6 +528,10 @@ export class SimpleStage extends Stage {
 
   grab() {
     return this.inputs[0].grab();
+  }
+
+  start() {
+    this.inputs[0].start();
   }
 
   pull() {
@@ -513,8 +582,13 @@ export class SimpleStage extends Stage {
     this.push(this.grab());
   }
 
+  onStart() {
+    this.doStart();
+    this.start();
+  }
+
   onPull() {
-    this.pull()
+    this.pull();
   }
 
   /**
@@ -531,19 +605,21 @@ export class SimpleStage extends Stage {
   onCancel() {
     this.cancel();
   }
-
-  nextSubscriber() {
-    throw new Error('Not allowed on simple stage');
-  }
 }
 
 export class SourceStage extends SimpleStage {
+
+  onStart() {}
 
   onPull() {
     throw new Error('Not implemented');
   }
 
   onCancel() {
+  }
+
+  start() {
+    throw new Error('Not allowed');
   }
 
   pull() {
@@ -596,35 +672,11 @@ export class SinkStage extends SimpleStage {
     return this.resultPromise;
   }
 
-  _getLastStage() {
-    return this;
-  }
-
-  _subscribe(subscriber) {
+  _addDownstreamStage(stage) {
     throw new Error('Not allowed on sink');
   }
 
   push() {
     throw new Error('Not allowed');
-  }
-}
-
-export class CompoundSinkStage extends SinkStage {
-
-  /**
-   *
-   * @param {SinkStage[]} sinks
-   */
-  constructor(sinks) {
-    super();
-    this.sinks = sinks;
-  }
-
-  pull() {
-    this.sinks.forEach(s => s.pull());
-  }
-
-  _getResult() {
-    return Promise.all(this.sinks.map(s => s._getResult()));
   }
 }

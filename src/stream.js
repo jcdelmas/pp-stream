@@ -1,5 +1,5 @@
 import Module from './module';
-import { SimpleStage, SourceStage, SinkStage } from './stage';
+import { SimpleStage, SourceStage, PushSourceStage, SinkStage } from './stage';
 import { ArraySourceStage } from './source';
 import {
   Delay,
@@ -22,6 +22,10 @@ export const Source = {
 
   createSimple(methods) {
     return this.create(() => new SourceStage(methods));
+  },
+
+  createPushOnly(methods) {
+    return this.create(() => new PushSourceStage(methods));
   },
 
   /**

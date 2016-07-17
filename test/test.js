@@ -1,5 +1,7 @@
+"use strict";
+
 import 'babel-polyfill';
-import should from 'should';
+import 'should';
 
 import {
   Source,
@@ -8,6 +10,10 @@ import {
   FanIn,
   FanOut
 } from '../src/index';
+
+const backPressureChecker = Flow.createSimple({
+
+});
 
 describe('Source', () => {
   it('from(list)', async () => {
@@ -264,5 +270,17 @@ describe('Complex routing', () => {
         .merge()
         .toArray();
     result.sort().should.be.eql([2, 3, 4, 5, 6, 7]);
+  });
+
+  it('push only sources', async () => {
+    const result = await Source.createPushOnly({
+      doStart() {
+        this.push(1);
+        this.push(2);
+        this.push(3);
+        this.pushAndComplete(4);
+      }
+    }).map(x => x + 1).toArray();
+    result.should.be.eql([2, 3, 4, 5]);
   });
 });

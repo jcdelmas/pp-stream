@@ -1,3 +1,6 @@
+
+import Buffer from './buffer';
+
 /**
  * @interface
  */
@@ -65,11 +68,6 @@ export class Outlet {
 
   push(x) {
     this._wire.push(x);
-  }
-
-  pushAndComplete(x) {
-    this.push(x);
-    this.complete();
   }
 
   error(e) {
@@ -403,7 +401,8 @@ export class FanInStage extends Stage {
   }
 
   pushAndComplete(x) {
-    this.outputs[0].pushAndComplete(x);
+    this.push(x);
+    this.complete();
   }
 
   error(e) {
@@ -502,9 +501,9 @@ export class FanOutStage extends Stage {
  */
 export class SimpleStage extends Stage {
 
-  constructor({ onStart, onPush, onPull, onComplete, onCancel, onError } = {}) {
+  constructor({ doStart, onPush, onPull, onComplete, onCancel, onError } = {}) {
     super();
-    if (onStart) this.onStart = onStart.bind(this);
+    if (doStart) this.doStart = doStart.bind(this);
     if (onPush) this.onPush = onPush.bind(this);
     if (onPull) this.onPull = onPull.bind(this);
     if (onComplete) this.onComplete = onComplete.bind(this);
@@ -559,7 +558,8 @@ export class SimpleStage extends Stage {
   }
 
   pushAndComplete(x) {
-    this.outputs[0].pushAndComplete(x);
+    this.push(x);
+    this.complete();
   }
 
   error(e) {
@@ -609,10 +609,11 @@ export class SimpleStage extends Stage {
 
 export class SourceStage extends SimpleStage {
 
-  onStart() {}
+  onStart() {
+    this.doStart();
+  }
 
   onPull() {
-    throw new Error('Not implemented');
   }
 
   onCancel() {
@@ -640,6 +641,42 @@ export class SourceStage extends SimpleStage {
 
   _addInput(input) {
     throw new Error('Not allowed on source');
+  }
+}
+
+export class PushSourceStage extends SourceStage {
+
+  completePending = false;
+
+  constructor(props) {
+    super(props);
+    this.buffer = new Buffer(props.bufferSize, props.bufferOverflowStrategy)
+  }
+
+  push(x) {
+    if (this.isOutputAvailable()) {
+      super.push(x);
+    } else {
+      this.buffer.push(x);
+    }
+  }
+
+  onPull() {
+    if (!this.buffer.isEmpty()) {
+      super.push(this.buffer.pull());
+
+      if (this.completePending && this.buffer.isEmpty()) {
+        super.complete();
+      }
+    }
+  }
+
+  complete() {
+    if (this.buffer.isEmpty()) {
+      super.complete();
+    } else {
+      this.completePending = true;
+    }
   }
 }
 

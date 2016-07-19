@@ -521,6 +521,13 @@ export default class Stream {
     return this.pipe(sink).run();
   }
 
+  /**
+   * @param {SinkStage} sinkStage
+   */
+  runWithLastStage(sinkStage) {
+    return this.runWith(Sink.create(() => sinkStage));
+  }
+
   forEach(cb) {
     return this.runWith(Sink.forEach(cb));
   }
@@ -576,22 +583,19 @@ class FlatMap extends SimpleStage {
     const parent = this;
     const source = this.fn(this.grab());
 
-    const sink = Sink.create(() => {
-      this.current = new SinkStage({
-        onPush() {
-          parent.push(this.grab())
-        },
+    this.current = new SinkStage({
+      onPush() {
+        parent.push(this.grab())
+      },
 
-        onComplete() {
-          parent.current = null;
-          if (parent.completePending) {
-            parent.complete();
-          }
+      onComplete() {
+        parent.current = null;
+        if (parent.completePending) {
+          parent.complete();
         }
-      });
-      return this.current;
+      }
     });
-    source.pipe(sink).run();
+    source.runWithLastStage(this.current);
   }
 
   onPull() {

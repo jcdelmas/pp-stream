@@ -1,16 +1,24 @@
 
+export const OverflowStrategy = {
+  DROP_BUFFER: "DROP_BUFFER",
+  DROP_HEAD: "DROP_HEAD",
+  DROP_NEW: "DROP_NEW",
+  DROP_TAIL: "DROP_TAIL",
+  FAIL: "FAIL",
+  BACK_PRESSURE: "BACK_PRESSURE"
+};
+
 export default class Buffer {
-  static DROP_BUFFER = "DROP_BUFFER";
-  static DROP_HEAD = "DROP_HEAD";
-  static DROP_NEW = "DROP_NEW";
-  static DROP_TAIL = "DROP_TAIL";
-  static FAIL = "FAIL";
 
   buf = [];
 
-  constructor(size = 100, overflowStrategy = Buffer.DROP_NEW) {
-    this.size = size;
+  constructor(maxSize = 100, overflowStrategy = OverflowStrategy.DROP_NEW) {
+    this.maxSize = maxSize;
     this.overflowStrategy = overflowStrategy;
+  }
+
+  size() {
+    return this.buf.length;
   }
 
   isEmpty() {
@@ -18,7 +26,7 @@ export default class Buffer {
   }
 
   isFull() {
-    return this.buf.length === this.size;
+    return this.buf.length === this.maxSize;
   }
 
   push(x) {
@@ -37,6 +45,8 @@ export default class Buffer {
         case Buffer.DROP_TAIL:
           this.buf.pop();
           break;
+        default:
+          throw new Error('Not supported strategy')
       }
     }
     this.buf.push(x);

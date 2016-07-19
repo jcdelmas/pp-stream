@@ -1,19 +1,16 @@
 "use strict";
 
 import 'babel-polyfill';
-import 'should';
+import should from 'should';
 
 import {
   Source,
   Sink,
   Flow,
   FanIn,
-  FanOut
+  FanOut,
+  OverflowStrategy
 } from '../src/index';
-
-const backPressureChecker = Flow.createSimple({
-
-});
 
 describe('Source', () => {
   it('from(list)', async () => {
@@ -100,7 +97,7 @@ describe('Flow stages', () => {
     const result = await Source.from([1, 1, 2, 3, 3, 4, 3, 5]).distinct().toArray();
     result.should.be.eql([1, 2, 3, 4, 3, 5]);
   });
-  it('flatMap', () => {
+  describe('flatMap', () => {
     it('simple', async () => {
       const result = await Source.from([1, 2, 3]).flatMap(i => {
         return Source.from([1, 2, 3].map(j => j * i))
@@ -114,6 +111,54 @@ describe('Flow stages', () => {
       result.should.be.eql([1, 2, 3, 2, 4]);
     });
   });
+  // describe('buffer', () => {
+  //   it('drop head', async () => {
+  //     const result = await Source.from([1, 2, 3, 4])
+  //       .buffer(3, OverflowStrategy.DROP_HEAD)
+  //       .delay(50)
+  //       .toArray();
+  //     result.should.be.eql([1, 3, 4]);
+  //   });
+  //   it('drop tail', async () => {
+  //     const result = await Source.from([1, 2, 3, 4])
+  //       .buffer(3, OverflowStrategy.DROP_TAIL)
+  //       .delay(50)
+  //       .toArray();
+  //     result.should.be.eql([1, 2, 4]);
+  //   });
+  //   it('drop new', async () => {
+  //     const result = await Source.from([1, 2, 3, 4])
+  //       .buffer(3, OverflowStrategy.DROP_TAIL)
+  //       .delay(50)
+  //       .toArray();
+  //     result.should.be.eql([1, 2, 3]);
+  //   });
+  //   it('drop buffer', async () => {
+  //     const result = await Source.from([1, 2, 3, 4])
+  //       .buffer(3, OverflowStrategy.DROP_BUFFER)
+  //       .delay(50)
+  //       .toArray();
+  //     result.should.be.eql([1, 4]);
+  //   });
+  //   it('back pressure', async () => {
+  //     const result = await Source.from([1, 2, 3, 4])
+  //       .buffer(3, OverflowStrategy.BACK_PRESSURE)
+  //       .delay(50)
+  //       .toArray();
+  //     result.should.be.eql([1, 2, 3, 4]);
+  //   });
+  //   it('fail', async () => {
+  //     try {
+  //       await Source.from([1, 2, 3, 4])
+  //         .buffer(3, OverflowStrategy.FAIL)
+  //         .delay(50)
+  //         .toArray();
+  //       should.fail('Error expected');
+  //     } catch (e) {
+  //       e.message.should.be.eql('Buffer overflow');
+  //     }
+  //   });
+  // });
 });
 
 describe('Fan in stages', () => {
@@ -193,14 +238,14 @@ describe('Fan in stages', () => {
       ]).toArray();
       result.should.be.eql([1, 4, 7, 2, 5, 8, 3, 6, 9]);
     });
-    // it('with broadcast', async () => {
-    //   const result = await Source.from([1, 2, 3]).broadcast(
-    //     Flow.map(x => x + 1),
-    //     Flow.map(x => x + 2),
-    //     Flow.map(x => x + 3)
-    //   ).interleaveStreams().toArray();
-    //   result.should.be.eql([2, 3, 4, 3, 4, 5, 4, 5, 6]);
-    // });
+    it('with broadcast', async () => {
+      const result = await Source.from([1, 2, 3]).broadcast(
+        Flow.map(x => x).buffer(1, OverflowStrategy.BACK_PRESSURE),
+        Flow.map(x => x * 2).buffer(1, OverflowStrategy.BACK_PRESSURE),
+        Flow.map(x => x * 3).buffer(1, OverflowStrategy.BACK_PRESSURE)
+      ).interleaveStreams().toArray();
+      result.should.be.eql([1, 2, 3, 2, 4, 6, 3, 6, 9]);
+    });
   })
 });
 

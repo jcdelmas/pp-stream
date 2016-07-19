@@ -8,6 +8,8 @@ import {
   DownstreamHandler
 } from './stage';
 
+import { OverflowStrategy } from './buffer';
+
 import Stream, { Source, Flow, Sink, FanIn, FanOut } from './stream';
 
 export {
@@ -22,5 +24,6 @@ export {
   SourceStage,
   SinkStage,
   UpstreamHandler,
-  DownstreamHandler
+  DownstreamHandler,
+  OverflowStrategy
 }

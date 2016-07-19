@@ -1,4 +1,58 @@
 import { SimpleStage } from './stage';
+import Buffer, { OverflowStrategy } from './buffer';
+
+export class BufferFlow extends SimpleStage {
+
+  pendingComplete = false;
+
+  constructor(size, overflowStategy = OverflowStrategy.FAIL) {
+    super();
+    this.size = size;
+    this.overflowStategy = overflowStategy;
+    this.buffer = new Buffer(
+      size,
+      this.overflowStategy !== OverflowStrategy.BACK_PRESSURE
+        ? this.overflowStategy
+        : OverflowStrategy.FAIL
+    );
+  }
+
+  doStart() {
+    this.pull();
+  }
+
+  onPush() {
+    const x = this.grab();
+    if (this.buffer.isEmpty() && this.isOutputAvailable()) {
+      this.push(x);
+    } else {
+      this.buffer.push(x);
+    }
+    if (this.overflowStategy !== OverflowStrategy.BACK_PRESSURE || !this.buffer.isFull()) {
+      this.pull();
+    }
+  }
+
+  onPull() {
+    if (!this.buffer.isEmpty()) {
+      this.push(this.buffer.pull());
+    }
+    if (!this.isInputHasBeenPulled() && !this.isInputClosed()) {
+      this.pull();
+    }
+    if (this.pendingComplete && this.buffer.isEmpty()) {
+      this.complete();
+    }
+  }
+
+  onComplete() {
+    if (this.buffer.isEmpty()) {
+      this.complete();
+    } else {
+      this.pendingComplete = true;
+    }
+  }
+}
 
 export class Scan extends SimpleStage {
   constructor(fn, zero) {

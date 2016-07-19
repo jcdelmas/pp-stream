@@ -541,15 +541,15 @@ export class SimpleStage extends Stage {
   }
 
   isInputAvailable() {
-    this.inputs[0].isAvailable();
+    return this.inputs[0].isAvailable();
   }
 
   isInputClosed() {
-    this.inputs[0].isClosed();
+    return this.inputs[0].isClosed();
   }
 
   isInputHasBeenPulled() {
-    this.inputs[0].isInputHasBeenPulled();
+    return this.inputs[0].hasBeenPulled();
   }
 
   push(x) {
@@ -582,8 +582,8 @@ export class SimpleStage extends Stage {
   }
 
   onStart() {
-    this.doStart();
     this.start();
+    this.doStart();
   }
 
   onPull() {

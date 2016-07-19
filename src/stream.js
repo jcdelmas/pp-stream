@@ -1,9 +1,11 @@
 "use strict";
 
 import Module from './module';
+import { OverflowStrategy } from './buffer';
 import { SimpleStage, SourceStage, PushSourceStage, SinkStage } from './stage';
 import { ArraySourceStage } from './source';
 import {
+  BufferFlow,
   Delay,
   Distinct,
   Drop,
@@ -13,7 +15,7 @@ import {
   Scan,
   Take
 } from './flow';
-import { Reduce } from './sink';
+import { Reduce, SinkTick } from './sink';
 import { Concat, Interleave, Merge, Zip } from './fan-in';
 import { Broadcast, Balance } from './fan-out';
 
@@ -160,6 +162,10 @@ export const Flow = {
         }
       },
     });
+  },
+
+  buffer(size, overflowStrategy = OverflowStrategy.FAIL) {
+    return this.create(() => new BufferFlow(size, overflowStrategy))
   },
 
   distinct() {
@@ -449,6 +455,15 @@ export default class Stream {
    */
   filter(fn) {
     return this.pipe(Flow.filter(fn));
+  }
+
+  /**
+   * @param {int} size
+   * @param {string} overflowStrategy
+   * @returns {Stream}
+   */
+  buffer(size, overflowStrategy = OverflowStrategy.FAIL) {
+    return this.pipe(Flow.buffer(size, overflowStrategy));
   }
 
   /**

@@ -352,7 +352,7 @@ export default class Stream {
     if (typeof materializer !== 'function') {
       throw new Error('Invalid materializer');
     }
-    this._materializer = materializer;
+    this._materialize = materializer;
   }
 
   /**
@@ -536,7 +536,7 @@ export default class Stream {
    * @returns {Module}
    */
   _materialize() {
-    return this._materializer();
+    throw new Error('Not implemented');
   }
 }
 

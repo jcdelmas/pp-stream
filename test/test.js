@@ -100,6 +100,18 @@ describe('Flow stages', () => {
     const result = await Source.from([1, 1, 2, 3, 3, 4, 3, 5]).distinct().toArray();
     result.should.be.eql([1, 2, 3, 4, 3, 5]);
   });
+  it('flatMap', async () => {
+    const result = await Source.from([1, 2, 3]).flatMap(i => {
+      return Source.from([1, 2, 3].map(j => j * i))
+    }).toArray();
+    result.should.be.eql([1, 2, 3, 2, 4, 6, 3, 6, 9]);
+  });
+  it('flatMap - with cancel', async () => {
+    const result = await Source.from([1, 2, 3]).flatMap(i => {
+      return Source.from([1, 2, 3].map(j => j * i))
+    }).take(5).toArray();
+    result.should.be.eql([1, 2, 3, 2, 4]);
+  });
 });
 
 describe('Fan in stages', () => {

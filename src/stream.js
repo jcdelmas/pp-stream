@@ -176,6 +176,14 @@ export const Flow = {
   },
 
   /**
+   * @param fn
+   * @returns {Flow}
+   */
+  flatMap(fn) {
+    return this.create(() => new FlatMap(fn));
+  },
+
+  /**
    * @param {number} n
    * @returns {Flow}
    */
@@ -402,6 +410,14 @@ export default class Stream {
   }
 
   /**
+   * @param fn
+   * @return {Stream}
+   */
+  flatMap(fn) {
+    return this.pipe(Flow.flatMap(fn));
+  }
+
+  /**
    * @param {number} n
    * @returns {Stream}
    */
@@ -540,3 +556,64 @@ export default class Stream {
   }
 }
 
+
+// Higher order stages
+
+class FlatMap extends SimpleStage {
+  constructor(fn) {
+    super();
+    this.fn = fn;
+  }
+
+  /**
+   * @type {SinkStage|null}
+   */
+  current = null;
+
+  completePending = false;
+
+  onPush() {
+    const parent = this;
+    const source = this.fn(this.grab());
+
+    const sink = Sink.create(() => {
+      this.current = new SinkStage({
+        onPush() {
+          parent.push(this.grab())
+        },
+
+        onComplete() {
+          parent.current = null;
+          if (parent.completePending) {
+            parent.complete();
+          }
+        }
+      });
+      return this.current;
+    });
+    source.pipe(sink).run();
+  }
+
+  onPull() {
+    if (this.current) {
+      this.current.onPull();
+    } else {
+      this.pull();
+    }
+  }
+
+  onCancel() {
+    if (this.current) {
+      this.current.onCancel();
+    }
+    this.cancel();
+  }
+
+  onComplete() {
+    if (!this.current) {
+      this.complete();
+    } else {
+      this.completePending = true;
+    }
+  }
+}

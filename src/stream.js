@@ -14,7 +14,7 @@ import {
   Take
 } from './flow';
 import { Reduce } from './sink';
-import { Concat, Merge, Zip } from './fan-in';
+import { Concat, Interleave, Merge, Zip } from './fan-in';
 import { Broadcast, Balance } from './fan-out';
 
 export const Source = {
@@ -104,6 +104,14 @@ export const Source = {
    */
   zip(...sources) {
     return this._fanInSource(() => new Zip(), sources);
+  },
+
+  /**
+   * @param {Stream[]} sources
+   * @returns {Stream}
+   */
+  interleave(sources, segmentSize = 1) {
+    return this._fanInSource(() => new Interleave(segmentSize), sources);
   }
 };
 
@@ -247,6 +255,15 @@ export const Flow = {
   zip(source) {
     return Stream.fromSourceFactory(firstSource => Source.zip(firstSource, source));
   },
+
+  /**
+   * @param {Stream} source
+   * @param {int} segmentSize
+   * @returns {Stream}
+   */
+  interleave(source, segmentSize = 1) {
+    return Stream.fromSourceFactory(firstSource => Source.interleave([firstSource, source], segmentSize));
+  }
 };
 
 export const Sink = {
@@ -325,6 +342,13 @@ export const FanIn = {
    */
   merge() {
     return Flow.create(() => new Merge());
+  },
+
+  /**
+   * @return {Stream}
+   */
+  interleave(segmentSize = 1) {
+    return Flow.create(() => new Interleave(segmentSize));
   },
 
   /**
@@ -527,6 +551,23 @@ export default class Stream {
    */
   zipWith(fn) {
     return this.pipe(FanIn.zipWith(fn));
+  }
+
+  /**
+   * @param {Stream} source
+   * @param {int} segmentSize
+   * @returns {Stream}
+   */
+  interleave(source, segmentSize = 1) {
+    return this.pipe(Flow.interleave(source, segmentSize));
+  }
+
+  /**
+   * @param segmentSize
+   * @return {Stream}
+   */
+  interleaveStreams(segmentSize = 1) {
+    return this.pipe(FanIn.interleave(segmentSize));
   }
 
   // Fan out methods

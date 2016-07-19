@@ -221,7 +221,6 @@ class Wire {
     this.completed = true;
     this._asyncIfRequired(() => {
       this.closed = true;
-      this.hasBeenPulled = false;
       this._downstreamHandler.onComplete();
     });
   }

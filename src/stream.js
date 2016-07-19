@@ -20,7 +20,7 @@ import { Broadcast, Balance } from './fan-out';
 export const Source = {
 
   create(stageProvider) {
-    return new Stream(() => Module.sourceStage(stageProvider()))
+    return Stream.fromMaterializer(() => Module.sourceStage(stageProvider()));
   },
 
   createSimple(methods) {
@@ -78,9 +78,9 @@ export const Source = {
    * @private
    */
   _fanInSource(stageFactory, sources) {
-    return new Stream(() => {
+    return Stream.fromMaterializer(() => {
       return Module.merge(...sources.map(s => s._materialize()))
-        .wire(Module.flowStage(stageFactory()));
+        .wireFlow(stageFactory());
     });
   },
 
@@ -110,7 +110,7 @@ export const Source = {
 export const Flow = {
 
   create(stageProvider) {
-    return new Stream(() => Module.flowStage(stageProvider()))
+    return Stream.fromSourcedMaterializer(source => source._materialize().wireFlow(stageProvider()));
   },
 
   /**
@@ -225,25 +225,11 @@ export const Flow = {
   },
 
   /**
-   * @param source
-   * @returns {Stream}
-   * @private
-   */
-  _fanInFlow(stageFactory, source) {
-    return new Stream(() => {
-      return Module.merge(
-        Module.flowStage(new SimpleStage()),
-        source._materialize()
-      ).wire(Module.flowStage(stageFactory()));
-    });
-  },
-
-  /**
    * @param {Stream} source
    * @returns {Stream}
    */
   concat(source) {
-    return this._fanInFlow(() => new Concat(), source);
+    return Stream.fromSourceFactory(firstSource => Source.concat(firstSource, source));
   },
 
   /**
@@ -251,7 +237,7 @@ export const Flow = {
    * @returns {Stream}
    */
   merge(source) {
-    return this._fanInFlow(() => new Merge(), source);
+    return Stream.fromSourceFactory(firstSource => Source.merge(firstSource, source));
   },
 
   /**
@@ -259,7 +245,7 @@ export const Flow = {
    * @returns {Stream}
    */
   zip(source) {
-    return this._fanInFlow(() => new Zip(), source);
+    return Stream.fromSourceFactory(firstSource => Source.zip(firstSource, source));
   },
 };
 
@@ -270,7 +256,7 @@ export const Sink = {
    * @returns {Stream}
    */
   create(stageProvider) {
-    return new Stream(() => Module.sinkStage(stageProvider()))
+    return Stream.fromSourcedMaterializer(source => source._materialize().wireSink(stageProvider()));
   },
 
   createSimple(stageMethods) {
@@ -297,14 +283,14 @@ export const Sink = {
 
 export const FanOut = {
 
-  /**
-   * @param {Stream...} streams
-   * @returns {Stream}
-   */
-  broadcast(...streams) {
-    return new Stream(() => {
-      return Module.flowStage(new Broadcast())
-        .wire(Module.merge(...streams.map(s => s._materialize())));
+  create(stageProvider, streams) {
+    return Stream.fromSourcedMaterializer(source => {
+      const stage = stageProvider();
+      const baseModule = source._materialize().wireFlow(stage);
+
+      const fanOutSource = Source.create(() => stage);
+      const modules = streams.map(stream => fanOutSource.pipe(stream)._materialize());
+      return Module.merge(...modules).addSinks(baseModule._sinks);
     });
   },
 
@@ -312,11 +298,16 @@ export const FanOut = {
    * @param {Stream...} streams
    * @returns {Stream}
    */
+  broadcast(...streams) {
+    return this.create(() => new Broadcast(), streams);
+  },
+
+  /**
+   * @param {Stream...} streams
+   * @returns {Stream}
+   */
   balance(...streams) {
-    return new Stream(() => {
-      return Module.flowStage(new Balance())
-        .wire(Module.merge(...streams.map(s => s._materialize())));
-    });
+    return this.create(() => new Balance(), streams);
   }
 };
 
@@ -354,13 +345,58 @@ export const FanIn = {
 export default class Stream {
 
   /**
-   * @param materializer
+   * @param fn
+   * @return {Stream}
    */
-  constructor(materializer) {
-    if (typeof materializer !== 'function') {
-      throw new Error('Invalid materializer');
+  static fromSourcedMaterializer(fn) {
+    return Stream.fromSourceFactory(source => Stream.fromMaterializer(() => fn(source)));
+  }
+
+  /**
+   * @param materializer
+   * @return {Stream}
+   */
+  static fromMaterializer(materializer) {
+    return new Stream({ materializer })
+  }
+
+  /**
+   * @param sourceFactory
+   * @return {Stream}
+   */
+  static fromSourceFactory(sourceFactory) {
+    return new Stream({ sourceFactory })
+  }
+
+  constructor({ materializer, sourceFactory }) {
+    if (materializer) {
+      if (typeof materializer !== 'function') {
+        throw new Error('Invalid materializer');
+      }
+      this._materialize = materializer;
+      this._isSource = true;
+    } else {
+      if (typeof sourceFactory !== 'function') {
+        throw new Error('Invalid sourceFactory');
+      }
+      this._wireSource = sourceFactory;
+      this._isSource = false;
     }
-    this._materialize = materializer;
+  }
+
+  /**
+   * @returns {Module}
+   */
+  _materialize() {
+    throw new Error('Not a source stream');
+  }
+
+  /**
+   * @param {Stream} source
+   * @returns {Stream}
+   */
+  _wireSource(source) {
+    throw new Error('Not allowed on source stream');
   }
 
   /**
@@ -368,12 +404,11 @@ export default class Stream {
    * @return {Stream}
    */
   pipe(stream) {
-    if (typeof stream._materialize !== 'function') {
-      throw new Error('stream param expected !');
+    if (this._isSource) {
+      return Stream.fromMaterializer(() => stream._wireSource(this)._materialize());
+    } else {
+      return Stream.fromSourceFactory(source => stream._wireSource(this._wireSource(source)));
     }
-    return new Stream(() => {
-      return this._materialize().wire(stream._materialize())
-    });
   }
 
   /**
@@ -553,13 +588,6 @@ export default class Stream {
     } else {
       return promises[0];
     }
-  }
-
-  /**
-   * @returns {Module}
-   */
-  _materialize() {
-    throw new Error('Not implemented');
   }
 }
 

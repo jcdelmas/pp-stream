@@ -108,7 +108,6 @@ export class Interleave extends FanInStage {
   constructor(segmentSize) {
     super();
     this.segmentSize = segmentSize;
-    console.log('Size: ' + this.segmentSize);
   }
 
   completedInputs = 0;
@@ -120,7 +119,6 @@ export class Interleave extends FanInStage {
   createDownstreamHandler(index) {
     return {
       onPush: () => {
-        console.log("Push: " + index);
         if (this.isOutputAvailable()) {
           this.push(this.inputs[index].grab());
           this.count++;
@@ -130,15 +128,12 @@ export class Interleave extends FanInStage {
         }
       },
       onComplete: () => {
-        console.log("Complete: " + index);
         this.completedInputs++;
         if (this.completedInputs >= this.inputs.length) {
           this.complete();
         } else if (this.currentInputIndex === index) {
           this._switchToNextInput();
-          console.log('Switch');
           if (this.isOutputAvailable()) {
-            console.log("Pull: " + this.currentInputIndex);
             this.currentInput().pull();
           }
         }
@@ -165,7 +160,6 @@ export class Interleave extends FanInStage {
 
   onPull() {
     if (!this.currentInput().hasBeenPulled()) {
-      console.log("Pull: " + this.currentInputIndex);
       this.currentInput().pull();
     }
   }

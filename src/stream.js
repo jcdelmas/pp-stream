@@ -193,8 +193,8 @@ export const Flow = {
    * @param fn
    * @returns {Flow}
    */
-  flatMap(fn) {
-    return this.create(() => new FlatMap(fn));
+  flatMapConcat(fn) {
+    return this.create(() => new FlatMapConcat(fn));
   },
 
   /**
@@ -487,8 +487,8 @@ export default class Stream {
    * @param fn
    * @return {Stream}
    */
-  flatMap(fn) {
-    return this.pipe(Flow.flatMap(fn));
+  flatMapConcat(fn) {
+    return this.pipe(Flow.flatMapConcat(fn));
   }
 
   /**
@@ -650,7 +650,7 @@ export default class Stream {
 
 // Higher order stages
 
-class FlatMap extends SimpleStage {
+class FlatMapConcat extends SimpleStage {
   constructor(fn) {
     super();
     this.fn = fn;

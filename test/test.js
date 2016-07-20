@@ -379,4 +379,49 @@ describe('push only sources', () => {
     }).map(x => x + 1).toArray();
     result.should.be.eql([2, 3, 4, 5]);
   });
+
+  describe('from callback source', () => {
+    it('simple', async () => {
+      const result = await Source.fromCallback((push, done) => {
+        push(1);
+        push(2);
+        push(3);
+        done();
+      }).toArray();
+      result.should.be.eql([1, 2, 3]);
+    });
+    it('with interval', async () => {
+      const result = await Source.fromCallback((push, done) => {
+        TimeSequence
+          .then(50, () => push(1))
+          .then(50, () => push(2))
+          .then(50, () => push(3))
+          .run(done)
+      }).toArray();
+      result.should.be.eql([1, 2, 3]);
+    });
+  })
 });
+
+class TimeSequence {
+
+  events = [];
+
+  static then(duration, action) {
+    return new TimeSequence().then(duration, action);
+  }
+
+  then(duration, action) {
+    this.events.push({ duration, action });
+    return this;
+  }
+
+  run(callback = () => {}) {
+    this.events.reverse().reduce((acc, event) => () => {
+      setTimeout(() => {
+        event.action();
+        acc();
+      }, event.duration)
+    }, callback)();
+  }
+}

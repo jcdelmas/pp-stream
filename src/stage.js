@@ -643,42 +643,6 @@ export class SourceStage extends SimpleStage {
   }
 }
 
-export class PushSourceStage extends SourceStage {
-
-  completePending = false;
-
-  constructor(props) {
-    super(props);
-    this.buffer = new Buffer(props.bufferSize, props.bufferOverflowStrategy)
-  }
-
-  push(x) {
-    if (this.isOutputAvailable()) {
-      super.push(x);
-    } else {
-      this.buffer.push(x);
-    }
-  }
-
-  onPull() {
-    if (!this.buffer.isEmpty()) {
-      super.push(this.buffer.pull());
-
-      if (this.completePending && this.buffer.isEmpty()) {
-        super.complete();
-      }
-    }
-  }
-
-  complete() {
-    if (this.buffer.isEmpty()) {
-      super.complete();
-    } else {
-      this.completePending = true;
-    }
-  }
-}
-
 export class SinkStage extends SimpleStage {
 
   constructor(methods = {}) {

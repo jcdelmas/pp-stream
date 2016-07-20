@@ -12,7 +12,7 @@ export default class Buffer {
 
   buf = [];
 
-  constructor(maxSize = 100, overflowStrategy = OverflowStrategy.DROP_NEW) {
+  constructor(maxSize = 16, overflowStrategy = OverflowStrategy.DROP_NEW) {
     this.maxSize = maxSize;
     this.overflowStrategy = overflowStrategy;
   }

@@ -2,8 +2,8 @@
 
 import Module from './module';
 import { OverflowStrategy } from './buffer';
-import { SimpleStage, SourceStage, PushSourceStage, SinkStage } from './stage';
-import { ArraySourceStage } from './source';
+import { SimpleStage, SourceStage, SinkStage } from './stage';
+import { PushSourceStage, ArraySourceStage, CallbackSourceStage } from './source';
 import {
   BufferFlow,
   Delay,
@@ -39,6 +39,15 @@ export const Source = {
    */
   from(items) {
     return this.create(() => new ArraySourceStage(items));
+  },
+
+  /**
+   * @param callback
+   * @param {int} bufferSize
+   * @param {string} bufferOverflowStrategy
+   */
+  fromCallback(callback, bufferSize = 16, bufferOverflowStrategy = OverflowStrategy.FAIL) {
+    return this.create(() => new CallbackSourceStage(callback, bufferSize, bufferOverflowStrategy));
   },
 
   /**

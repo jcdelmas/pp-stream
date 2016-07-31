@@ -217,6 +217,23 @@ describe('Fan in stages', () => {
     });
   });
 
+  describe('merge', () => {
+    it('simple', async () => {
+      const source1 = TimedSource
+        .then(0, 1)
+        .then(150, 4)
+        .then(100, 6)
+        .toSource();
+      const source2 = TimedSource
+        .then(50, 2)
+        .then(50, 3)
+        .then(100, 5)
+        .toSource();
+      const result = await Source.merge(source1, source2).toArray();
+      result.should.be.eql([1, 2, 3, 4, 5, 6]);
+    });
+  });
+
   describe('interleave', () => {
     it('simple', async () => {
       const result = await Source.from([1, 2, 3]).interleave(Source.from([4, 5, 6, 7, 8])).toArray();
@@ -391,17 +408,48 @@ describe('push only sources', () => {
       result.should.be.eql([1, 2, 3]);
     });
     it('with interval', async () => {
-      const result = await Source.fromCallback((push, done) => {
-        TimeSequence
-          .then(50, () => push(1))
-          .then(50, () => push(2))
-          .then(50, () => push(3))
-          .run(done)
-      }).toArray();
+      const result = await TimedSource.then(50, 1).then(50, 2).then(50, 3).toSource().toArray();
       result.should.be.eql([1, 2, 3]);
     });
   })
 });
+
+class TimedSource {
+
+  sequence = [];
+
+  /**
+   * @param {int} duration
+   * @param value
+   * @return {TimedSource}
+   */
+  static then(duration, value) {
+    return new TimedSource().then(duration, value)
+  }
+
+  /**
+   * @param {int} duration
+   * @param value
+   * @return {TimedSource}
+   */
+  then(duration, value) {
+    this.sequence.push({ duration, value });
+    return this;
+  }
+
+  /**
+   * @return {Stream}
+   */
+  toSource() {
+    return Source.fromCallback((push, done) => {
+      const seq = new TimeSequence();
+      this.sequence.forEach(({ duration, value }) => {
+        seq.then(duration, () => push(value));
+      });
+      seq.run(done);
+    })
+  }
+}
 
 class TimeSequence {
 

@@ -228,6 +228,30 @@ export class Drop extends SimpleStage {
   }
 }
 
+export class DropWhile extends SimpleStage {
+
+  dropFinished = false;
+
+  constructor(fn) {
+    super();
+    this.fn = fn;
+  }
+
+  onPush() {
+    if (this.dropFinished) {
+      this.push(this.grab());
+    } else {
+      const v = this.grab();
+      if (this.fn(v)) {
+        this.pull();
+      } else {
+        this.push(v);
+        this.dropFinished = true;
+      }
+    }
+  }
+}
+
 export class Delay extends SimpleStage {
 
   constructor(duration) {

@@ -9,6 +9,7 @@ import {
   Delay,
   Distinct,
   Drop,
+  DropWhile,
   Grouped,
   MapConcat,
   Sliding,
@@ -251,6 +252,14 @@ export const Flow = {
    */
   drop(n) {
     return this.create(() => new Drop(n));
+  },
+
+  /**
+   * @param {function} fn
+   * @returns {Flow}
+   */
+  dropWhile(fn) {
+    return this.create(() => new DropWhile(fn));
   },
 
   /**
@@ -562,6 +571,14 @@ export default class Stream {
    */
   drop(n) {
     return this.pipe(Flow.drop(n));
+  }
+
+  /**
+   * @param {function} fn
+   * @returns {Stream}
+   */
+  dropWhile(fn) {
+    return this.pipe(Flow.dropWhile(fn));
   }
 
   distinct() {

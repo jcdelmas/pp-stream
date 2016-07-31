@@ -97,13 +97,33 @@ describe('Flow stages', () => {
       result.should.be.eql([1, 2]);
     });
   });
-  it('drop - 1', async () => {
-    const result = await Source.from([1, 2, 3, 4]).drop(2).toArray();
-    result.should.be.eql([3, 4]);
+  describe('drop', () => {
+    it('simple', async () => {
+      const result = await Source.from([1, 2, 3, 4]).drop(2).toArray();
+      result.should.be.eql([3, 4]);
+    });
+    it('with early complete', async () => {
+      const result = await Source.from([1, 2]).drop(4).toArray();
+      result.should.be.eql([]);
+    });
+    it('with cancel', async () => {
+      const result = await Source.from([1, 2, 3, 4]).drop(2).take(1).toArray();
+      result.should.be.eql([3]);
+    });
   });
-  it('drop - 2', async () => {
-    const result = await Source.from([1, 2]).drop(4).toArray();
-    result.should.be.eql([]);
+  describe('dropWhile', () => {
+    it('simple', async () => {
+      const result = await Source.from([1, 2, 3, 1]).dropWhile(x => x < 3).toArray();
+      result.should.be.eql([3, 1]);
+    });
+    it('with early complete', async () => {
+      const result = await Source.from([1, 2]).dropWhile(x => x < 3).toArray();
+      result.should.be.eql([]);
+    });
+    it('with cancel', async () => {
+      const result = await Source.from([1, 2, 3, 4]).dropWhile(x => x < 3).take(1).toArray();
+      result.should.be.eql([3]);
+    });
   });
   it('distinct', async () => {
     const result = await Source.from([1, 1, 2, 3, 3, 4, 3, 5]).distinct().toArray();

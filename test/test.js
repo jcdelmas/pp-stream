@@ -154,12 +154,22 @@ describe('Flow stages', () => {
       }, 2).toArray();
       result.should.be.eql([11, 21, 12, 22, 13, 31, 23, 32, 33]);
     });
-    // it('with cancel', async () => {
-    //   const result = await Source.from([1, 2, 3]).flatMapConcat(i => {
-    //     return Source.from([1, 2, 3].map(j => j * i))
-    //   }).take(5).toArray();
-    //   result.should.be.eql([1, 2, 3, 2, 4]);
-    // });
+    it('with cancel', async () => {
+      const source = TimedSource
+        .then(0, 10)
+        .then(50, 20)
+        .then(50, 30)
+        .then(200, 40)
+        .toSource();
+      const result = await source.flatMapMerge(i => {
+        return TimedSource
+          .then(50, i + 1)
+          .then(150, i + 2)
+          .then(150, i + 3)
+          .toSource();
+      }).take(5).toArray();
+      result.should.be.eql([11, 21, 31, 12, 22]);
+    });
   });
   // describe('buffer', () => {
   //   it('drop head', async () => {
@@ -461,17 +471,18 @@ describe('push only sources', () => {
       const result = await TimedSource.then(50, 1).then(50, 2).then(50, 3).toSource().toArray();
       result.should.be.eql([1, 2, 3]);
     });
-    // it('with cancel', async () => {
-    //   const result = await TimedSource
-    //     .then(50, 1)
-    //     .then(50, 2)
-    //     .then(50, 3)
-    //     .then(50, 4)
-    //     .then(50, 5)
-    //     .toSource()
-    //     .toArray();
-    //   result.should.be.eql([1, 2, 3]);
-    // });
+    it('with cancel', async () => {
+      const result = await TimedSource
+        .then(50, 1)
+        .then(50, 2)
+        .then(50, 3)
+        .then(50, 4)
+        .then(50, 5)
+        .toSource()
+        .take(3)
+        .toArray();
+      result.should.be.eql([1, 2, 3]);
+    });
   })
 });
 

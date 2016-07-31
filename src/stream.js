@@ -140,10 +140,6 @@ export const Flow = {
     return this.create(() => new SimpleStage(stageMethods));
   },
 
-  empty() {
-    return this.create(() => new SimpleStage());
-  },
-
   /**
    * @param fn
    * @returns {Flow}

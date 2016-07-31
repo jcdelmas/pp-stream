@@ -13,7 +13,8 @@ import {
   MapConcat,
   Sliding,
   Scan,
-  Take
+  Take,
+  TakeWhile
 } from './flow';
 import { Reduce, SinkTick } from './sink';
 import { Concat, Interleave, Merge, Zip } from './fan-in';
@@ -234,6 +235,14 @@ export const Flow = {
    */
   take(n) {
     return this.create(() => new Take(n));
+  },
+
+  /**
+   * @param {function} fn
+   * @returns {Flow}
+   */
+  takeWhile(fn) {
+    return this.create(() => new TakeWhile(fn));
   },
 
   /**
@@ -537,6 +546,14 @@ export default class Stream {
    */
   take(n) {
     return this.pipe(Flow.take(n));
+  }
+
+  /**
+   * @param {function} fn
+   * @returns {Stream}
+   */
+  takeWhile(fn) {
+    return this.pipe(Flow.takeWhile(fn));
   }
 
   /**

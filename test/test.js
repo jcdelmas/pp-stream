@@ -77,13 +77,25 @@ describe('Flow stages', () => {
     const result = await Source.from([1, 2, 3, 4]).sliding(3, 2).toArray();
     result.should.be.eql([[1, 2, 3], [3, 4]]);
   });
-  it('take - 1', async () => {
-    const result = await Source.from([1, 2, 3, 4]).take(2).toArray();
-    result.should.be.eql([1, 2]);
+  describe('take', () => {
+    it('simple', async () => {
+      const result = await Source.from([1, 2, 3, 4]).take(2).toArray();
+      result.should.be.eql([1, 2]);
+    });
+    it('early complete', async () => {
+      const result = await Source.from([1, 2]).take(4).toArray();
+      result.should.be.eql([1, 2]);
+    });
   });
-  it('take - 2', async () => {
-    const result = await Source.from([1, 2]).take(4).toArray();
-    result.should.be.eql([1, 2]);
+  describe('takeWhile', () => {
+    it('simple', async () => {
+      const result = await Source.from([1, 2, 3, 4]).takeWhile(x => x < 3).toArray();
+      result.should.be.eql([1, 2]);
+    });
+    it('full completion', async () => {
+      const result = await Source.from([1, 2]).takeWhile(x => x < 3).toArray();
+      result.should.be.eql([1, 2]);
+    });
   });
   it('drop - 1', async () => {
     const result = await Source.from([1, 2, 3, 4]).drop(2).toArray();

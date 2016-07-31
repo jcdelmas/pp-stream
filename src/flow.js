@@ -193,6 +193,23 @@ export class Take extends SimpleStage {
   }
 }
 
+export class TakeWhile extends SimpleStage {
+
+  constructor(fn) {
+    super();
+    this.fn = fn;
+  }
+
+  onPush() {
+    const v = this.grab();
+    if (this.fn(v)) {
+      this.push(v);
+    } else {
+      this.completeStage();
+    }
+  }
+}
+
 export class Drop extends SimpleStage {
 
   constructor(nbr) {

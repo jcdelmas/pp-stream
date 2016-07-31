@@ -19,10 +19,7 @@
 ## Flows
  
  * fold
- * flatMapMerge
- * takeWhile
  * takeWithin
- * dropWhile
  * dropWithin
  * groupedWithin
  * recover

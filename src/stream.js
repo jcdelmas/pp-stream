@@ -203,6 +203,15 @@ export const Flow = {
   },
 
   /**
+   * @param fn
+   * @param {int} breadth
+   * @returns {Flow}
+   */
+  flatMapMerge(fn, breadth = 16) {
+    return this.create(() => new FlatMapMerge(fn, breadth));
+  },
+
+  /**
    * @param {number} n
    * @returns {Flow}
    */
@@ -497,6 +506,15 @@ export default class Stream {
   }
 
   /**
+   * @param fn
+   * @param {int} breadth
+   * @return {Stream}
+   */
+  flatMapMerge(fn, breadth = 16) {
+    return this.pipe(Flow.flatMapMerge(fn, breadth));
+  }
+
+  /**
    * @param {number} n
    * @returns {Stream}
    */
@@ -704,6 +722,74 @@ class FlatMapConcat extends SimpleStage {
 
   onComplete() {
     if (!this.current) {
+      this.complete();
+    } else {
+      this.completePending = true;
+    }
+  }
+}
+class FlatMapMerge extends SimpleStage {
+  constructor(fn, breadth = 16) {
+    super();
+    this.fn = fn;
+    this.breadth = breadth;
+  }
+
+  stages = [];
+
+  completePending = false;
+
+  onPush() {
+    const parent = this;
+    const source = this.fn(this.grab());
+
+    const stage = new SinkStage({
+      onPush() {
+        parent.push(this.grab())
+      },
+
+      onComplete() {
+        const i = parent.stages.indexOf(this);
+        parent.stages.splice(i, 1);
+
+        if (parent.completePending && parent.stages.length === 0) {
+          parent.complete();
+        } else if (!parent.isInputClosed()) {
+          parent.pull();
+        }
+      }
+    });
+    this.stages.push(stage);
+    source.runWithLastStage(stage);
+
+    if (this.stages.length < this.breadth) {
+      this.pull();
+    }
+  }
+
+  onPull() {
+    if (this.stages.length > 0) {
+      const availableStage = this.stages.find(stage => stage.isInputAvailable());
+      if (availableStage) {
+        this.push(availableStage.grab());
+      }
+      this.stages.forEach(stage => {
+        if (!stage.isInputHasBeenPulled() && !stage.isInputClosed()) {
+          stage.pull();
+        }
+      });
+    } else {
+      this.pull();
+    }
+  }
+
+  onCancel() {
+    this.stages.forEach(stage => stage.onCancel());
+    this.cancel();
+  }
+
+  onComplete() {
+    if (this.stages.length === 0) {
       this.complete();
     } else {
       this.completePending = true;

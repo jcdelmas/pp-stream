@@ -324,8 +324,8 @@ export class Stage {
 
   completeStage() {
     this.cancelAll();
-    this.completeAll();
     this.doFinish();
+    this.completeAll();
   }
 
   cancelAll() {
@@ -598,12 +598,13 @@ export class SimpleStage extends Stage {
    * @param {Error} e
    */
   onError(e) {
+    this.doFinish();
     this.error(e);
   }
 
   onComplete() {
-    this.complete();
     this.doFinish();
+    this.complete();
   }
 
   onCancel() {

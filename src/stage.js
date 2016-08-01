@@ -320,9 +320,12 @@ export class Stage {
 
   doStart() {}
 
+  doFinish() {}
+
   completeStage() {
     this.cancelAll();
     this.completeAll();
+    this.doFinish();
   }
 
   cancelAll() {
@@ -500,9 +503,10 @@ export class FanOutStage extends Stage {
  */
 export class SimpleStage extends Stage {
 
-  constructor({ doStart, onPush, onPull, onComplete, onCancel, onError } = {}) {
+  constructor({ doStart, doFinish, onPush, onPull, onComplete, onCancel, onError } = {}) {
     super();
     if (doStart) this.doStart = doStart.bind(this);
+    if (doFinish) this.doFinish = doFinish.bind(this);
     if (onPush) this.onPush = onPush.bind(this);
     if (onPull) this.onPull = onPull.bind(this);
     if (onComplete) this.onComplete = onComplete.bind(this);
@@ -599,10 +603,12 @@ export class SimpleStage extends Stage {
 
   onComplete() {
     this.complete();
+    this.doFinish();
   }
 
   onCancel() {
     this.cancel();
+    this.doFinish();
   }
 }
 

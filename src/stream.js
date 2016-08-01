@@ -15,7 +15,8 @@ import {
   Sliding,
   Scan,
   Take,
-  TakeWhile
+  TakeWhile,
+  Throttle
 } from './flow';
 import { Reduce, SinkTick } from './sink';
 import { Concat, Interleave, Merge, Zip } from './fan-in';
@@ -173,6 +174,10 @@ export const Flow = {
 
   buffer(size, overflowStrategy = OverflowStrategy.FAIL) {
     return this.create(() => new BufferFlow(size, overflowStrategy))
+  },
+
+  throttle(duration, opts = {}) {
+    return this.create(() => new Throttle(duration, opts));
   },
 
   distinct() {
@@ -496,6 +501,15 @@ export default class Stream {
    */
   buffer(size, overflowStrategy = OverflowStrategy.FAIL) {
     return this.pipe(Flow.buffer(size, overflowStrategy));
+  }
+
+  /**
+   * @param {int} duration
+   * @param {object} opts
+   * @returns {Stream}
+   */
+  throttle(duration, opts = {}) {
+    return this.pipe(Flow.throttle(duration, opts));
   }
 
   /**

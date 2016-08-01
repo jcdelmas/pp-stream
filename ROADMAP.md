@@ -25,7 +25,6 @@
  * recover
  * recoverWith
  * detach
- * throttle
  * delay (full support)
  * mapAsync
  * mapAsyncUnordered

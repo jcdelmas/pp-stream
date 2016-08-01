@@ -32,21 +32,21 @@ export default class Buffer {
   push(x) {
     if (this.isFull()) {
       switch (this.overflowStrategy) {
-        case Buffer.FAIL:
+        case OverflowStrategy.FAIL:
           throw new Error('Buffer overflow');
-        case Buffer.DROP_BUFFER:
+        case OverflowStrategy.DROP_BUFFER:
           this.buf = [];
           break;
-        case Buffer.DROP_HEAD:
+        case OverflowStrategy.DROP_HEAD:
           this.buf.shift();
           break;
-        case Buffer.DROP_NEW:
+        case OverflowStrategy.DROP_NEW:
           return;
-        case Buffer.DROP_TAIL:
+        case OverflowStrategy.DROP_TAIL:
           this.buf.pop();
           break;
         default:
-          throw new Error('Not supported strategy')
+          throw new Error('Not supported strategy: ' + this.overflowStrategy)
       }
     }
     this.buf.push(x);

@@ -278,54 +278,50 @@ describe('Flow stages', () => {
     });
   });
 
-  // describe('buffer', () => {
-  //   it('drop head', async () => {
-  //     const result = await Source.from([1, 2, 3, 4])
-  //       .buffer(3, OverflowStrategy.DROP_HEAD)
-  //       .delay(50)
-  //       .toArray();
-  //     result.should.be.eql([1, 3, 4]);
-  //   });
-  //   it('drop tail', async () => {
-  //     const result = await Source.from([1, 2, 3, 4])
-  //       .buffer(3, OverflowStrategy.DROP_TAIL)
-  //       .delay(50)
-  //       .toArray();
-  //     result.should.be.eql([1, 2, 4]);
-  //   });
-  //   it('drop new', async () => {
-  //     const result = await Source.from([1, 2, 3, 4])
-  //       .buffer(3, OverflowStrategy.DROP_TAIL)
-  //       .delay(50)
-  //       .toArray();
-  //     result.should.be.eql([1, 2, 3]);
-  //   });
-  //   it('drop buffer', async () => {
-  //     const result = await Source.from([1, 2, 3, 4])
-  //       .buffer(3, OverflowStrategy.DROP_BUFFER)
-  //       .delay(50)
-  //       .toArray();
-  //     result.should.be.eql([1, 4]);
-  //   });
-  //   it('back pressure', async () => {
-  //     const result = await Source.from([1, 2, 3, 4])
-  //       .buffer(3, OverflowStrategy.BACK_PRESSURE)
-  //       .delay(50)
-  //       .toArray();
-  //     result.should.be.eql([1, 2, 3, 4]);
-  //   });
-  //   it('fail', async () => {
-  //     try {
-  //       await Source.from([1, 2, 3, 4])
-  //         .buffer(3, OverflowStrategy.FAIL)
-  //         .delay(50)
-  //         .toArray();
-  //       should.fail('Error expected');
-  //     } catch (e) {
-  //       e.message.should.be.eql('Buffer overflow');
-  //     }
-  //   });
-  // });
+  describe('buffer', () => {
+    it('drop head', async () => {
+      const result = await Source.from([1, 2, 3, 4, 5])
+        .buffer(2, OverflowStrategy.DROP_HEAD)
+        .throttle(50)
+        .toArray();
+      result.should.be.eql([1, 2, 4, 5]);
+    });
+    it('drop tail', async () => {
+      const result = await Source.from([1, 2, 3, 4, 5])
+        .buffer(2, OverflowStrategy.DROP_TAIL)
+        .throttle(50)
+        .toArray();
+      result.should.be.eql([1, 2, 3, 5]);
+    });
+    it('drop new', async () => {
+      const result = await Source.from([1, 2, 3, 4, 5])
+        .buffer(2, OverflowStrategy.DROP_NEW)
+        .throttle(50)
+        .toArray();
+      result.should.be.eql([1, 2, 3, 4]);
+    });
+    it('drop buffer', async () => {
+      const result = await Source.from([1, 2, 3, 4, 5])
+        .buffer(2, OverflowStrategy.DROP_BUFFER)
+        .throttle(50)
+        .toArray();
+      result.should.be.eql([1, 2, 5]);
+    });
+    it('back pressure', async () => {
+      const result = await Source.from([1, 2, 3, 4, 5])
+        .buffer(2, OverflowStrategy.BACK_PRESSURE)
+        .throttle(50)
+        .toArray();
+      result.should.be.eql([1, 2, 3, 4, 5]);
+    });
+    it('fail', async () => {
+      Source.from([1, 2, 3, 4, 5])
+        .buffer(2, OverflowStrategy.FAIL)
+        .throttle(50)
+        .toArray()
+        .should.be.rejectedWith({ message: 'Buffer overflow' });
+    });
+  });
 });
 
 describe('Fan in stages', () => {

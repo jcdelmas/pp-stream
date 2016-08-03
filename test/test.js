@@ -466,34 +466,34 @@ describe('Fan out stages', () => {
   describe('balance', () => {
     const DELAY = 50;
     it('with source', async () => {
-      const result = await Source.from([1, 2, 3, 4]).balance(
-        Flow.delay(DELAY).pipe(Sink.toArray()),
-        Flow.delay(DELAY).pipe(Sink.toArray())
-      ).run();
-      result.should.be.eql([[1, 3], [2, 4]]);
+      const result = await Source.from([1, 2, 3, 4]).throttle(10).balance(
+        Flow.delay(DELAY).map(x => "A" + x),
+        Flow.delay(DELAY).map(x => "B" + x)
+      ).merge().toArray();
+      result.should.be.eql(["A1", "B2", "A3", "B4"]);
     });
     it('with early cancel', async () => {
-      const result = await Source.from([1, 2, 3, 4]).balance(
-        Flow.take(1).delay(DELAY).pipe(Sink.toArray()),
-        Flow.delay(DELAY).pipe(Sink.toArray())
-      ).run();
-      result.should.be.eql([[1], [2, 3, 4]]);
+      const result = await Source.from([1, 2, 3, 4]).throttle(10).balance(
+        Flow.take(1).delay(DELAY).map(x => "A" + x),
+        Flow.delay(DELAY).map(x => "B" + x)
+      ).merge().toArray();
+      result.should.be.eql(["A1", "B2", "B3", "B4"]);
     });
     it('with flow', async () => {
       const sink = Flow.map(x => x + 1).balance(
-        Flow.delay(DELAY).pipe(Sink.toArray()),
-        Flow.delay(DELAY).pipe(Sink.toArray())
-      );
-      const result = await Source.from([1, 2, 3, 4]).runWith(sink);
-      result.should.be.eql([[2, 4], [3, 5]]);
+        Flow.delay(DELAY).map(x => "A" + x),
+        Flow.delay(DELAY).map(x => "B" + x)
+      ).merge().pipe(Sink.toArray());
+      const result = await Source.from([1, 2, 3, 4]).throttle(10).runWith(sink);
+      result.should.be.eql(["A2", "B3", "A4", "B5"]);
     });
     it('with sink', async () => {
       const sink = FanOut.balance(
-        Flow.delay(DELAY).pipe(Sink.toArray()),
-        Flow.delay(DELAY).pipe(Sink.toArray())
-      );
-      const result = await Source.from([1, 2, 3, 4]).runWith(sink);
-      result.should.be.eql([[1, 3], [2, 4]]);
+        Flow.delay(DELAY).map(x => "A" + x),
+        Flow.delay(DELAY).map(x => "B" + x)
+      ).merge().pipe(Sink.toArray());
+      const result = await Source.from([1, 2, 3, 4]).throttle(10).runWith(sink);
+      result.should.be.eql(["A1", "B2", "A3", "B4"]);
     });
   });
 });

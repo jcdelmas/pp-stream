@@ -306,14 +306,14 @@ export class Stage {
    */
   outputs = [];
 
-  startedOutputs = 0;
+  started = false;
 
   defaultUpstreamHandler = {
     onStart: () => {
-      this.startedOutputs++;
-      if (this.startedOutputs == this.outputs.length) {
-        this.doStart();
+      if (!this.started) {
         this.inputs.forEach(input => input.start());
+        this.doStart();
+        this.started = true;
       }
     }
   };

@@ -584,30 +584,30 @@ describe('Fan out stages', () => {
     const DELAY = 50;
     it('with source', async () => {
       const result = await Source.from([1, 2, 3, 4]).throttle(10).balance(
-        Flow.delay(DELAY).map(x => "A" + x),
-        Flow.delay(DELAY).map(x => "B" + x)
+        delayedFlow(DELAY).map(x => "A" + x),
+        delayedFlow(DELAY).map(x => "B" + x)
       ).merge().toArray();
       result.should.be.eql(["A1", "B2", "A3", "B4"]);
     });
     it('with early cancel', async () => {
       const result = await Source.from([1, 2, 3, 4]).throttle(10).balance(
-        Flow.take(1).delay(DELAY).map(x => "A" + x),
-        Flow.delay(DELAY).map(x => "B" + x)
+        Flow.take(1).pipe(delayedFlow(DELAY)).map(x => "A" + x),
+        delayedFlow(DELAY).map(x => "B" + x)
       ).merge().toArray();
       result.should.be.eql(["A1", "B2", "B3", "B4"]);
     });
     it('with flow', async () => {
       const sink = Flow.map(x => x + 1).balance(
-        Flow.delay(DELAY).map(x => "A" + x),
-        Flow.delay(DELAY).map(x => "B" + x)
+        delayedFlow(DELAY).map(x => "A" + x),
+        delayedFlow(DELAY).map(x => "B" + x)
       ).merge().pipe(Sink.toArray());
       const result = await Source.from([1, 2, 3, 4]).throttle(10).runWith(sink);
       result.should.be.eql(["A2", "B3", "A4", "B5"]);
     });
     it('with sink', async () => {
       const sink = FanOut.balance(
-        Flow.delay(DELAY).map(x => "A" + x),
-        Flow.delay(DELAY).map(x => "B" + x)
+        delayedFlow(DELAY).map(x => "A" + x),
+        delayedFlow(DELAY).map(x => "B" + x)
       ).merge().pipe(Sink.toArray());
       const result = await Source.from([1, 2, 3, 4]).throttle(10).runWith(sink);
       result.should.be.eql(["A1", "B2", "A3", "B4"]);
@@ -654,7 +654,7 @@ describe('Complex routing', () => {
 
   it('balance and concat', async () => {
     const DELAY = 50;
-    const workers = [1, 2, 3].map(x => Flow.delay(DELAY * x).map(x => x + 1));
+    const workers = [1, 2, 3].map(x => delayedFlow(DELAY * x).map(x => x + 1));
 
     const result = await Source.from([1, 2, 3, 4, 5, 6])
         .balance(...workers)
@@ -776,6 +776,10 @@ class TimeSequence {
 
 function delayed(duration, result) {
   return new Promise(resolve => setTimeout(() => resolve(result), duration));
+}
+
+function delayedFlow(duration) {
+  return Flow.mapAsync(x => delayed(duration, x));
 }
 
 function checkTime(time, expectedTime) {

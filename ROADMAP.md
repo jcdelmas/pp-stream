@@ -26,8 +26,6 @@
  * recoverWith
  * detach
  * delay (full support)
- * mapAsync
- * mapAsyncUnordered
  * initialDelay
  * batch
  * prepend

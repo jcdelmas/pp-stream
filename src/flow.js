@@ -303,10 +303,9 @@ export class Distinct extends SimpleStage {
   }
 }
 
-export class MapAsync extends SimpleStage {
+export class MapAsyncUnordered extends SimpleStage {
 
   buffer = [];
-  runningJobs = [];
 
   constructor(fn, parallelism = 1) {
     super();
@@ -324,24 +323,18 @@ export class MapAsync extends SimpleStage {
       throw new Error('No available worker');
     }
     this.availableWorkers--;
-    const x = this.grab();
-    this._execute(x);
+    this._execute(this.grab());
     if (this.availableWorkers > 0) {
       this.pull();
     }
   }
 
   _execute(x) {
-    const job = new Job(() => this.fn(x));
-    this.runningJobs.push(job);
-    job.run().then(() => {
-      while (this.runningJobs.length && this.runningJobs[0].completed) {
-        const y = this.runningJobs.shift().result;
-        if (this.isOutputAvailable()) {
-          this.fullPush(y);
-        } else {
-          this.buffer.push(y);
-        }
+    this.fn(x).then(y => {
+      if (this.isOutputAvailable()) {
+        this.fullPush(y);
+      } else {
+        this.buffer.push(y);
       }
     }).catch(err => this.error(err));
   }
@@ -370,6 +363,30 @@ export class MapAsync extends SimpleStage {
 
   hasPendingJobs() {
     return this.availableWorkers < this.maxWorkers;
+  }
+}
+
+export class MapAsync extends MapAsyncUnordered {
+
+  runningJobs = [];
+
+  constructor(fn, parallelism = 1) {
+    super(fn, parallelism);
+  }
+
+  _execute(x) {
+    const job = new Job(() => this.fn(x));
+    this.runningJobs.push(job);
+    job.run().then(() => {
+      while (this.runningJobs.length && this.runningJobs[0].completed) {
+        const y = this.runningJobs.shift().result;
+        if (this.isOutputAvailable()) {
+          this.fullPush(y);
+        } else {
+          this.buffer.push(y);
+        }
+      }
+    }).catch(err => this.error(err));
   }
 }
 

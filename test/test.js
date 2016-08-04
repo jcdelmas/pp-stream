@@ -23,11 +23,10 @@ const WithTime = Flow.createSimple({
 });
 
 function timeChecker(results, expected) {
-  results.should.have.length(expected.length);
-  expected.forEach(([x, time], i) => {
-    results[i][0].should.be.eql(x);
-    checkTime(results[i][1], time)
-  })
+  results.map(x => {
+    const rawTime = x[1];
+    return [x[0], Math.floor((rawTime + 50) / 100) * 100];
+  }).should.be.eql(expected);
 }
 
 describe('Source', () => {
@@ -202,6 +201,58 @@ describe('Flow stages', () => {
         [1, 100],
         [2, 100],
         [3, 200]
+      ]);
+    });
+  });
+  describe('mapAsyncUnordered', () => {
+    it('simple', async () => {
+      const result = await Source.from([1, 2, 3]).mapAsyncUnordered(x => delayed(100, x)).pipe(WithTime).toArray();
+      timeChecker(result, [
+        [1, 100],
+        [2, 200],
+        [3, 300]
+      ]);
+    });
+    it('check order when parallelism is 1', async () => {
+      const result = await Source.from([3, 1, 2]).mapAsyncUnordered(x => delayed((x - 1) * 100, x)).pipe(WithTime).toArray();
+      timeChecker(result, [
+        [3, 200],
+        [1, 200],
+        [2, 300]
+      ]);
+    });
+    it('check unordered with parallelism > 1', async () => {
+      const result = await Source.from([2, 1, 3]).mapAsyncUnordered(x => delayed(x * 100, x), 2).pipe(WithTime).toArray();
+      timeChecker(result, [
+        [1, 100],
+        [2, 200],
+        [3, 400]
+      ]);
+    });
+    it('check parallelism', async () => {
+      const result = await Source.from([4, 3, 2, 3]).mapAsyncUnordered(x => delayed(x * 100, x), 2).pipe(WithTime).toArray();
+      timeChecker(result, [
+        [3, 300],
+        [4, 400],
+        [2, 500],
+        [3, 700]
+      ]);
+    });
+    it('check parallelism - 2', async () => {
+      const result = await Source.from([4, 3, 1, 1]).mapAsyncUnordered(x => delayed(x * 100, x), 3).pipe(WithTime).toArray();
+      timeChecker(result, [
+        [1, 100],
+        [1, 200],
+        [3, 300],
+        [4, 400]
+      ]);
+    });
+    it('with cancel', async () => {
+      const result = await Source.from([4, 3, 1, 1]).mapAsyncUnordered(x => delayed(x * 100, x), 3).take(3).pipe(WithTime).toArray();
+      timeChecker(result, [
+        [1, 100],
+        [1, 200],
+        [3, 300]
       ]);
     });
   });

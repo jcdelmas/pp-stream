@@ -11,6 +11,7 @@ import {
   Drop,
   DropWhile,
   Grouped,
+  MapAsync,
   MapConcat,
   Sliding,
   Scan,
@@ -170,6 +171,10 @@ export const Flow = {
         }
       },
     });
+  },
+
+  mapAsync(fn, parallelism = 1) {
+    return this.create(() => new MapAsync(fn, parallelism))
   },
 
   buffer(size, overflowStrategy = OverflowStrategy.FAIL) {
@@ -492,6 +497,15 @@ export default class Stream {
    */
   filter(fn) {
     return this.pipe(Flow.filter(fn));
+  }
+
+  /**
+   * @param fn
+   * @param {int} parallelism
+   * @return {Stream}
+   */
+  mapAsync(fn, parallelism = 1) {
+    return this.pipe(Flow.mapAsync(fn, parallelism));
   }
 
   /**

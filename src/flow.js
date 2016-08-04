@@ -303,6 +303,93 @@ export class Distinct extends SimpleStage {
   }
 }
 
+export class MapAsync extends SimpleStage {
+
+  buffer = [];
+  runningJobs = [];
+
+  constructor(fn, parallelism = 1) {
+    super();
+    this.fn = fn;
+    this.maxWorkers = parallelism;
+    this.availableWorkers = parallelism;
+  }
+
+  doStart() {
+    this.pull();
+  }
+
+  onPush() {
+    if (this.availableWorkers === 0) {
+      throw new Error('No available worker');
+    }
+    this.availableWorkers--;
+    const x = this.grab();
+    this._execute(x);
+    if (this.availableWorkers > 0) {
+      this.pull();
+    }
+  }
+
+  _execute(x) {
+    const job = new Job(() => this.fn(x));
+    this.runningJobs.push(job);
+    job.run().then(() => {
+      while (this.runningJobs.length && this.runningJobs[0].completed) {
+        const y = this.runningJobs.shift().result;
+        if (this.isOutputAvailable()) {
+          this.fullPush(y);
+        } else {
+          this.buffer.push(y);
+        }
+      }
+    }).catch(err => this.error(err));
+  }
+
+  fullPush(x) {
+    this.push(x);
+    this.availableWorkers++;
+    if (!this.hasPendingJobs() && this.isInputClosed()) {
+      this.complete();
+    } else if (!this.isInputHasBeenPulled() && !this.isInputClosed()) {
+      this.pull();
+    }
+  }
+
+  onPull() {
+    if (this.buffer.length) {
+      this.fullPush(this.buffer.shift());
+    }
+  }
+
+  onComplete() {
+    if (!this.hasPendingJobs()) {
+      this.complete();
+    }
+  }
+
+  hasPendingJobs() {
+    return this.availableWorkers < this.maxWorkers;
+  }
+}
+
+class Job {
+
+  completed = false;
+  result = null;
+
+  constructor(job) {
+    this.job = job;
+  }
+
+  run() {
+    return this.job().then(x => {
+      this.result = x;
+      this.completed = true;
+    });
+  }
+}
+
 export class Throttle extends SimpleStage {
 
   pending = null;

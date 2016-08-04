@@ -125,7 +125,7 @@ class Wire {
 
   pull() {
     if (!this.started) {
-      throw new Error('Not started');
+      throw new Error('Upstream stage not started');
     }
     if (this.closed || this.canceled) {
       throw new Error('Input closed');
@@ -171,7 +171,7 @@ class Wire {
 
   push(x) {
     if (!this.started) {
-      throw new Error('Not started');
+      throw new Error('Downstream stage not started');
     }
     if (this.closed || this.completed) {
       throw new Error('Output closed');

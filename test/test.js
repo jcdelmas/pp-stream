@@ -12,6 +12,24 @@ import {
   OverflowStrategy
 } from '../src/index';
 
+const WithTime = Flow.createSimple({
+  doStart() {
+    this.startTime = new Date().getTime();
+  },
+  onPush() {
+    const x = this.grab();
+    this.push([x, new Date().getTime() - this.startTime])
+  }
+});
+
+function timeChecker(results, expected) {
+  results.should.have.length(expected.length);
+  expected.forEach(([x, time], i) => {
+    results[i][0].should.be.eql(x);
+    checkTime(results[i][1], time)
+  })
+}
+
 describe('Source', () => {
   it('from(list)', async () => {
     const result = await Source.from([1, 2, 3]).toArray();
@@ -135,6 +153,58 @@ describe('Flow stages', () => {
       result.should.be.eql([1, 2, 3]);
     });
   });
+  describe('mapAsync', () => {
+    it('simple', async () => {
+      const result = await Source.from([1, 2, 3]).mapAsync(x => delayed(100, x)).pipe(WithTime).toArray();
+      timeChecker(result, [
+        [1, 100],
+        [2, 200],
+        [3, 300]
+      ]);
+    });
+    it('check order', async () => {
+      const result = await Source.from([3, 1, 2]).mapAsync(x => delayed((x - 1) * 100, x)).pipe(WithTime).toArray();
+      timeChecker(result, [
+        [3, 200],
+        [1, 200],
+        [2, 300]
+      ]);
+    });
+    it('check order with parallelism', async () => {
+      const result = await Source.from([3, 1, 2]).mapAsync(x => delayed(x * 100, x), 2).pipe(WithTime).toArray();
+      timeChecker(result, [
+        [3, 300],
+        [1, 300],
+        [2, 500]
+      ]);
+    });
+    it('check parallelism', async () => {
+      const result = await Source.from([1, 2, 3, 4]).mapAsync(x => delayed(x * 100, x), 2).pipe(WithTime).toArray();
+      timeChecker(result, [
+        [1, 100],
+        [2, 200],
+        [3, 400],
+        [4, 600]
+      ]);
+    });
+    it('check parallelism - 2', async () => {
+      const result = await Source.from([1, 2, 3, 4]).mapAsync(x => delayed(x * 100, x), 3).pipe(WithTime).toArray();
+      timeChecker(result, [
+        [1, 100],
+        [2, 200],
+        [3, 300],
+        [4, 500]
+      ]);
+    });
+    it('with cancel', async () => {
+      const result = await Source.from([1, 2, 3, 4]).mapAsync(x => delayed(100, x), 2).take(3).pipe(WithTime).toArray();
+      timeChecker(result, [
+        [1, 100],
+        [2, 100],
+        [3, 200]
+      ]);
+    });
+  });
   describe('flatMapConcat', () => {
     it('simple', async () => {
       const result = await Source.from([1, 2, 3]).flatMapConcat(i => {
@@ -199,10 +269,6 @@ describe('Flow stages', () => {
   });
 
   describe('throttle', () => {
-    const checkTime = (time, expectedTime) => {
-      time.should.be.above(expectedTime - 20);
-      time.should.be.below(expectedTime + 20);
-    };
     it('simple', async () => {
       const startTime = new Date().getTime();
       const result = await Source.repeat(1).throttle(100).take(4).map(x => new Date().getTime() - startTime).toArray();
@@ -655,4 +721,13 @@ class TimeSequence {
       }, event.duration)
     }, callback)();
   }
+}
+
+function delayed(duration, result) {
+  return new Promise(resolve => setTimeout(() => resolve(result), duration));
+}
+
+function checkTime(time, expectedTime) {
+  time.should.be.above(expectedTime - 30);
+  time.should.be.below(expectedTime + 30);
 }

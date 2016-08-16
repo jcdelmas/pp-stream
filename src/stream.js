@@ -849,11 +849,7 @@ class FlatMapMerge extends SimpleStage {
       if (availableStage) {
         this.push(availableStage.grab());
       }
-      this.stages.forEach(stage => {
-        if (!stage.isInputHasBeenPulled() && !stage.isInputClosed()) {
-          stage.pull();
-        }
-      });
+      this.stages.forEach(stage => stage.pullIfAllowed());
     } else {
       this.pull();
     }

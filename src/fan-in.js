@@ -60,7 +60,7 @@ export class Merge extends FanInStage {
       }
     } else {
       this.inputs.forEach(input => {
-        if (!input.hasBeenPulled() && !input.isClosed()) {
+        if (input.canBePulled()) {
           input.pull();
         }
       });
@@ -159,9 +159,7 @@ export class Interleave extends FanInStage {
   }
 
   onPull() {
-    if (!this.currentInput().hasBeenPulled()) {
-      this.currentInput().pull();
-    }
+    this.currentInput().pullIfAllowed();
   }
 
   onCancel() {

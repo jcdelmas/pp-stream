@@ -37,9 +37,7 @@ export class BufferFlow extends SimpleStage {
     if (!this.buffer.isEmpty()) {
       this.push(this.buffer.pull());
     }
-    if (!this.isInputHasBeenPulled() && !this.isInputClosed()) {
-      this.pull();
-    }
+    this.pullIfAllowed();
     if (this.pendingComplete && this.buffer.isEmpty()) {
       this.complete();
     }
@@ -344,8 +342,8 @@ export class MapAsyncUnordered extends SimpleStage {
     this.availableWorkers++;
     if (!this.hasPendingJobs() && this.isInputClosed()) {
       this.complete();
-    } else if (!this.isInputHasBeenPulled() && !this.isInputClosed()) {
-      this.pull();
+    } else {
+      this.pullIfAllowed();
     }
   }
 

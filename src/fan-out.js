@@ -42,9 +42,7 @@ export class Balance extends FanOutStage {
   createUpstreamHandler(index) {
     return {
       onPull: () => {
-        if (!this.isInputHasBeenPulled()) {
-          this.pull();
-        }
+        this.pullIfAllowed();
       },
       onCancel: () => {
         if (!this.openOutputs().length) {

@@ -41,6 +41,12 @@ export class Inlet {
     this._wire.pull();
   }
 
+  pullIfAllowed() {
+    if (this.canBePulled()) {
+      this.pull();
+    }
+  }
+
   cancel() {
     this._wire.cancel();
   }
@@ -465,6 +471,10 @@ export class FanOutStage extends Stage {
     this.inputs[0].pull();
   }
 
+  pullIfAllowed() {
+    this.inputs[0].pullIfAllowed();
+  }
+
   cancel() {
     this.inputs[0].cancel();
   }
@@ -540,6 +550,10 @@ export class SimpleStage extends Stage {
     this.inputs[0].pull();
   }
 
+  pullIfAllowed() {
+    this.inputs[0].pullIfAllowed();
+  }
+
   cancel() {
     this.inputs[0].cancel();
   }
@@ -554,6 +568,10 @@ export class SimpleStage extends Stage {
 
   isInputHasBeenPulled() {
     return this.inputs[0].hasBeenPulled();
+  }
+
+  isInputCanBePulled() {
+    return this.inputs[0].canBePulled();
   }
 
   push(x) {

@@ -1,7 +1,6 @@
 
 import {
   Stage,
-  SimpleStage,
   SourceStage,
   SinkStage,
   UpstreamHandler,
@@ -20,7 +19,6 @@ export {
   FanIn,
   FanOut,
   Stage,
-  SimpleStage,
   SourceStage,
   SinkStage,
   UpstreamHandler,

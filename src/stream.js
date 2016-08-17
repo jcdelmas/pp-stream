@@ -2,7 +2,7 @@
 
 import Module from './module';
 import { OverflowStrategy } from './buffer';
-import { SimpleStage, SourceStage, SinkStage } from './stage';
+import { Stage, SourceStage, SinkStage } from './stage';
 import { PushSourceStage, ArraySourceStage, CallbackSourceStage } from './source';
 import {
   BufferFlow,
@@ -142,7 +142,7 @@ export const Flow = {
    * @returns {Flow}
    */
   createSimple(stageMethods) {
-    return this.create(() => new SimpleStage(stageMethods));
+    return this.create(() => new Stage(stageMethods));
   },
 
   /**
@@ -749,7 +749,7 @@ export default class Stream {
 
 // Higher order stages
 
-class FlatMapConcat extends SimpleStage {
+class FlatMapConcat extends Stage {
   constructor(fn) {
     super();
     this.fn = fn;
@@ -783,7 +783,7 @@ class FlatMapConcat extends SimpleStage {
 
   onPull() {
     if (this.current) {
-      this.current.onPull();
+      this.current.pullIfAllowed();
     } else {
       this.pull();
     }
@@ -804,7 +804,7 @@ class FlatMapConcat extends SimpleStage {
     }
   }
 }
-class FlatMapMerge extends SimpleStage {
+class FlatMapMerge extends Stage {
   constructor(fn, breadth = 16) {
     super();
     this.fn = fn;

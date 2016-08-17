@@ -1,7 +1,7 @@
-import { SimpleStage } from './stage';
+import { Stage } from './stage';
 import Buffer, { OverflowStrategy } from './buffer';
 
-export class BufferFlow extends SimpleStage {
+export class BufferFlow extends Stage {
 
   pendingComplete = false;
 
@@ -52,7 +52,7 @@ export class BufferFlow extends SimpleStage {
   }
 }
 
-export class Scan extends SimpleStage {
+export class Scan extends Stage {
   constructor(fn, zero) {
     super();
     this.fn = fn;
@@ -65,7 +65,7 @@ export class Scan extends SimpleStage {
   }
 }
 
-export class MapConcat extends SimpleStage {
+export class MapConcat extends Stage {
   constructor(fn) {
     super();
     this.fn = fn;
@@ -111,7 +111,7 @@ export class MapConcat extends SimpleStage {
   }
 }
 
-export class Grouped extends SimpleStage {
+export class Grouped extends Stage {
   constructor(size) {
     super();
     this.size = size;
@@ -140,7 +140,7 @@ export class Grouped extends SimpleStage {
   }
 }
 
-export class Sliding extends SimpleStage {
+export class Sliding extends Stage {
   constructor(size, step = 1) {
     super();
     this.size = size;
@@ -172,7 +172,7 @@ export class Sliding extends SimpleStage {
   }
 }
 
-export class Take extends SimpleStage {
+export class Take extends Stage {
 
   constructor(nbr) {
     super();
@@ -186,12 +186,12 @@ export class Take extends SimpleStage {
       this.push(this.grab());
     }
     if (this.count === this.nbr) {
-      this.completeStage();
+      this.finish();
     }
   }
 }
 
-export class TakeWhile extends SimpleStage {
+export class TakeWhile extends Stage {
 
   constructor(fn) {
     super();
@@ -203,12 +203,12 @@ export class TakeWhile extends SimpleStage {
     if (this.fn(v)) {
       this.push(v);
     } else {
-      this.completeStage();
+      this.finish();
     }
   }
 }
 
-export class Drop extends SimpleStage {
+export class Drop extends Stage {
 
   constructor(nbr) {
     super();
@@ -226,7 +226,7 @@ export class Drop extends SimpleStage {
   }
 }
 
-export class DropWhile extends SimpleStage {
+export class DropWhile extends Stage {
 
   dropFinished = false;
 
@@ -250,7 +250,7 @@ export class DropWhile extends SimpleStage {
   }
 }
 
-export class Delay extends SimpleStage {
+export class Delay extends Stage {
 
   constructor(duration) {
     super();
@@ -286,7 +286,7 @@ export class Delay extends SimpleStage {
   }
 }
 
-export class Distinct extends SimpleStage {
+export class Distinct extends Stage {
 
   last = null;
 
@@ -301,7 +301,7 @@ export class Distinct extends SimpleStage {
   }
 }
 
-export class MapAsyncUnordered extends SimpleStage {
+export class MapAsyncUnordered extends Stage {
 
   buffer = [];
 
@@ -405,7 +405,7 @@ class Job {
   }
 }
 
-export class Throttle extends SimpleStage {
+export class Throttle extends Stage {
 
   pending = null;
   completePending = false;

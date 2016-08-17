@@ -81,13 +81,13 @@ export class Zip extends FanInStage {
           this.push(this.inputs.map(i => i.grab()));
 
           if (this.inputs.some(i => i.isClosed())) {
-            this.completeStage();
+            this.finish();
           }
         }
       },
       onComplete: () => {
         if (!this.isOutputClosed() && !this.inputs[index].isAvailable()) {
-          this.completeStage();
+          this.finish();
         }
       },
       onError: e => this.error(e)

@@ -317,29 +317,168 @@ export class Stage {
   defaultUpstreamHandler = {
     onStart: () => {
       if (!this.started) {
-        this.inputs.forEach(input => input.start());
+        this.start();
         this.doStart();
         this.started = true;
       }
     }
   };
 
+  constructor({ doStart, doFinish, onPush, onPull, onComplete, onCancel, onError } = {}) {
+    if (doStart) this.doStart = doStart.bind(this);
+    if (doFinish) this.doFinish = doFinish.bind(this);
+    if (onPush) this.onPush = onPush.bind(this);
+    if (onPull) this.onPull = onPull.bind(this);
+    if (onComplete) this.onComplete = onComplete.bind(this);
+    if (onCancel) this.onCancel = onCancel.bind(this);
+    if (onError) this.onError = onError.bind(this);
+  }
+
+  // Lifecycle methods
+
   doStart() {}
 
   doFinish() {}
 
-  completeStage() {
-    this.cancelAll();
+  // Downstream handler methods
+
+  onPush() {
+    this.push(this.grab());
+  }
+
+  /**
+   * @param {Error} e
+   */
+  onError(e) {
     this.doFinish();
-    this.completeAll();
+    this.error(e);
   }
 
-  cancelAll() {
-    this.inputs.filter(input => !input.isClosed()).forEach(input => input.cancel());
+  onComplete() {
+    this.doFinish();
+    this.complete();
   }
 
-  completeAll() {
-    this.outputs.filter(output => !output.isClosed()).forEach(output => output.complete());
+  // Upstream handler methods
+
+  onStart() {
+    this.start();
+    this.doStart();
+    this.started = true;
+  }
+
+  onPull() {
+    this.inputs.forEach(input => input.pullIfAllowed());
+  }
+
+  onCancel() {
+    this.cancel();
+    this.doFinish();
+  }
+
+  // General command methods
+
+  finish() {
+    this.cancel();
+    this.doFinish();
+    this.complete();
+  }
+
+  start() {
+    this.inputs.forEach(input => input.start());
+  }
+
+  cancel() {
+    this.inputs.forEach(input => {
+      if (!input.isClosed()) {
+        input.cancel();
+      }
+    });
+  }
+
+  complete() {
+    this.outputs.forEach(output => {
+      if (!output.isClosed()) {
+        output.complete();
+      }
+    });
+  }
+
+  error(e) {
+    this.outputs.forEach(output => {
+      if (!output.isClosed()) {
+        output.error(e);
+      }
+    });
+  }
+
+  // Single input command methods
+
+  grab() {
+    return this.inputs[0].grab();
+  }
+
+  pull() {
+    this.inputs[0].pull();
+  }
+
+  pullIfAllowed() {
+    this.inputs[0].pullIfAllowed();
+  }
+
+  // Single input query methods
+
+  isInputAvailable() {
+    return this.inputs[0].isAvailable();
+  }
+
+  isInputClosed() {
+    return this.inputs[0].isClosed();
+  }
+
+  isInputHasBeenPulled() {
+    return this.inputs[0].hasBeenPulled();
+  }
+
+  isInputCanBePulled() {
+    return this.inputs[0].canBePulled();
+  }
+
+  // Single output command methods
+
+  push(x) {
+    this.outputs[0].push(x);
+  }
+
+  pushAndComplete(x) {
+    this.push(x);
+    this.complete();
+  }
+
+  // Single output query methods
+
+  isOutputAvailable() {
+    return this.outputs[0].isAvailable();
+  }
+
+  isOutputClosed() {
+    return this.outputs[0].isClosed();
+  }
+
+  // Build methods
+
+  createDownstreamHandler(index) {
+    if (index > 0) {
+      throw new Error('Input already exist');
+    }
+    return this;
+  }
+
+  createUpstreamHandler(index) {
+    if (index > 0) {
+      throw new Error('Output already exist');
+    }
+    return this;
   }
 
   /**
@@ -379,296 +518,146 @@ export class Stage {
   _addInput(input) {
     this.inputs.push(input)
   }
-
-  /**
-   * @return {DownstreamHandler}
-   */
-  createDownstreamHandler(index) {
-    throw new Error('Not implemented');
-  }
-
-  /**
-   * @return {UpstreamHandler}
-   */
-  createUpstreamHandler(index) {
-    throw new Error('Not implemented');
-  }
 }
 
 export class FanInStage extends Stage {
 
-  createUpstreamHandler(index) {
-    if (index > 0) {
-      throw new Error('Output already exist');
-    }
-    return this;
+  createDownstreamHandler(index) {
+    throw new Error('Not implemented');
   }
 
-  push(x) {
-    this.outputs[0].push(x);
+  // Not allowed methods
+
+  onPush() {
+    throw new Error('Not supported');
   }
 
-  pushAndComplete(x) {
-    this.push(x);
-    this.complete();
+  onError(e) {
+    throw new Error('Not supported');
   }
 
-  error(e) {
-    this.outputs[0].error(e);
+  onComplete() {
+    throw new Error('Not supported');
   }
 
-  complete() {
-    this.outputs[0].complete();
+  grab() {
+    throw new Error('Not supported');
   }
 
-  isOutputAvailable() {
-    return this.outputs[0].isAvailable();
+  pull() {
+    throw new Error('Not supported');
   }
 
-  isOutputClosed() {
-    return this.outputs[0].isClosed();
+  pullIfAllowed() {
+    throw new Error('Not supported');
   }
 
-  onStart() {
-    this.inputs.forEach(input => input.start());
+  isInputAvailable() {
+    throw new Error('Not supported');
   }
 
-  onPull() {
-    this.inputs.forEach(input => {
-      if (input.canBePulled()) {
-        input.pull();
-      }
-    });
+  isInputClosed() {
+    throw new Error('Not supported');
   }
 
-  onCancel() {
-    this.inputs.forEach(input => {
-      if (!input.isClosed()) {
-        input.cancel();
-      }
-    });
+  isInputHasBeenPulled() {
+    throw new Error('Not supported');
+  }
+
+  isInputCanBePulled() {
+    throw new Error('Not supported');
   }
 }
 
 export class FanOutStage extends Stage {
 
-  createDownstreamHandler(index) {
-    if (index > 0) {
-      throw new Error('Input already exist');
-    }
-    return this;
-  }
-
-  grab() {
-    return this.inputs[0].grab();
-  }
-
-  start() {
-    this.inputs[0].start();
-  }
-
-  pull() {
-    this.inputs[0].pull();
-  }
-
-  pullIfAllowed() {
-    this.inputs[0].pullIfAllowed();
-  }
-
-  cancel() {
-    this.inputs[0].cancel();
-  }
-
-  isInputAvailable() {
-    return this.inputs[0].isAvailable();
-  }
-
-  isInputClosed() {
-    return this.inputs[0].isClosed();
-  }
-
-  isInputHasBeenPulled() {
-    return this.inputs[0].hasBeenPulled();
-  }
-
-  onPush() {
-    this.push(this.grab());
-  }
-
-  /**
-   * @param {Error} e
-   */
-  onError(e) {
-    this.outputs[0].error(e);
-  }
-
-  onComplete() {
-    this.completeAll();
-  }
-}
-
-/**
- * @implements {DownstreamHandler}
- * @implements {UpstreamHandler}
- */
-export class SimpleStage extends Stage {
-
-  constructor({ doStart, doFinish, onPush, onPull, onComplete, onCancel, onError } = {}) {
-    super();
-    if (doStart) this.doStart = doStart.bind(this);
-    if (doFinish) this.doFinish = doFinish.bind(this);
-    if (onPush) this.onPush = onPush.bind(this);
-    if (onPull) this.onPull = onPull.bind(this);
-    if (onComplete) this.onComplete = onComplete.bind(this);
-    if (onCancel) this.onCancel = onCancel.bind(this);
-    if (onError) this.onError = onError.bind(this);
-  }
-
-  createDownstreamHandler(index) {
-    if (index > 0) {
-      throw new Error('Input already exist');
-    }
-    return this;
-  }
-
   createUpstreamHandler(index) {
-    if (index > 0) {
-      throw new Error('Output already exist');
-    }
-    return this;
+    throw new Error('Not implemented')
   }
 
-  grab() {
-    return this.inputs[0].grab();
+  // Not allowed methods
+
+  onStart() {
+    throw new Error('Not supported');
   }
 
-  start() {
-    this.inputs[0].start();
+  onPull() {
+    throw new Error('Not supported');
   }
 
-  pull() {
-    this.inputs[0].pull();
-  }
-
-  pullIfAllowed() {
-    this.inputs[0].pullIfAllowed();
-  }
-
-  cancel() {
-    this.inputs[0].cancel();
-  }
-
-  isInputAvailable() {
-    return this.inputs[0].isAvailable();
-  }
-
-  isInputClosed() {
-    return this.inputs[0].isClosed();
-  }
-
-  isInputHasBeenPulled() {
-    return this.inputs[0].hasBeenPulled();
-  }
-
-  isInputCanBePulled() {
-    return this.inputs[0].canBePulled();
+  onCancel() {
+    throw new Error('Not supported');
   }
 
   push(x) {
-    this.outputs[0].push(x);
+    throw new Error('Not supported');
   }
 
   pushAndComplete(x) {
-    this.push(x);
-    this.complete();
-  }
-
-  error(e) {
-    this.outputs[0].error(e);
-  }
-
-  complete() {
-    this.outputs[0].complete();
+    throw new Error('Not supported');
   }
 
   isOutputAvailable() {
-    return this.outputs[0].isAvailable();
+    throw new Error('Not supported');
   }
 
   isOutputClosed() {
-    return this.outputs[0].isClosed();
+    throw new Error('Not supported');
   }
+}
 
-  onPush() {
-    this.push(this.grab());
-  }
+export class SourceStage extends Stage {
 
   onStart() {
-    this.start();
     this.doStart();
   }
 
   onPull() {
-    this.pull();
   }
 
-  /**
-   * @param {Error} e
-   */
+  onCancel() {
+  }
+
+  // Not allowed methods
+
+  onPush() {
+    throw new Error('Not supported');
+  }
+
   onError(e) {
-    this.doFinish();
-    this.error(e);
+    throw new Error('Not supported');
   }
 
   onComplete() {
-    this.doFinish();
-    this.complete();
-  }
-
-  onCancel() {
-    this.cancel();
-    this.doFinish();
-  }
-}
-
-export class SourceStage extends SimpleStage {
-
-  onStart() {
-    this.doStart();
-  }
-
-  onPull() {
-  }
-
-  onCancel() {
+    throw new Error('Not supported');
   }
 
   start() {
-    throw new Error('Not allowed');
+    throw new Error('Not supported');
   }
 
   pull() {
-    throw new Error('Not allowed');
+    throw new Error('Not supported');
   }
 
   cancel() {
-    throw new Error('Not allowed');
+    throw new Error('Not supported');
   }
 
-  completeStage() {
-    throw new Error('Not allowed');
+  finish() {
+    throw new Error('Not supported');
   }
 
   _createNextDownstreamHandler() {
-    throw new Error('Not allowed on source');
+    throw new Error('Not supported');
   }
 
   _addInput(input) {
-    throw new Error('Not allowed on source');
+    throw new Error('Not supported');
   }
 }
 
-export class SinkStage extends SimpleStage {
+export class SinkStage extends Stage {
 
   constructor(methods = {}) {
     super(methods);
@@ -683,13 +672,12 @@ export class SinkStage extends SimpleStage {
   }
 
   complete(result) {
-    if (!this.inputs[0].isClosed()) {
-      this.cancel();
-    }
+    this.cancel();
     this.resolve(result);
   }
 
   error(e) {
+    this.cancel();
     this.reject(e);
   }
 
@@ -697,11 +685,37 @@ export class SinkStage extends SimpleStage {
     return this.resultPromise;
   }
 
+  // Not supported methods
+
   _addDownstreamStage(stage) {
-    throw new Error('Not allowed on sink');
+    throw new Error('Not supported');
   }
 
-  push() {
-    throw new Error('Not allowed');
+  onStart() {
+    throw new Error('Not supported');
+  }
+
+  onPull() {
+    throw new Error('Not supported');
+  }
+
+  onCancel() {
+    throw new Error('Not supported');
+  }
+
+  push(x) {
+    throw new Error('Not supported');
+  }
+
+  pushAndComplete(x) {
+    throw new Error('Not supported');
+  }
+
+  isOutputAvailable() {
+    throw new Error('Not supported');
+  }
+
+  isOutputClosed() {
+    throw new Error('Not supported');
   }
 }

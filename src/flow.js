@@ -252,37 +252,70 @@ export class DropWhile extends Stage {
 
 export class Delay extends Stage {
 
-  constructor(duration) {
+  constructor(duration, bufferSize = 16, overflowStrategy = OverflowStrategy.FAIL) {
     super();
     this.duration = duration;
+    this.buffer = new Buffer(bufferSize, overflowStrategy, v => v.cancel());
+    this.overflowStrategy = overflowStrategy;
   }
 
-  currentTimeout = null;
-  pendingComplete = false;
+  doStart() {
+    this.pull();
+  }
 
   onPush() {
-    this.currentTimeout = setTimeout(() => {
-      this.push(this.grab());
-      if (this.pendingComplete) {
-        this.complete();
+    this.buffer.push(new DelayedValue(this.grab(), this.duration, () => {
+      if (this.isOutputAvailable()) {
+        this.pushNext();
+        if (this.overflowStrategy === OverflowStrategy.BACK_PRESSURE) {
+          this.pullIfAllowed();
+        }
       }
-      this.currentTimeout = null;
-    }, this.duration);
+    }));
+    if (this.overflowStrategy !== OverflowStrategy.BACK_PRESSURE || !this.buffer.isFull()) {
+      this.pullIfAllowed();
+    }
   }
 
   onComplete() {
-    if (!this.currentTimeout) {
+    if (this.buffer.isEmpty()) {
       this.complete();
-    } else {
-      this.pendingComplete = true;
     }
   }
 
   onCancel() {
-    if (this.currentTimeout) {
-      clearTimeout(this.currentTimeout);
-    }
+    this.buffer.drain().forEach(v => v.cancel());
     this.cancel();
+  }
+
+  onPull() {
+    if (!this.buffer.isEmpty() && this.buffer.head().completed) {
+      this.pushNext();
+    }
+  }
+
+  pushNext() {
+    this.push(this.buffer.pull().value);
+    if (this.buffer.isEmpty() && this.isInputClosed()) {
+      this.complete();
+    }
+  }
+}
+
+class DelayedValue {
+
+  completed = false;
+
+  constructor(value, duration, handler) {
+    this.value = value;
+    this.timeout = setTimeout(() => {
+      this.completed = true;
+      handler();
+    }, duration);
+  }
+
+  cancel() {
+    clearTimeout(this.timeout);
   }
 }
 

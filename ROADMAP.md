@@ -25,7 +25,6 @@
  * recover
  * recoverWith
  * detach
- * delay (full support)
  * initialDelay
  * batch
  * prepend

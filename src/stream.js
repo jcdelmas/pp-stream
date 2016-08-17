@@ -279,10 +279,20 @@ export const Flow = {
 
   /**
    * @param {number} duration
+   * @param bufferSize
+   * @param overflowStrategy
    * @returns {Flow}
    */
-  delay(duration) {
-    return this.create(() => new Delay(duration));
+  delay(duration, bufferSize = 16, overflowStrategy = OverflowStrategy.FAIL) {
+    return this.create(() => new Delay(duration, bufferSize, overflowStrategy));
+  },
+
+  /**
+   * @param {number} duration
+   * @returns {Flow}
+   */
+  debounce(duration) {
+    return this.create(() => new Delay(duration, 1, OverflowStrategy.DROP_BUFFER));
   },
 
   /**
@@ -629,10 +639,20 @@ export default class Stream {
 
   /**
    * @param {number} duration
+   * @param bufferSize
+   * @param overflowStrategy
    * @returns {Stream}
    */
-  delay(duration) {
-    return this.pipe(Flow.delay(duration));
+  delay(duration, bufferSize = 16, overflowStrategy = OverflowStrategy.FAIL) {
+    return this.pipe(Flow.delay(duration, bufferSize, overflowStrategy));
+  }
+
+  /**
+   * @param {number} duration
+   * @returns {Stream}
+   */
+  debounce(duration) {
+    return this.pipe(Flow.debounce(duration));
   }
 
   /**

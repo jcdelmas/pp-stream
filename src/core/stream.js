@@ -3,8 +3,7 @@
 import Module from './module';
 import Source from './source';
 import Flow from './flow';
-import { SinkStage } from './sink';
-import { Reduce, SinkTick } from './sink';
+import Sink from './sink';
 import { Concat, Interleave, Merge, Zip } from './fan-in';
 import { Broadcast, Balance } from './fan-out';
 
@@ -88,38 +87,6 @@ Object.assign(Flow, {
     return Stream.fromSourceFactory(firstSource => Source.interleave([firstSource, source], segmentSize));
   }
 });
-
-export const Sink = {
-
-  /**
-   * @param stageProvider
-   * @returns {Stream}
-   */
-  create(stageProvider) {
-    return Stream.fromSourcedMaterializer(source => source._materialize().wireSink(stageProvider()));
-  },
-
-  createSimple(stageMethods) {
-    return this.create(() => new SinkStage(stageMethods));
-  },
-
-  forEach(cb) {
-    return this.createSimple({
-      onPush() {
-        cb(this.grab());
-        this.pull();
-      }
-    });
-  },
-
-  reduce(fn, zero) {
-    return this.create(() => new Reduce(fn, zero));
-  },
-
-  toArray() {
-    return this.reduce((xs, x) => xs.concat([x]), []);
-  }
-};
 
 export const FanOut = {
 
@@ -339,18 +306,6 @@ export default class Stream {
    */
   runWithLastStage(sinkStage) {
     return this.runWith(Sink.create(() => sinkStage));
-  }
-
-  forEach(cb) {
-    return this.runWith(Sink.forEach(cb));
-  }
-
-  toArray() {
-    return this.runWith(Sink.toArray());
-  }
-
-  reduce(fn, zero) {
-    return this.runWith(Sink.reduce(fn, zero));
   }
 
   // Closed graph methods

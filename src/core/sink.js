@@ -1,4 +1,35 @@
 import { Stage } from './stage';
+import Stream from './stream';
+
+/**
+ * @param stageProvider
+ * @returns {Stream}
+ */
+export function create(stageProvider) {
+  return Stream.fromSourcedMaterializer(source => source._materialize().wireSink(stageProvider()));
+}
+
+/**
+ * @param stageMethods
+ * @return {Stream}
+ */
+export function createSimple(stageMethods) {
+  return create(() => new SinkStage(stageMethods));
+}
+
+const Sink = {
+  create,
+  createSimple
+};
+
+export function _registerSink(name, fn) {
+  Sink[name] = fn;
+  Stream.prototype[name] = function (...args) {
+    return this.runWith(fn(...args));
+  };
+}
+
+export default Sink;
 
 export class SinkStage extends Stage {
 
@@ -72,22 +103,5 @@ export class BasicSinkStage extends SinkStage {
 
   onNext(x) {
     throw new Error('Not implemented');
-  }
-}
-
-export class Reduce extends BasicSinkStage {
-
-  constructor(fn, zero) {
-    super();
-    this.fn = fn;
-    this.acc = zero;
-  }
-
-  onNext(x) {
-    this.acc = this.fn(this.acc, x);
-  }
-
-  onComplete() {
-    this.complete(this.acc);
   }
 }

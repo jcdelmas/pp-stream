@@ -1,16 +1,16 @@
 import {
   Stage,
-  SinkStage,
   UpstreamHandler,
   DownstreamHandler
 } from './core/stage';
 
-import {OverflowStrategy} from './core/buffer';
+import { OverflowStrategy } from './core/buffer';
 
-import Stream, {Sink, FanIn, FanOut} from './core/stream';
+import Stream, { FanIn, FanOut } from './core/stream';
 
-import Source, {SourceStage} from './core/source';
+import Source, { SourceStage } from './core/source';
 import Flow from './core/flow';
+import Sink, { SinkStage, BasicSinkStage } from './core/sink';
 
 import './sources/empty';
 import './sources/from-array';
@@ -37,6 +37,10 @@ import './flows/take';
 import './flows/take-while';
 import './flows/throttle';
 
+import './sinks/for-each';
+import './sinks/reduce';
+import './sinks/to-array';
+
 export {
   Stream,
   Source,
@@ -47,6 +51,7 @@ export {
   Stage,
   SourceStage,
   SinkStage,
+  BasicSinkStage,
   UpstreamHandler,
   DownstreamHandler,
   OverflowStrategy

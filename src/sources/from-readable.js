@@ -7,7 +7,7 @@ export function fromPausedReadable(readable) {
 
 Source.fromPausedReadable = fromPausedReadable;
 
-export class PausedReadableSource extends SourceStage {
+class PausedReadableSource extends SourceStage {
 
   constructor(readable) {
     super();

@@ -606,57 +606,6 @@ export class FanOutStage extends Stage {
   }
 }
 
-export class SourceStage extends Stage {
-
-  onStart() {
-    this.doStart();
-  }
-
-  onPull() {
-  }
-
-  onCancel() {
-  }
-
-  // Not allowed methods
-
-  onPush() {
-    throw new Error('Not supported');
-  }
-
-  onError(e) {
-    throw new Error('Not supported');
-  }
-
-  onComplete() {
-    throw new Error('Not supported');
-  }
-
-  start() {
-    throw new Error('Not supported');
-  }
-
-  pull() {
-    throw new Error('Not supported');
-  }
-
-  cancel() {
-    throw new Error('Not supported');
-  }
-
-  finish() {
-    throw new Error('Not supported');
-  }
-
-  _createNextDownstreamHandler() {
-    throw new Error('Not supported');
-  }
-
-  _addInput(input) {
-    throw new Error('Not supported');
-  }
-}
-
 export class SinkStage extends Stage {
 
   constructor(methods = {}) {

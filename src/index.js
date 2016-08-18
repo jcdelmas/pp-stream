@@ -1,15 +1,22 @@
-
 import {
   Stage,
-  SourceStage,
   SinkStage,
   UpstreamHandler,
   DownstreamHandler
-} from './stage';
+} from './core/stage';
 
-import { OverflowStrategy } from './buffer';
+import {OverflowStrategy} from './core/buffer';
 
-import Stream, { Source, Flow, Sink, FanIn, FanOut } from './stream';
+import Stream, {Flow, Sink, FanIn, FanOut} from './core/stream';
+
+import Source, {SourceStage} from './core/source';
+
+import './sources/empty';
+import './sources/from-array';
+import './sources/from-callback';
+import './sources/from-readable';
+import './sources/repeat';
+import './sources/single';
 
 export {
   Stream,

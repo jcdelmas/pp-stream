@@ -3,12 +3,7 @@
 import Module from './module';
 import { OverflowStrategy } from './buffer';
 import { Stage, SourceStage, SinkStage } from './stage';
-import {
-  PushSourceStage,
-  ArraySourceStage,
-  CallbackSourceStage,
-  PausedReadableSource
-} from './source';
+import Source from './source';
 import {
   BufferFlow,
   Delay,
@@ -29,98 +24,32 @@ import { Reduce, SinkTick } from './sink';
 import { Concat, Interleave, Merge, Zip } from './fan-in';
 import { Broadcast, Balance } from './fan-out';
 
-export const Source = {
+/**
+ * @param stageFactory
+ * @param {Stream[]} sources
+ * @private
+ */
+function _fanInSource(stageFactory, sources) {
+  return Stream.fromMaterializer(() => {
+    return Module.merge(...sources.map(s => s._materialize()))
+      .wireFlow(stageFactory());
+  });
+}
 
-  create(stageProvider) {
-    return Stream.fromMaterializer(() => Module.sourceStage(stageProvider()));
-  },
-
-  createSimple(methods) {
-    return this.create(() => new SourceStage(methods));
-  },
-
-  createPushOnly(methods) {
-    return this.create(() => new PushSourceStage(methods));
-  },
-
-  /**
-   * @param items
-   * @returns {Stream}
-   */
-  from(items) {
-    return this.create(() => new ArraySourceStage(items));
-  },
-
-  /**
-   * @param callback
-   * @param {int} bufferSize
-   * @param {string} bufferOverflowStrategy
-   */
-  fromCallback(callback, bufferSize = 16, bufferOverflowStrategy = OverflowStrategy.FAIL) {
-    return this.create(() => new CallbackSourceStage(callback, bufferSize, bufferOverflowStrategy));
-  },
-
-  fromPausedReadable(readable) {
-    return this.create(() => new PausedReadableSource(readable));
-  },
-
-  /**
-   * @returns {Stream}
-   */
-  empty() {
-    return this.createSimple({
-      onPull() {
-        this.complete();
-      }
-    });
-  },
-
-  /**
-   * @returns {Stream}
-   */
-  single(x) {
-    return this.createSimple({
-      onPull() {
-        this.pushAndComplete(x);
-      }
-    });
-  },
-
-  /**
-   * @returns {Stream}
-   */
-  repeat(x) {
-    return this.createSimple({
-      onPull() {
-        this.push(x);
-      }
-    });
-  },
-
-  /**
-   * @param stageFactory
-   * @param {Stream[]} sources
-   * @private
-   */
-  _fanInSource(stageFactory, sources) {
-    return Stream.fromMaterializer(() => {
-      return Module.merge(...sources.map(s => s._materialize()))
-        .wireFlow(stageFactory());
-    });
-  },
+Object.assign(Source, {
 
   /**
    * @param {...Stream} sources
    */
   concat(...sources) {
-    return this._fanInSource(() => new Concat(), sources);
+    return _fanInSource(() => new Concat(), sources);
   },
 
   /**
    * @param {...Stream} sources
    */
   merge(...sources) {
-    return this._fanInSource(() => new Merge(), sources);
+    return _fanInSource(() => new Merge(), sources);
   },
 
   /**
@@ -128,7 +57,7 @@ export const Source = {
    * @returns {Stream}
    */
   zip(...sources) {
-    return this._fanInSource(() => new Zip(), sources);
+    return _fanInSource(() => new Zip(), sources);
   },
 
   /**
@@ -136,9 +65,9 @@ export const Source = {
    * @returns {Stream}
    */
   interleave(sources, segmentSize = 1) {
-    return this._fanInSource(() => new Interleave(segmentSize), sources);
+    return _fanInSource(() => new Interleave(segmentSize), sources);
   }
-};
+});
 
 export const Flow = {
 

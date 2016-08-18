@@ -3,7 +3,10 @@ import { createSimple, _registerFlow } from '../core/flow';
 
 /**
  * @param fn
- * @returns {Flow}
+ * @returns {Stream}
+ *
+ * @memberOf Stream#
+ * @memberOf Flow
  */
 export function map(fn) {
   return createSimple({

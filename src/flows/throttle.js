@@ -2,6 +2,14 @@
 import { Stage } from '../core/stage';
 import { create, _registerFlow } from '../core/flow';
 
+/**
+ * @param duration
+ * @param opts
+ * @return {Stream}
+ *
+ * @memberOf Stream#
+ * @memberOf Flow
+ */
 export function throttle(duration, opts = {}) {
   return create(() => new Throttle(duration, opts));
 }

@@ -2,6 +2,12 @@
 import { Stage } from '../core/stage';
 import { create, _registerFlow } from '../core/flow';
 
+/**
+ * @return {Stream}
+ *
+ * @memberOf Stream#
+ * @memberOf Flow
+ */
 export function distinct() {
   return create(() => new Distinct())
 }

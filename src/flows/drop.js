@@ -4,7 +4,10 @@ import { create, _registerFlow } from '../core/flow';
 
 /**
  * @param {number} n
- * @returns {Flow}
+ * @returns {Stream}
+ *
+ * @memberOf Stream#
+ * @memberOf Flow
  */
 export function drop(n) {
   return create(() => new Drop(n));

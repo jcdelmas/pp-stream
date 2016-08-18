@@ -5,7 +5,10 @@ import { SinkStage } from '../core/sink';
 /**
  * @param fn
  * @param {int} breadth
- * @returns {Flow}
+ * @returns {Stream}
+ *
+ * @memberOf Stream#
+ * @memberOf Flow
  */
 export function flatMapMerge(fn, breadth = 16) {
   return create(() => new FlatMapMerge(fn, breadth));

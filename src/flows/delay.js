@@ -8,6 +8,9 @@ import { create, _registerFlow } from '../core/flow';
  * @param bufferSize
  * @param overflowStrategy
  * @returns {Flow}
+ *
+ * @memberOf Stream#
+ * @memberOf Flow
  */
 export function delay(duration, bufferSize = 16, overflowStrategy = OverflowStrategy.FAIL) {
   return create(() => new Delay(duration, bufferSize, overflowStrategy));

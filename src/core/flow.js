@@ -1,13 +1,17 @@
 import { Stage } from './stage';
 import Stream from './stream';
 
+/**
+ * @param stageProvider
+ * @return {Stream}
+ */
 export function create(stageProvider) {
   return Stream.fromSourcedMaterializer(source => source._materialize().wireFlow(stageProvider()));
 }
 
 /**
  * @param stageMethods
- * @returns {Flow}
+ * @returns {Stream}
  */
 export function createSimple(stageMethods) {
   return create(() => new Stage(stageMethods));

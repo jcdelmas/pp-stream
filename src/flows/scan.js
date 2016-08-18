@@ -5,7 +5,10 @@ import { create, _registerFlow } from '../core/flow';
 /**
  * @param fn
  * @param zero
- * @returns {Flow}
+ * @returns {Stream}
+ *
+ * @memberOf Stream#
+ * @memberOf Flow
  */
 export function scan(fn, zero) {
   return create(() => new Scan(fn, zero));

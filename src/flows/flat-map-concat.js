@@ -4,7 +4,10 @@ import { SinkStage } from '../core/sink';
 
 /**
  * @param fn
- * @returns {Flow}
+ * @returns {Stream}
+ *
+ * @memberOf Stream#
+ * @memberOf Flow
  */
 export function flatMapConcat(fn) {
   return create(() => new FlatMapConcat(fn));

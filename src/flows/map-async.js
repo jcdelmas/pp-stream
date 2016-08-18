@@ -2,10 +2,26 @@
 import { Stage } from '../core/stage';
 import { create, _registerFlow } from '../core/flow';
 
+/**
+ * @param fn
+ * @param parallelism
+ * @return {Stream}
+ *
+ * @memberOf Stream#
+ * @memberOf Flow
+ */
 export function mapAsync(fn, parallelism = 1) {
   return create(() => new MapAsync(fn, parallelism));
 }
 
+/**
+ * @param fn
+ * @param parallelism
+ * @return {Stream}
+ *
+ * @memberOf Stream#
+ * @memberOf Flow
+ */
 export function mapAsyncUnordered(fn, parallelism = 1) {
   return create(() => new MapAsyncUnordered(fn, parallelism));
 }

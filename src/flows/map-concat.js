@@ -4,7 +4,10 @@ import { create, _registerFlow } from '../core/flow';
 
 /**
  * @param fn
- * @returns {Flow}
+ * @returns {Stream}
+ *
+ * @memberOf Stream#
+ * @memberOf Flow
  */
 export function mapConcat(fn) {
   return create(() => new MapConcat(fn));

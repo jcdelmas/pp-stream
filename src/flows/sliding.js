@@ -5,7 +5,10 @@ import { create, _registerFlow } from '../core/flow';
 /**
  * @param {number} n
  * @param {number} step
- * @returns {Flow}
+ * @returns {Stream}
+ *
+ * @memberOf Stream#
+ * @memberOf Flow
  */
 export function sliding(n, step = 1) {
   return create(() => new Sliding(n, step));

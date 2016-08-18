@@ -4,7 +4,10 @@ import { create, _registerFlow } from '../core/flow';
 
 /**
  * @param {function} fn
- * @returns {Flow}
+ * @returns {Stream}
+ *
+ * @memberOf Stream#
+ * @memberOf Flow
  */
 export function takeWhile(fn) {
   return create(() => new TakeWhile(fn));

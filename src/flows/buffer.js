@@ -3,6 +3,14 @@ import Buffer, { OverflowStrategy } from '../core/buffer';
 import { Stage } from '../core/stage';
 import { create, _registerFlow } from '../core/flow';
 
+/**
+ * @param size
+ * @param overflowStrategy
+ * @return {Stream}
+ *
+ * @memberOf Stream#
+ * @memberOf Flow
+ */
 export function buffer(size, overflowStrategy = OverflowStrategy.FAIL) {
   return create(() => new BufferFlow(size, overflowStrategy))
 }

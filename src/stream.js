@@ -3,7 +3,12 @@
 import Module from './module';
 import { OverflowStrategy } from './buffer';
 import { Stage, SourceStage, SinkStage } from './stage';
-import { PushSourceStage, ArraySourceStage, CallbackSourceStage } from './source';
+import {
+  PushSourceStage,
+  ArraySourceStage,
+  CallbackSourceStage,
+  PausedReadableSource
+} from './source';
 import {
   BufferFlow,
   Delay,
@@ -53,6 +58,10 @@ export const Source = {
    */
   fromCallback(callback, bufferSize = 16, bufferOverflowStrategy = OverflowStrategy.FAIL) {
     return this.create(() => new CallbackSourceStage(callback, bufferSize, bufferOverflowStrategy));
+  },
+
+  fromPausedReadable(readable) {
+    return this.create(() => new PausedReadableSource(readable));
   },
 
   /**

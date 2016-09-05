@@ -1,73 +1,65 @@
-import { FanOutStage } from './stage';
+import { Stage } from './stage';
+import Source from './source';
+import Stream from './stream';
+import Module from './module';
 
-export class Broadcast extends FanOutStage {
+export function create(stageProvider, streams) {
+  return Stream.fromSourcedMaterializer(source => {
+    const stage = stageProvider();
+    const baseModule = source._materialize().wireFlow(stage);
 
-  createUpstreamHandler(index) {
-    return {
-      onPull: () => {
-        this.pullIfReady();
-      },
-      onCancel: () => {
-        if (!this.openOutputs().length) {
-          this.cancel();
-        } else {
-          this.pullIfReady();
-        }
-      }
-    };
-  }
-
-  pullIfReady() {
-    if (this.openOutputs().every(o => o.isAvailable())) {
-      this.pull();
-    }
-  }
-
-  onPush() {
-    const x = this.grab();
-    this.openOutputs().forEach(output => output.push(x));
-  }
-
-  onError(e) {
-    this.openOutputs().forEach(output => output.error(e));
-  }
-
-  openOutputs() {
-    return this.outputs.filter(output => !output.isClosed());
-  }
+    const fanOutSource = Source.create(() => stage);
+    const modules = streams.map(stream => fanOutSource.pipe(stream)._materialize());
+    return Module.merge(...modules).addSinks(baseModule._sinks);
+  });
 }
 
-export class Balance extends FanOutStage {
+const FanOut = {
+  create
+};
+
+export function _registerFanOut(name, fn) {
+  FanOut[name] = fn;
+  Stream.prototype[name] = function (...args) {
+    return this.pipe(fn(...args));
+  };
+}
+
+export default FanOut;
+
+export class FanOutStage extends Stage {
 
   createUpstreamHandler(index) {
-    return {
-      onPull: () => {
-        this.pullIfAllowed();
-      },
-      onCancel: () => {
-        if (!this.openOutputs().length) {
-          this.cancel();
-        }
-      }
-    };
+    throw new Error('Not implemented')
   }
 
-  onPush() {
-    this.firstAvailableOutput().push(this.grab());
-    if (this.firstAvailableOutput()) {
-      this.pull();
-    }
+  // Not allowed methods
+
+  onStart() {
+    throw new Error('Not supported');
   }
 
-  onError(e) {
-    this.openOutputs().forEach(output => output.error(e));
+  onPull() {
+    throw new Error('Not supported');
   }
 
-  openOutputs() {
-    return this.outputs.filter(output => !output.isClosed());
+  onCancel() {
+    throw new Error('Not supported');
   }
 
-  firstAvailableOutput() {
-    return this.outputs.find(output => output.isAvailable());
+  push(x) {
+    throw new Error('Not supported');
+  }
+
+  pushAndComplete(x) {
+    throw new Error('Not supported');
+  }
+
+  isOutputAvailable() {
+    throw new Error('Not supported');
+  }
+
+  isOutputClosed() {
+    throw new Error('Not supported');
   }
 }

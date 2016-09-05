@@ -6,11 +6,12 @@ import {
 
 import { OverflowStrategy } from './core/buffer';
 
-import Stream, { FanIn, FanOut } from './core/stream';
+import Stream, { FanIn } from './core/stream';
 
 import Source, { SourceStage } from './core/source';
 import Flow from './core/flow';
 import Sink, { SinkStage, BasicSinkStage } from './core/sink';
+import FanOut, { FanOutStage } from './core/fan-out';
 
 import './sources/empty';
 import './sources/from-array';
@@ -41,6 +42,15 @@ import './sinks/for-each';
 import './sinks/reduce';
 import './sinks/to-array';
 
+import './fan-out/broadcast';
+import './fan-out/balance';
+
+import './fan-in/concat';
+import './fan-in/merge';
+import './fan-in/zip';
+import './fan-in/zip-with';
+import './fan-in/interleave';
+
 export {
   Stream,
   Source,
@@ -52,6 +62,7 @@ export {
   SourceStage,
   SinkStage,
   BasicSinkStage,
+  FanOutStage,
   UpstreamHandler,
   DownstreamHandler,
   OverflowStrategy

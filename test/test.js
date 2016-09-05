@@ -712,21 +712,21 @@ describe('Fan out stages', () => {
       const result = await Source.from([1, 2, 3, 4]).throttle(10).balance(
         delayedFlow(DELAY).map(x => "A" + x),
         delayedFlow(DELAY).map(x => "B" + x)
-      ).merge().toArray();
+      ).mergeStreams().toArray();
       result.should.be.eql(["A1", "B2", "A3", "B4"]);
     });
     it('with early cancel', async () => {
       const result = await Source.from([1, 2, 3, 4]).throttle(10).balance(
         Flow.take(1).pipe(delayedFlow(DELAY)).map(x => "A" + x),
         delayedFlow(DELAY).map(x => "B" + x)
-      ).merge().toArray();
+      ).mergeStreams().toArray();
       result.should.be.eql(["A1", "B2", "B3", "B4"]);
     });
     it('with flow', async () => {
       const sink = Flow.map(x => x + 1).balance(
         delayedFlow(DELAY).map(x => "A" + x),
         delayedFlow(DELAY).map(x => "B" + x)
-      ).merge().pipe(Sink.toArray());
+      ).mergeStreams().pipe(Sink.toArray());
       const result = await Source.from([1, 2, 3, 4]).throttle(10).runWith(sink);
       result.should.be.eql(["A2", "B3", "A4", "B5"]);
     });
@@ -734,7 +734,7 @@ describe('Fan out stages', () => {
       const sink = FanOut.balance(
         delayedFlow(DELAY).map(x => "A" + x),
         delayedFlow(DELAY).map(x => "B" + x)
-      ).merge().pipe(Sink.toArray());
+      ).mergeStreams().pipe(Sink.toArray());
       const result = await Source.from([1, 2, 3, 4]).throttle(10).runWith(sink);
       result.should.be.eql(["A1", "B2", "A3", "B4"]);
     });
@@ -778,13 +778,13 @@ describe('Complex routing', () => {
     result.should.be.eql([4, 7, 10]);
   });
 
-  it('balance and concat', async () => {
+  it('balance and merge', async () => {
     const DELAY = 50;
     const workers = [1, 2, 3].map(x => delayedFlow(DELAY * x).map(x => x + 1));
 
     const result = await Source.from([1, 2, 3, 4, 5, 6])
         .balance(...workers)
-        .merge()
+        .mergeStreams()
         .toArray();
     result.sort().should.be.eql([2, 3, 4, 5, 6, 7]);
   });

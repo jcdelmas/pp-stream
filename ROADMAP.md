@@ -7,6 +7,8 @@
  * fromPromise
  * failed
  * fromFile
+ * unfold
+ * unfoldAsync
  
 ## Sinks
 
@@ -15,6 +17,7 @@
  * ignore
  * cancelled
  * toFile
+ * foldAsync
  
 ## Flows
  

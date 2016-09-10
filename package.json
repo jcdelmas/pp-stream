@@ -22,7 +22,7 @@
     "should-promised": "^0.3.1"
   },
   "scripts": {
-    "test": "mocha --compilers js:babel-register"
+    "test": "mocha --compilers js:babel-register test/**/*.spec.js"
   },
   "repository": {
     "type": "git",

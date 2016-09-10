@@ -49,7 +49,7 @@ export default class Stream {
    * @returns {Module}
    */
   _materialize() {
-    throw new Error('Not a source stream');
+    throw new Error('Not a sources stream');
   }
 
   /**
@@ -57,7 +57,7 @@ export default class Stream {
    * @returns {Stream}
    */
   _wireSource(source) {
-    throw new Error('Not allowed on source stream');
+    throw new Error('Not allowed on sources stream');
   }
 
   /**

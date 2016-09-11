@@ -19,6 +19,7 @@ import './sources/from-callback';
 import './sources/from-readable';
 import './sources/repeat';
 import './sources/single';
+import './sources/tick';
 
 import './flows/buffer';
 import './flows/delay';

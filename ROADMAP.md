@@ -3,7 +3,6 @@
 
 ## Sources
 
- * tick
  * fromPromise
  * failed
  * fromFile

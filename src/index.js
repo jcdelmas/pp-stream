@@ -21,6 +21,7 @@ import './sources/from-readable';
 import './sources/repeat';
 import './sources/single';
 import './sources/tick';
+import './sources/unfold';
 
 import './flows/buffer';
 import './flows/delay';

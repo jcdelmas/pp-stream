@@ -5,7 +5,6 @@
 
  * failed
  * fromFile
- * unfold
  * unfoldAsync
  
 ## Sinks

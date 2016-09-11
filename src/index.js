@@ -16,6 +16,7 @@ import FanOut, { FanOutStage } from './core/fan-out';
 import './sources/empty';
 import './sources/from-array';
 import './sources/from-callback';
+import './sources/from-promise';
 import './sources/from-readable';
 import './sources/repeat';
 import './sources/single';

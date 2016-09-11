@@ -3,7 +3,6 @@
 
 ## Sources
 
- * fromPromise
  * failed
  * fromFile
  * unfold

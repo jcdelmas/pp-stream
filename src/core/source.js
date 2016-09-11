@@ -3,14 +3,26 @@ import { Stage } from './stage';
 import Stream from './stream';
 import Module from './module';
 
+/**
+ * @param stageProvider
+ * @return {Stream}
+ */
 export function create(stageProvider) {
   return Stream.fromMaterializer(() => Module.sourceStage(stageProvider()));
 }
 
+/**
+ * @param methods
+ * @return {Stream}
+ */
 export function createSimple(methods) {
   return create(() => new SourceStage(methods));
 }
 
+/**
+ * @param methods
+ * @return {Stream}
+ */
 export function createPushOnly(methods) {
   return create(() => new PushSourceStage(methods));
 }

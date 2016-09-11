@@ -22,6 +22,7 @@ import './sources/repeat';
 import './sources/single';
 import './sources/tick';
 import './sources/unfold';
+import './sources/unfold-async';
 
 import './flows/buffer';
 import './flows/delay';

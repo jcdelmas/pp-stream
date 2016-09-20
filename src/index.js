@@ -41,6 +41,7 @@ import './flows/scan';
 import './flows/sliding';
 import './flows/take';
 import './flows/take-while';
+import './flows/take-within';
 import './flows/throttle';
 
 import './sinks/for-each';

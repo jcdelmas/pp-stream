@@ -1,5 +1,5 @@
 
-import { createSimple, _registerSink } from '../core/sink';
+import { createBasic, _registerSink } from '../core/sink';
 
 /**
  * @param cb
@@ -9,12 +9,7 @@ import { createSimple, _registerSink } from '../core/sink';
  * @memberOf Stream#
  */
 export function forEach(cb) {
-  return createSimple({
-    onPush() {
-      cb(this.grab());
-      this.pull();
-    }
-  });
+  return createBasic({ onNext: cb });
 }
 
 _registerSink('forEach', forEach);

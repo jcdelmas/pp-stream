@@ -45,6 +45,7 @@ import './flows/throttle';
 
 import './sinks/for-each';
 import './sinks/head';
+import './sinks/ignore';
 import './sinks/last';
 import './sinks/reduce';
 import './sinks/to-array';

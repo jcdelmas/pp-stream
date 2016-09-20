@@ -48,6 +48,7 @@ import './sinks/head';
 import './sinks/ignore';
 import './sinks/last';
 import './sinks/reduce';
+import './sinks/reduce-async';
 import './sinks/to-array';
 
 import './fan-out/broadcast';

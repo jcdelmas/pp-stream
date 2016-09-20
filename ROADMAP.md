@@ -9,7 +9,6 @@
 
  * cancelled
  * toFile
- * foldAsync
  
 ## Flows
  

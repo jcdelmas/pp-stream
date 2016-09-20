@@ -3,7 +3,6 @@
 
 ## Sources
 
- * failed
  * fromFile
  
 ## Sinks

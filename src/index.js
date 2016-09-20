@@ -14,6 +14,7 @@ import Sink, { SinkStage, BasicSinkStage } from './core/sink';
 import FanOut, { FanOutStage } from './core/fan-out';
 
 import './sources/empty';
+import './sources/failed';
 import './sources/from-array';
 import './sources/from-callback';
 import './sources/from-promise';

@@ -44,6 +44,7 @@ import './flows/take-while';
 import './flows/throttle';
 
 import './sinks/for-each';
+import './sinks/head';
 import './sinks/reduce';
 import './sinks/to-array';
 

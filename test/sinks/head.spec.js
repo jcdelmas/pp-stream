@@ -13,4 +13,7 @@ describe('head', () => {
     const result = await Source.repeat('Hello').runWith(Sink.head());
     result.should.be.eql('Hello');
   });
+  it('with empty source', async() => {
+    Source.empty().runWith(Sink.head()).should.be.rejectedWith('No element found');
+  });
 });

@@ -17,6 +17,14 @@ export function createSimple(stageMethods) {
   return create(() => new SinkStage(stageMethods));
 }
 
+/**
+ * @param stageMethods
+ * @return {Stream}
+ */
+export function createBasic(stageMethods) {
+  return create(() => new BasicSinkStage(stageMethods));
+}
+
 const Sink = {
   create,
   createSimple
@@ -95,6 +103,11 @@ export class SinkStage extends Stage {
 }
 
 export class BasicSinkStage extends SinkStage {
+
+  constructor(methods = {}) {
+    super(methods);
+    if (methods.onNext) this.onNext = methods.onNext.bind(this);
+  }
 
   onPush() {
     this.onNext(this.grab());

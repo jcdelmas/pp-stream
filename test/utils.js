@@ -1,5 +1,5 @@
+"use strict";
 
-import 'should';
 import {
   Source,
   Flow
@@ -85,10 +85,11 @@ class TimeSequence {
 }
 
 export function timeChecker(results, expected) {
-  results.map(x => {
+  const result = results.map(x => {
     const rawTime = x[1];
     return [x[0], Math.floor((rawTime + 50) / 100) * 100];
-  }).should.be.eql(expected);
+  });
+  expect(result).toEqual(expected);
 }
 
 export function delayed(duration, result) {
@@ -100,7 +101,24 @@ export function delayedFlow(duration) {
 }
 
 export function checkTime(time, expectedTime) {
-  time.should.be.above(expectedTime - 30);
-  time.should.be.below(expectedTime + 30);
+  expect(time).toBeGreaterThan(expectedTime - 30);
+  expect(time).toBeLessThan(expectedTime + 30);
+}
+
+export function expectPromise(promise) {
+  return {
+    toThrowError(expectedError) {
+      return promise.then(
+        result => { throw new Error('Failure expected, but get ' + result) },
+        err => expect(err).toEqual(expectedError)
+      )
+    },
+    toThrow() {
+      return promise.then(
+        result => { throw new Error('Failure expected, but get ' + result) },
+        err => {}
+      )
+    }
+  };
 }
 

@@ -1,19 +1,19 @@
 "use strict";
 
 import 'babel-polyfill';
-import 'should';
 
 import { Source } from '../../src/index';
 import {
   TimedSource,
-  checkTime
+  checkTime,
+  expectPromise
 } from '../utils';
 
 describe('throttle', () => {
   it('simple', async() => {
     const startTime = new Date().getTime();
     const result = await Source.repeat(1).throttle(100).take(4).map(x => new Date().getTime() - startTime).toArray();
-    result.should.have.length(4);
+    expect(result.length).toBe(4);
     result.forEach((time, i) => {
       checkTime(time, i * 100);
     });
@@ -24,7 +24,7 @@ describe('throttle', () => {
       .throttle(200, { elements: 2 })
       .map(x => new Date().getTime() - startTime)
       .toArray();
-    result.should.have.length(4);
+    expect(result.length).toBe(4);
     checkTime(result[0], 0);
     checkTime(result[1], 0);
     checkTime(result[2], 200);
@@ -44,7 +44,7 @@ describe('throttle', () => {
       .map(x => new Date().getTime() - startTime)
       .toArray();
 
-    result.should.have.length(6);
+    expect(result.length).toBe(6);
     checkTime(result[0], 0);
     checkTime(result[1], 100);
     checkTime(result[2], 400);
@@ -65,7 +65,7 @@ describe('throttle', () => {
       .throttle(100, { cost: 3, maximumBurst: 6, costCalculation: xs => xs.length })
       .map(x => new Date().getTime() - startTime)
       .toArray();
-    result.should.have.length(6);
+    expect(result.length).toBe(6);
     checkTime(result[0], 0);
     checkTime(result[1], 0);
     checkTime(result[2], 200);
@@ -74,13 +74,13 @@ describe('throttle', () => {
     checkTime(result[5], 400);
   });
   it('with failOnPressure', async() => {
-    TimedSource.of([
+    const promise = TimedSource.of([
       [0, 1],
       [100, 2],
       [0, 3]
     ])
       .throttle(100, { failOnPressure: true })
-      .toArray()
-      .should.be.rejected();
+      .toArray();
+    await expectPromise(promise).toThrowError(new Error("Maximum throttle throughput exceeded."));
   });
 });

@@ -1,7 +1,6 @@
 "use strict";
 
 import 'babel-polyfill';
-import 'should';
 
 import { TimedSource } from '../utils';
 
@@ -12,7 +11,7 @@ describe('takeWithin', () => {
       [100, 2],
       [200, 3]
     ]).takeWithin(200).toArray();
-    result.should.be.eql([1, 2]) ;
+    expect(result).toEqual([1, 2]) ;
   });
   it('with complete', async () => {
     const result = await TimedSource.of([
@@ -20,7 +19,7 @@ describe('takeWithin', () => {
       [100, 2],
       [100, 3]
     ]).takeWithin(300).toArray();
-    result.should.be.eql([1, 2, 3]) ;
+    expect(result).toEqual([1, 2, 3]) ;
   });
   it('with cancel', async () => {
     const result = await TimedSource.of([
@@ -28,6 +27,6 @@ describe('takeWithin', () => {
       [100, 2],
       [100, 3]
     ]).takeWithin(300).take(2).toArray();
-    result.should.be.eql([1, 2]) ;
+    expect(result).toEqual([1, 2]) ;
   });
 });

@@ -1,8 +1,8 @@
 "use strict";
 
 import 'babel-polyfill';
-import 'should';
 import { Source, Sink } from '../../src/index';
+import { expectPromise } from '../utils';
 
 describe('ignore', () => {
   it('simple', async() => {
@@ -11,9 +11,9 @@ describe('ignore', () => {
       xs.push(x);
       return x;
     }).runWith(Sink.ignore());
-    xs.should.be.eql([1, 2, 3]);
+    expect(xs).toEqual([1, 2, 3]);
   });
   it('with error', async() => {
-    Source.failed('Coucou').runWith(Sink.ignore()).should.be.rejectedWith('Coucou');
+    await expectPromise(Source.failed('Coucou').runWith(Sink.ignore())).toThrowError('Coucou');
   });
 });

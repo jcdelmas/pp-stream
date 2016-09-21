@@ -1,7 +1,6 @@
 "use strict";
 
 import 'babel-polyfill';
-import 'should';
 
 import { Source } from '../../src/index';
 
@@ -15,6 +14,6 @@ describe('push only sources', () => {
         this.pushAndComplete(4);
       }
     }).map(x => x + 1).toArray();
-    result.should.be.eql([2, 3, 4, 5]);
+    expect(result).toEqual([2, 3, 4, 5]);
   });
 });

@@ -1,7 +1,6 @@
 "use strict";
 
 import 'babel-polyfill';
-import 'should';
 import {
   Source,
   Sink
@@ -10,10 +9,10 @@ import {
 describe('toArray', () => {
   it('simple', async () => {
     const result = await Source.from([1, 2, 3]).toArray();
-    result.should.be.eql([1, 2, 3]);
+    expect(result).toEqual([1, 2, 3]);
   });
   it('with to', async () => {
     const result = await Source.from([1, 2, 3]).pipe(Sink.toArray()).run();
-    result.should.be.eql([1, 2, 3]);
+    expect(result).toEqual([1, 2, 3]);
   });
 });

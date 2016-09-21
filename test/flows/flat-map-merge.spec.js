@@ -1,7 +1,6 @@
 "use strict";
 
 import 'babel-polyfill';
-import 'should';
 
 import { TimedSource } from '../utils';
 
@@ -19,7 +18,7 @@ describe('flatMapMerge', () => {
         .then(150, i + 3)
         .toSource();
     }).toArray();
-    result.should.be.eql([11, 21, 31, 12, 22, 32, 13, 23, 33]);
+    expect(result).toEqual([11, 21, 31, 12, 22, 32, 13, 23, 33]);
   });
   it('with breadth limit', async() => {
     const source = TimedSource
@@ -34,7 +33,7 @@ describe('flatMapMerge', () => {
         .then(150, i + 3)
         .toSource();
     }, 2).toArray();
-    result.should.be.eql([11, 21, 12, 22, 13, 31, 23, 32, 33]);
+    expect(result).toEqual([11, 21, 12, 22, 13, 31, 23, 32, 33]);
   });
   it('with cancel', async() => {
     const source = TimedSource
@@ -50,6 +49,6 @@ describe('flatMapMerge', () => {
         .then(150, i + 3)
         .toSource();
     }).take(5).toArray();
-    result.should.be.eql([11, 21, 31, 12, 22]);
+    expect(result).toEqual([11, 21, 31, 12, 22]);
   });
 });

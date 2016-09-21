@@ -1,7 +1,6 @@
 "use strict";
 
 import 'babel-polyfill';
-import 'should';
 import {
   Source,
   Flow
@@ -16,6 +15,6 @@ describe('zipWith', () => {
       )
       .zipWith((x, y) => x + y)
       .toArray();
-    result.should.be.eql([4, 7, 10]);
+    expect(result).toEqual([4, 7, 10]);
   });
 });

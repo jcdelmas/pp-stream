@@ -1,11 +1,11 @@
 "use strict";
 
 import 'babel-polyfill';
-import 'should';
 import {
   Source,
   OverflowStrategy
 } from '../../src/index';
+import { expectPromise } from '../utils';
 
 import {
   TimedSource,
@@ -91,11 +91,11 @@ describe('delay', () => {
       [4, 700]
     ]);
   });
-  it('fail', async() => {
-    Source.from([1, 2, 3])
+  it('fail', async () => {
+    const promise = Source.from([1, 2, 3])
       .delay(100, 2, OverflowStrategy.FAIL)
-      .toArray()
-      .should.be.rejectedWith({ message: 'Buffer overflow' });
+      .toArray();
+    await expectPromise(promise).toThrowError(new Error('Buffer overflow'));
   });
   it('with cancel', async() => {
     const result = await TimedSource.of([

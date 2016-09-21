@@ -1,7 +1,6 @@
 "use strict";
 
 import 'babel-polyfill';
-import 'should';
 import { Source } from '../../src/index';
 import {
   WithTime,

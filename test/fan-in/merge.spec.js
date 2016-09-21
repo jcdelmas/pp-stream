@@ -1,7 +1,6 @@
 "use strict";
 
 import 'babel-polyfill';
-import 'should';
 import { Source } from '../../src/index';
 import { TimedSource, delayedFlow } from '../utils';
 
@@ -18,7 +17,7 @@ describe('merge', () => {
       .then(100, 5)
       .toSource();
     const result = await Source.merge(source1, source2).toArray();
-    result.should.be.eql([1, 2, 3, 4, 5, 6]);
+    expect(result).toEqual([1, 2, 3, 4, 5, 6]);
   });
 
   it('balance and merge', async() => {
@@ -29,6 +28,6 @@ describe('merge', () => {
       .balance(...workers)
       .mergeStreams()
       .toArray();
-    result.sort().should.be.eql([2, 3, 4, 5, 6, 7]);
+    expect(result.sort()).toEqual([2, 3, 4, 5, 6, 7]);
   });
 });

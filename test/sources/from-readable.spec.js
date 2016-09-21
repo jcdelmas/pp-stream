@@ -1,7 +1,6 @@
 "use strict";
 
 import 'babel-polyfill';
-import 'should';
 
 import fs from 'fs';
 import { Source } from '../../src/index';
@@ -14,7 +13,7 @@ describe('fromPausedReadable', () => {
       autoClose: true
     });
     const result = await Source.fromPausedReadable(readable).toArray();
-    result.should.be.eql(["foo\nbar\nbaz\n"]);
+    expect(result).toEqual(["foo\nbar\nbaz\n"]);
   });
 
   // TODO: Check cancel

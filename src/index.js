@@ -30,6 +30,7 @@ import './flows/delay';
 import './flows/distinct';
 import './flows/drop';
 import './flows/drop-while';
+import './flows/drop-within';
 import './flows/filter';
 import './flows/flat-map-concat';
 import './flows/flat-map-merge';

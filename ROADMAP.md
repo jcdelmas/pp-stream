@@ -13,8 +13,6 @@
 ## Flows
  
  * fold
- * takeWithin
- * dropWithin
  * groupedWithin
  * recover
  * recoverWith
@@ -33,6 +31,3 @@
  
  * NodeJS stream converter
  
-## Testing
-
- * Concurrent test execution

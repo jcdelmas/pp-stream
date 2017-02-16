@@ -35,6 +35,7 @@ import './flows/filter';
 import './flows/flat-map-concat';
 import './flows/flat-map-merge';
 import './flows/grouped';
+import './flows/grouped-within';
 import './flows/map';
 import './flows/map-async';
 import './flows/map-concat';

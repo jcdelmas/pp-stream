@@ -36,10 +36,9 @@ class Grouped extends Stage {
     }
   }
 
-  onComplete() {
+  doFinish() {
     if (this.buffer.length) {
       this.push(this.buffer);
     }
-    this.complete();
   }
 }

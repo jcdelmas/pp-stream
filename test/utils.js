@@ -2,7 +2,9 @@
 
 import {
   Source,
-  Flow
+  Flow,
+  Sink,
+  SinkStage
 } from '../src/index';
 
 export class TimedSource {
@@ -47,6 +49,47 @@ export class TimedSource {
       });
       seq.run(done);
     })
+  }
+}
+
+export class TimedSink extends SinkStage {
+
+  index = 0;
+  buffer = [];
+
+  static of(sequence) {
+    return Sink.create(() => new TimedSink(sequence));
+  }
+
+  constructor(sequence = []) {
+    super();
+    this.sequence = sequence;
+  }
+
+  onPush() {
+    this.buffer.push(this.grab());
+    this._runNextPull();
+  }
+
+  onComplete() {
+    if (this.currentTimeout) {
+      clearTimeout(this.currentTimeout);
+    }
+    this.resolve(this.buffer);
+  }
+
+  doStart() {
+    this._runNextPull();
+  }
+
+  _runNextPull() {
+    if (this.index < this.sequence.length) {
+      this.currentTimeout = setTimeout(() => {
+        this.pull();
+      }, this.sequence[this.index++]);
+    } else {
+      this.complete(this.buffer);
+    }
   }
 }
 

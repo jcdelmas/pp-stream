@@ -8,7 +8,6 @@
  
 ## Sinks
 
- * last
  * ignore
  * cancelled
  * toFile

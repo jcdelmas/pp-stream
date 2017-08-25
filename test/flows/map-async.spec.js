@@ -61,6 +61,14 @@ describe('mapAsync', () => {
       [3, 200]
     ]);
   });
+  it('with error', async() => {
+    try {
+      await Source.from([1, 2, 3]).mapAsync(() => Promise.reject('my error')).ignore();
+      throw new Error('should have failed');
+    } catch (e) {
+      e.should.be.eql('my error');
+    }
+  });
 });
 
 describe('mapAsyncUnordered', () => {

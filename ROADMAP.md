@@ -8,7 +8,6 @@
  
 ## Sinks
 
- * head
  * last
  * ignore
  * cancelled

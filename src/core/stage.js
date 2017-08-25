@@ -1,6 +1,3 @@
-
-import Buffer from './buffer';
-
 /**
  * @interface
  */

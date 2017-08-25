@@ -42,6 +42,7 @@ import './flows/take';
 import './flows/take-while';
 import './flows/throttle';
 
+import './sinks/ignore';
 import './sinks/head';
 import './sinks/last';
 import './sinks/for-each';

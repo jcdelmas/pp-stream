@@ -8,7 +8,6 @@
  
 ## Sinks
 
- * ignore
  * cancelled
  * toFile
  * foldAsync

@@ -36,6 +36,7 @@ import './flows/grouped';
 import './flows/map';
 import './flows/map-async';
 import './flows/map-concat';
+import './flows/recover';
 import './flows/scan';
 import './flows/sliding';
 import './flows/take';

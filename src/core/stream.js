@@ -8,7 +8,7 @@ export default class Stream {
    * @param fn
    * @return {Stream}
    */
-  static fromSourcedMaterializer(fn) {
+  static fromSourceMaterializer(fn) {
     return Stream.fromSourceFactory(source => Stream.fromMaterializer(() => fn(source)));
   }
 

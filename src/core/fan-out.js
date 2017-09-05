@@ -4,7 +4,7 @@ import Stream from './stream';
 import Module from './module';
 
 export function create(stageProvider, streams) {
-  return Stream.fromSourcedMaterializer(source => {
+  return Stream.fromSourceMaterializer(source => {
     const stage = stageProvider();
     const baseModule = source._materialize().wireFlow(stage);
 

@@ -6,7 +6,7 @@ import Stream from './stream';
  * @return {Stream}
  */
 export function create(stageProvider) {
-  return Stream.fromSourcedMaterializer(source => source._materialize().wireFlow(stageProvider()));
+  return Stream.fromSourceMaterializer(source => source._materialize().wireFlow(stageProvider()));
 }
 
 /**

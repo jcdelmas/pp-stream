@@ -1,7 +1,6 @@
-import FanIn, { FanInStage, createFlow, createFanIn } from '../core/fan-in';
+import FanIn, { createFanIn, FanInStage } from '../core/fan-in';
 import Stream from '../core/stream';
 import Source from '../core/source';
-import Flow from '../core/flow';
 
 /**
  * @param {Stream[]} sources
@@ -10,15 +9,6 @@ import Flow from '../core/flow';
  */
 Source.interleave = (sources, segmentSize = 1) => {
   return Stream.groupStreams(sources).interleaveStreams(segmentSize);
-};
-
-/**
- * @param {Stream} source
- * @param {int} segmentSize
- * @returns {Stream}
- */
-Flow.interleave = (source, segmentSize = 1) => {
-  return Flow.createSimple().interleave(source, segmentSize);
 };
 
 /**

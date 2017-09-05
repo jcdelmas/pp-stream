@@ -15,7 +15,6 @@ const FanIn = {
 
 export function _registerSimpleFanIn(name, fanInName, stageFactory) {
   Source[name] = (...sources) => FanIn[name](...sources);
-  Flow[name] = source => Flow.createSimple()[name](source);
   FanIn[name] = (...streams) => {
     const fanIn = createFanIn(stageFactory);
     return streams.length > 0 ? Stream.groupStreams(streams).fanIn(fanIn) : fanIn;

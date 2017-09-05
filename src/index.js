@@ -6,12 +6,13 @@ import {
 
 import { OverflowStrategy } from './core/buffer';
 
-import Stream, { FanIn } from './core/stream';
+import Stream from './core/stream';
 
 import Source, { SourceStage } from './core/source';
 import Flow from './core/flow';
 import Sink, { SinkStage, BasicSinkStage } from './core/sink';
 import FanOut, { FanOutStage } from './core/fan-out';
+import FanIn, { FanInStage } from './core/fan-in';
 
 import './sources/empty';
 import './sources/from-array';
@@ -70,6 +71,7 @@ export {
   SourceStage,
   SinkStage,
   BasicSinkStage,
+  FanInStage,
   FanOutStage,
   UpstreamHandler,
   DownstreamHandler,

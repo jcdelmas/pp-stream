@@ -7,7 +7,7 @@ import { create, _registerFlow } from '../core/flow';
  * @param {number} duration
  * @param bufferSize
  * @param overflowStrategy
- * @returns {Flow}
+ * @returns {Stream}
  *
  * @memberOf Stream#
  * @memberOf Flow
@@ -18,7 +18,7 @@ export function delay(duration, bufferSize = 16, overflowStrategy = OverflowStra
 
 /**
  * @param {number} duration
- * @returns {Flow}
+ * @returns {Stream}
  */
 export function debounce(duration) {
   return create(() => new Delay(duration, 1, OverflowStrategy.DROP_BUFFER));

@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import Sink from './sink';
 import Module from './module';
 

@@ -24,14 +24,13 @@ export function fromGraphBuilder(factory) {
   });
 }
 
-const Flow = {
-  create,
-  createSimple,
-  fromGraphBuilder
-};
+const Flow = createSimple();
+
+Flow.create = create;
+Flow.createSimple = createSimple;
+Flow.fromGraphBuilder = fromGraphBuilder;
 
 export function _registerFlow(name, fn) {
-  Flow[name] = fn;
   Stream.prototype[name] = function (...args) {
     return this.pipe(fn(...args));
   };

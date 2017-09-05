@@ -1,9 +1,8 @@
-"use strict";
 
 import 'babel-polyfill';
 import 'should';
 
-import { TimedSource } from '../utils';
+import { TimedSource } from '../utils';
 
 describe('flatMapMerge', () => {
   it('simple', async() => {

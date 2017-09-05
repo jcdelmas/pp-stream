@@ -1,9 +1,8 @@
-"use strict";
 
 import 'babel-polyfill';
 import 'should';
 
-import { Source } from '../../src/index';
+import { Source } from '../../src/index';
 
 describe('recover', () => {
   it('without message', async () => {
@@ -36,7 +35,7 @@ describe('recover', () => {
       if (err.message === 'error2') {
         return 'first';
       }
-      throw e;
+      throw err;
     }).recover(() => 'second').toArray();
     result.should.be.eql([1, 'first', 3, 'second', 5]);
   });

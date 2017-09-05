@@ -1,6 +1,5 @@
 "use strict";
 
-import Module from './module';
 import Sink from './sink';
 
 export default class Stream {

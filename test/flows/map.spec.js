@@ -1,9 +1,8 @@
-"use strict";
 
 import 'babel-polyfill';
 import 'should';
 
-import { Source } from '../../src/index';
+import { Source } from '../../src/index';
 
 describe('map', () => {
   it('simple', async() => {

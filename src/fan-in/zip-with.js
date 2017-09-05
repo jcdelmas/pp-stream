@@ -1,4 +1,3 @@
-"use strict";
 import FanIn from '../core/fan-in'
 import Stream from '../core/stream'
 

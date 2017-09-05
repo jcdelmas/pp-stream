@@ -1,4 +1,3 @@
-"use strict";
 import FanIn, { FanInStage, createSource, createFlow, createFanIn } from '../core/fan-in';
 import Stream from '../core/stream';
 import Source from '../core/source';

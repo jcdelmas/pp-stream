@@ -2,11 +2,11 @@ import { Stage } from './stage';
 import Stream from './stream';
 
 /**
- * @param stageProvider
+ * @param stageFactory
  * @return {Stream}
  */
-export function create(stageProvider) {
-  return Stream.fromFlowStageFactory(stageProvider);
+export function create(stageFactory) {
+  return Stream.fromFlowStageFactory(stageFactory);
 }
 
 /**

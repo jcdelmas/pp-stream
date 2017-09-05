@@ -4,11 +4,11 @@ import Stream from './stream';
 import Module from './module';
 
 /**
- * @param stageProvider
+ * @param stageFactory
  * @return {Stream}
  */
-export function create(stageProvider) {
-  return Stream.fromSourceStageFactory(stageProvider);
+export function create(stageFactory) {
+  return Stream.fromSourceStageFactory(stageFactory);
 }
 
 /**

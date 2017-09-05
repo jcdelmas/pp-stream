@@ -1,62 +1,58 @@
-"use strict";
-
+import _ from 'lodash';
 import Sink from './sink';
+import Module from './module';
 
 export default class Stream {
 
-  /**
-   * @param fn
-   * @return {Stream}
-   */
-  static fromSourceMaterializer(fn) {
-    return Stream.fromSourceFactory(source => Stream.fromMaterializer(() => fn(source)));
+  static fromSourceStageFactory(stageFactory) {
+    return new Stream(() => {
+      const stage = stageFactory();
+      return new Module([], [stage], []);
+    });
+  }
+
+  static fromFlowStageFactory(stageFactory) {
+    return new Stream(() => {
+      const stage = stageFactory();
+      return new Module([stage], [stage], []);
+    });
+  }
+
+  static fromSinkStageFactory(stageFactory) {
+    return new Stream(() => {
+      const stage = stageFactory();
+      return new Module([stage], [], [stage]);
+    });
+  }
+
+  static groupStreams(streams) {
+    return new Stream(() => Module.group(streams.map(s => s._materialize())));
+  }
+
+  static fromGraphBuilder(factory) {
+    return new Stream(() => {
+      const sinks = [];
+      const { inputs = [], outputs = [] } = factory({
+        add: s => {
+          const module = s._materialize();
+          module._sinks.forEach(s => sinks.push(s));
+          return module.wrapper();
+        }
+      });
+      return new Module(
+        inputs.map(i => i._input),
+        outputs.map(o => o._output),
+        sinks
+      );
+    });
   }
 
   /**
-   * @param materializer
-   * @return {Stream}
+   *
+   * @param {function} materializer
    */
-  static fromMaterializer(materializer) {
-    return new Stream({ materializer })
-  }
-
-  /**
-   * @param sourceFactory
-   * @return {Stream}
-   */
-  static fromSourceFactory(sourceFactory) {
-    return new Stream({ sourceFactory })
-  }
-
-  constructor({ materializer, sourceFactory }) {
-    if (materializer) {
-      if (typeof materializer !== 'function') {
-        throw new Error('Invalid materializer');
-      }
-      this._materialize = materializer;
-      this._isSource = true;
-    } else {
-      if (typeof sourceFactory !== 'function') {
-        throw new Error('Invalid sourceFactory');
-      }
-      this._wireSource = sourceFactory;
-      this._isSource = false;
-    }
-  }
-
-  /**
-   * @returns {Module}
-   */
-  _materialize() {
-    throw new Error('Not a sources stream');
-  }
-
-  /**
-   * @param {Stream} source
-   * @returns {Stream}
-   */
-  _wireSource(source) {
-    throw new Error('Not allowed on sources stream');
+  constructor(materializer) {
+    this._materialize = materializer;
   }
 
   /**
@@ -64,11 +60,53 @@ export default class Stream {
    * @return {Stream}
    */
   pipe(stream) {
-    if (this._isSource) {
-      return Stream.fromMaterializer(() => stream._wireSource(this)._materialize());
-    } else {
-      return Stream.fromSourceFactory(source => stream._wireSource(this._wireSource(source)));
-    }
+    return Stream.fromGraphBuilder(b => {
+      const prev = b.add(this);
+      const next = b.add(stream);
+      prev.out().wire(next.in());
+      return {
+        inputs: prev.inputs(),
+        outputs: next.outputs()
+      };
+    });
+  }
+
+  /**
+   * @param {Stream} stream
+   * @return {Stream}
+   */
+  fanIn(stream) {
+    return Stream.fromGraphBuilder(b => {
+      const prev = b.add(this);
+      const fanIn = b.add(stream);
+
+      prev.outputs().forEach(out => out.wire(fanIn.in()));
+      return {
+        inputs: prev.inputs(),
+        outputs: fanIn.outputs()
+      };
+    });
+  }
+
+  /**
+   *
+   * @param {...Stream} streams
+   * @return {Stream}
+   */
+  fanOut(...streams) {
+    return Stream.fromGraphBuilder(b => {
+      const prev = b.add(this);
+      const outputs = [];
+      streams.forEach(stream => {
+        const s = b.add(stream);
+        prev.out().wire(s.in());
+        s.outputs().forEach(o => outputs.push(o));
+      });
+      return {
+        inputs: prev.inputs(),
+        outputs
+      }
+    });
   }
 
   // Source methods

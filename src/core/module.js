@@ -1,66 +1,57 @@
-
 import _ from 'lodash';
 
 export default class Module {
 
-  static sourceStage(stage) {
-    return new Module([stage], []);
-  }
-
-  static merge(...modules) {
+  /**
+   * @param {Module[]} modules
+   * @returns {Module}
+   */
+  static group(modules) {
+    const inputs = _(modules).map(m => m._inputs).flatten().value();
     const outputs = _(modules).map(m => m._outputs).flatten().value();
     const sinks = _(modules).map(m => m._sinks).flatten().value();
-    return new Module(outputs, sinks);
+    return new Module(inputs, outputs, sinks);
   }
 
   /**
    * @param {Stage[]} outputs
    * @param {SinkStage[]} sinks
    */
-  constructor(outputs, sinks) {
+  constructor(inputs, outputs, sinks) {
+    this._inputs = inputs || [];
     this._outputs = outputs || [];
     this._sinks = sinks || [];
   }
 
-  /**
-   * @param {Stage} stage
-   * @return {Module}
-   */
-  wireFlow(stage) {
-    return this._wire(stage, true);
-  }
+  wrapper() {
+    const module = this;
+    return {
+      inputs() {
+        return module._inputs.map((input, i) => this.in(i));
+      },
 
-  /**
-   * @param {Stage} stage
-   * @return {Module}
-   */
-  wireSink(stage) {
-    return this._wire(stage, false);
-  }
+      outputs() {
+        return module._outputs.map((output, i) => this.out(i));
+      },
 
-  /**
-   * @param {SinkStage[]} sinks
-   */
-  addSinks(sinks) {
-    return sinks.length ? new Module(this._outputs, this._sinks.concat(sinks)) : this;
-  }
+      in(i = 0) {
+        if (module._inputs.length <= i) {
+          throw new Error(`No input with index ${i}`);
+        }
+        return {
+          _input: module._inputs[i]
+        }
+      },
 
-  /**
-   * @param {Stage} stage
-   * @param {boolean} asFlow
-   * @return {Module}
-   */
-  _wire(stage, asFlow) {
-    if (this._outputs.length === 0) {
-      throw new Error('No output available in this module');
-    }
-
-    this._outputs.forEach((output, i) => output._addDownstreamStage(stage));
-
-    if (asFlow) {
-      return new Module([stage], this._sinks);
-    } else {
-      return new Module([], [...this._sinks, stage]);
+      out(i = 0) {
+        if (module._outputs.length <= i) {
+          throw new Error(`No output with index ${i}`);
+        }
+        return {
+          wire: input => module._outputs[i]._addDownstreamStage(input._input),
+          _output: module._outputs[i]
+        };
+      }
     }
   }
 
@@ -68,6 +59,9 @@ export default class Module {
    * @returns {Promise[]}
    */
   run() {
+    if (this._inputs.length > 0) {
+      throw new Error('Not runnable module: contains input(s)');
+    }
     if (this._outputs.length > 0) {
       throw new Error('Not runnable module: contains output(s)');
     }

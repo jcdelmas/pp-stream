@@ -247,11 +247,11 @@ class Wire {
       try {
         try {
           cb()
-        } finally {
-          this._asyncRequired = false;
+        } catch (e) {
+          this.error(e);
         }
-      } catch (e) {
-        this.error(e);
+      } finally {
+        this._asyncRequired = false;
       }
     }
   }

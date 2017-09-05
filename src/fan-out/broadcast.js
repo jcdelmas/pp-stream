@@ -1,17 +1,7 @@
 
-import { FanOutStage, create, _registerFanOut } from '../core/fan-out';
+import { FanOutStage, _registerFanOut } from '../core/fan-out';
 
-/**
- * @return {Stream}
- *
- * @memberOf Stream#
- * @memberOf FanOut
- */
-export function broadcast(...streams) {
-  return create(() => new Broadcast(), streams);
-}
-
-_registerFanOut('broadcast', broadcast);
+_registerFanOut('broadcast', () => new Broadcast());
 
 class Broadcast extends FanOutStage {
 

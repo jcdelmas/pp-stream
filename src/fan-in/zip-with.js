@@ -15,5 +15,5 @@ function zipWith(fn) {
 }
 
 Stream.prototype.zipWith = function (fn) {
-  return this.pipe(zipWith(fn));
+  return this.fanIn(zipWith(fn));
 };

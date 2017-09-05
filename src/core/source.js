@@ -8,7 +8,7 @@ import Module from './module';
  * @return {Stream}
  */
 export function create(stageProvider) {
-  return Stream.fromMaterializer(() => Module.sourceStage(stageProvider()));
+  return Stream.fromSourceStageFactory(stageProvider);
 }
 
 /**
@@ -27,10 +27,15 @@ export function createPushOnly(methods) {
   return create(() => new PushSourceStage(methods));
 }
 
+export function fromGraphBuilder(factory) {
+  return Stream.fromGraphBuilder(builder => ({ outputs: [factory(builder)] }));
+}
+
 const Source = {
   create,
   createSimple,
-  createPushOnly
+  createPushOnly,
+  fromGraphBuilder
 };
 
 export default Source;

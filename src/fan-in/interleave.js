@@ -1,4 +1,4 @@
-import FanIn, { FanInStage, createSource, createFlow, createFanIn } from '../core/fan-in';
+import FanIn, { FanInStage, createFlow, createFanIn } from '../core/fan-in';
 import Stream from '../core/stream';
 import Source from '../core/source';
 import Flow from '../core/flow';
@@ -9,7 +9,7 @@ import Flow from '../core/flow';
  * @returns {Stream}
  */
 Source.interleave = (sources, segmentSize = 1) => {
-  return createSource(() => new Interleave(segmentSize), sources);
+  return Stream.groupStreams(sources).interleaveStreams(segmentSize);
 };
 
 /**
@@ -18,7 +18,7 @@ Source.interleave = (sources, segmentSize = 1) => {
  * @returns {Stream}
  */
 Flow.interleave = (source, segmentSize = 1) => {
-  return createFlow((...sources) => Source.interleave(sources, segmentSize), source)
+  return Flow.createSimple().interleave(source, segmentSize);
 };
 
 /**
@@ -35,7 +35,7 @@ FanIn.interleave = (segmentSize = 1) => {
  * @returns {Stream}
  */
 Stream.prototype.interleave = function (source, segmentSize = 1) {
-  return this.pipe(Flow.interleave(source, segmentSize));
+  return Stream.groupStreams([this, source]).fanIn(FanIn.interleave(segmentSize));
 };
 
 /**
@@ -43,7 +43,7 @@ Stream.prototype.interleave = function (source, segmentSize = 1) {
  * @return {Stream}
  */
 Stream.prototype.interleaveStreams = function (segmentSize = 1) {
-  return this.pipe(FanIn.interleave(segmentSize));
+  return this.fanIn(FanIn.interleave(segmentSize));
 };
 
 class Interleave extends FanInStage {

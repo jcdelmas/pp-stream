@@ -1,17 +1,7 @@
 
-import { FanOutStage, create, _registerFanOut } from '../core/fan-out';
+import { FanOutStage, _registerFanOut } from '../core/fan-out';
 
-/**
- * @return {Stream}
- *
- * @memberOf Stream#
- * @memberOf FanOut
- */
-export function balance(...streams) {
-  return create(() => new Balance(), streams);
-}
-
-_registerFanOut('balance', balance);
+_registerFanOut('balance', () => new Balance());
 
 class Balance extends FanOutStage {
 

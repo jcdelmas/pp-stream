@@ -1,27 +1,21 @@
 import { Stage } from './stage';
-import Source from './source';
 import Stream from './stream';
-import Module from './module';
 
-export function create(stageProvider, streams) {
-  return Stream.fromSourceMaterializer(source => {
-    const stage = stageProvider();
-    const baseModule = source._materialize().wireFlow(stage);
-
-    const fanOutSource = Source.create(() => stage);
-    const modules = streams.map(stream => fanOutSource.pipe(stream)._materialize());
-    return Module.merge(...modules).addSinks(baseModule._sinks);
-  });
+export function createFanOut(stageFactory) {
+  return Stream.fromFlowStageFactory(stageFactory);
 }
 
 const FanOut = {
-  create
+  create: createFanOut
 };
 
-export function _registerFanOut(name, fn) {
-  FanOut[name] = fn;
-  Stream.prototype[name] = function (...args) {
-    return this.pipe(fn(...args));
+export function _registerFanOut(name, stageFactory) {
+  FanOut[name] = (...streams) => {
+    const fanOut = createFanOut(stageFactory);
+    return streams.length > 0 ? fanOut.fanOut(...streams) : fanOut;
+  };
+  Stream.prototype[name] = function (...streams) {
+    return this.pipe(FanOut[name]()).fanOut(...streams);
   };
 }
 

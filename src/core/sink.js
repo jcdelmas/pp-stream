@@ -6,7 +6,7 @@ import Stream from './stream';
  * @returns {Stream}
  */
 export function create(stageProvider) {
-  return Stream.fromSourceMaterializer(source => source._materialize().wireSink(stageProvider()));
+  return Stream.fromSinkStageFactory(stageProvider);
 }
 
 /**
@@ -17,9 +17,14 @@ export function createSimple(stageMethods) {
   return create(() => new SinkStage(stageMethods));
 }
 
+export function fromGraphBuilder(factory) {
+  return Stream.fromGraphBuilder(builder => ({ inputs: [factory(builder)] }));
+}
+
 const Sink = {
   create,
-  createSimple
+  createSimple,
+  fromGraphBuilder
 };
 
 export function _registerSink(name, fn) {

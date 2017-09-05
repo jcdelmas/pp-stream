@@ -17,12 +17,12 @@
  * takeWithin
  * dropWithin
  * groupedWithin
- * recover
  * recoverWith
  * detach
  * initialDelay
  * batch
  * prepend
+ * fromSinkAndSource
  
 ## Fan out
 

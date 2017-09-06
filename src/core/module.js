@@ -23,19 +23,20 @@ export default class Module {
    * @returns {Module}
    */
   static group(modules) {
-    const inputs = _(modules).map(m => m._inputs).flatten().value();
-    const outputs = _(modules).map(m => m._outputs).flatten().value();
+    const inputs = _(modules).map(m => m.inputs).flatten().value();
+    const outputs = _(modules).map(m => m.outputs).flatten().value();
     const sinks = _(modules).map(m => m._sinks).flatten().value();
     return new Module(inputs, outputs, sinks);
   }
 
   /**
-   * @param {Stage[]} outputs
+   * @param {Inlet[]} inputs
+   * @param {Outlet[]} outputs
    * @param {SinkStage[]} sinks
    */
   constructor(inputs, outputs, sinks) {
-    this._inputs = inputs || [];
-    this._outputs = outputs || [];
+    this.inputs = inputs || [];
+    this.outputs = outputs || [];
     this._sinks = sinks || [];
   }
 
@@ -43,25 +44,25 @@ export default class Module {
     const module = this;
     return {
       inputs() {
-        return module._inputs.map(input => new InputWrapper(input));
+        return module.inputs.map(input => new InputWrapper(input));
       },
 
       outputs() {
-        return module._outputs.map(output => new OutputWrapper(output));
+        return module.outputs.map(output => new OutputWrapper(output));
       },
 
       in(i = 0) {
-        if (module._inputs.length <= i) {
+        if (module.inputs.length <= i) {
           throw new Error(`No input with index ${i}`);
         }
-        return new InputWrapper(module._inputs[i]);
+        return new InputWrapper(module.inputs[i]);
       },
 
       out(i = 0) {
-        if (module._outputs.length <= i) {
+        if (module.outputs.length <= i) {
           throw new Error(`No output with index ${i}`);
         }
-        return new OutputWrapper(module._outputs[i]);
+        return new OutputWrapper(module.outputs[i]);
       }
     }
   }
@@ -70,10 +71,10 @@ export default class Module {
    * @returns {Promise[]}
    */
   run() {
-    if (this._inputs.length > 0) {
+    if (this.inputs.length > 0) {
       throw new Error('Not runnable module: contains input(s)');
     }
-    if (this._outputs.length > 0) {
+    if (this.outputs.length > 0) {
       throw new Error('Not runnable module: contains output(s)');
     }
     if (this._sinks.length === 0) {

@@ -3,7 +3,7 @@ import Source from './source';
 import Stream from './stream';
 
 export function createFanIn(size, stageFactory) {
-  return Stream.fromFlowStageFactory(() => stageFactory(size), size);
+  return Stream.fromStageFactory(() => stageFactory(size), size);
 }
 
 const FanIn = {

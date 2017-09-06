@@ -33,7 +33,7 @@ class BufferFlow extends Stage {
     );
   }
 
-  doStart() {
+  onStart() {
     this.pull();
   }
 

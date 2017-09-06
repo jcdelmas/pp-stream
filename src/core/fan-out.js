@@ -4,7 +4,7 @@ import Flow from './flow';
 import Sink from './sink';
 
 export function createFanOut(size, stageFactory) {
-  return Stream.fromFlowStageFactory(() => stageFactory(size), 1, size);
+  return Stream.fromStageFactory(() => stageFactory(size), 1, size);
 }
 
 const FanOut = {
@@ -32,10 +32,6 @@ export class FanOutStage extends Stage {
   }
 
   // Not allowed methods
-
-  onStart() {
-    throw new Error('Not supported');
-  }
 
   onPull() {
     throw new Error('Not supported');

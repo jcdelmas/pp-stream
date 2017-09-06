@@ -20,14 +20,14 @@ class Reduce extends BasicSinkStage {
   constructor(fn, zero) {
     super();
     this.fn = fn;
-    this.acc = zero;
+    this.result = zero;
   }
 
   onNext(x) {
-    this.acc = this.fn(this.acc, x);
+    this.result = this.fn(this.result, x);
   }
 
   onComplete() {
-    this.complete(this.acc);
+    this.complete();
   }
 }

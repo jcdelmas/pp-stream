@@ -29,16 +29,16 @@ describe('balance', () => {
     const sink = Flow.map(x => x + 1).balance(
       delayedFlow(DELAY).map(x => "A" + x),
       delayedFlow(DELAY).map(x => "B" + x)
-    ).mergeStreams().pipe(Sink.toArray());
-    const result = await Source.from([1, 2, 3, 4]).throttle(10).runWith(sink);
+    ).mergeStreams().pipe(Sink.toArray().key('result'));
+    const result = await Source.from([1, 2, 3, 4]).throttle(10).runWith(sink).result;
     result.should.be.eql(["A2", "B3", "A4", "B5"]);
   });
   it('with sink', async() => {
     const sink = Flow.balance(
       delayedFlow(DELAY).map(x => "A" + x),
       delayedFlow(DELAY).map(x => "B" + x)
-    ).mergeStreams().pipe(Sink.toArray());
-    const result = await Source.from([1, 2, 3, 4]).throttle(10).runWith(sink);
+    ).mergeStreams().pipe(Sink.toArray().key('result'));
+    const result = await Source.from([1, 2, 3, 4]).throttle(10).runWith(sink).result;
     result.should.be.eql(["A1", "B2", "A3", "B4"]);
   });
 });

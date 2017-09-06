@@ -31,7 +31,7 @@ class Throttle extends Stage {
     this.bucket = new TokenBucket(this.maximumBurst);
   }
 
-  doStart() {
+  onStart() {
     this.bucket.offer(this.cost);
     this.timerId = setInterval(() => {
       this.bucket.offer(this.cost);

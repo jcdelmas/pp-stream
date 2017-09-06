@@ -51,7 +51,7 @@ export class TimedSource {
 }
 
 export const WithTime = Flow.createSimple({
-  doStart() {
+  onStart() {
     this.startTime = new Date().getTime();
   },
   onPush() {

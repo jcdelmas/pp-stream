@@ -46,10 +46,6 @@ export class SourceStage extends Stage {
     super({ ...methods, inputs: 0 })
   }
 
-  onStart() {
-    this.doStart();
-  }
-
   onPull() {
   }
 
@@ -67,10 +63,6 @@ export class SourceStage extends Stage {
   }
 
   onComplete() {
-    throw new Error('Not supported');
-  }
-
-  start() {
     throw new Error('Not supported');
   }
 

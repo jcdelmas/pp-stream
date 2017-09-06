@@ -7,7 +7,7 @@ import { Source } from '../../src/index';
 describe('push only sources', () => {
   it('simple case', async() => {
     const result = await Source.createPushOnly({
-      doStart() {
+      onStart() {
         this.push(1);
         this.push(2);
         this.push(3);

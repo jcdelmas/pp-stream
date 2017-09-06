@@ -6,7 +6,7 @@ import Stream from './stream';
  * @return {Stream}
  */
 export function create(stageFactory) {
-  return Stream.fromFlowStageFactory(stageFactory);
+  return Stream.fromStageFactory(stageFactory);
 }
 
 /**

@@ -15,7 +15,7 @@ class CallbackSourceStage extends PushSourceStage {
     this.callback = callback;
   }
 
-  doStart() {
+  onStart() {
     this.callback(
       x => this.push(x),
       () => this.complete(),

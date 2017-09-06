@@ -40,7 +40,7 @@ class MapAsyncUnordered extends Stage {
     this.availableWorkers = parallelism;
   }
 
-  doStart() {
+  onStart() {
     this.pull();
   }
 

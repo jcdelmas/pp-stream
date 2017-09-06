@@ -10,10 +10,15 @@ export default class Stream {
    * @returns {Stream}
    */
   static fromSourceStageFactory(stageFactory) {
-    return new Stream(0, 1, () => {
-      const stage = stageFactory();
-      return new Module([], stage.outputs, []);
-    });
+    return Stream.fromStageFactory(stageFactory, 0, 1);
+  }
+
+  /**
+   * @param {function} stageFactory
+   * @returns {Stream}
+   */
+  static fromSinkStageFactory(stageFactory) {
+    return Stream.fromStageFactory(stageFactory, 1, 0);
   }
 
   /**
@@ -22,38 +27,25 @@ export default class Stream {
    * @param {number} outputs
    * @returns {Stream}
    */
-  static fromFlowStageFactory(stageFactory, inputs = 1, outputs = 1) {
-    return new Stream(inputs, outputs, () => {
-      const stage = stageFactory();
-      return new Module(stage.inputs, stage.outputs, []);
-    });
-  }
-
-  /**
-   * @param {function} stageFactory
-   * @returns {Stream}
-   */
-  static fromSinkStageFactory(stageFactory) {
-    return new Stream(1, 0, () => {
-      const stage = stageFactory();
-      return new Module(stage.inputs, [], [stage]);
-    });
+  static fromStageFactory(stageFactory, inputs = 1, outputs = 1) {
+    return new Stream(inputs, outputs, attrs => Module.fromStageFactory(stageFactory, attrs));
   }
 
   static groupStreams(streams) {
     return new Stream(
       _.sum(streams.map(s => s._inCount)),
       _.sum(streams.map(s => s._outCount)),
-      () => Module.group(streams.map(s => s._materialize())));
+      attrs => Module.group(streams.map(s => s._materialize()), attrs)
+    );
   }
 
   static fromGraph(inCount, outCount, factory) {
-    return new Stream(inCount, outCount, () => {
-      const sinks = [];
+    return new Stream(inCount, outCount, attrs => {
+      const submodules = [];
       const { inputs = [], outputs = [] } = factory({
         add: s => {
           const module = s._materialize();
-          module._sinks.forEach(s => sinks.push(s));
+          submodules.push(module);
           return module.wrapper();
         }
       });
@@ -63,23 +55,43 @@ export default class Stream {
       if (outputs.length != outCount) {
         throw new Error('Invalid outputs number');
       }
-      return new Module(
+      return Module.create(
         inputs.map(i => i._input),
         outputs.map(o => o._output),
-        sinks
+        submodules,
+        attrs
       );
     });
   }
 
   /**
-   * @param {number} inputs
-   * @param {number} outputs
+   * @param {number} inCount
+   * @param {number} outCount
    * @param {function} materializer
+   * @param {object} attributes
    */
-  constructor(inputs, outputs, materializer) {
-    this._inCount = inputs;
-    this._outCount = outputs;
-    this._materialize = materializer;
+  constructor(inCount, outCount, materializer, attributes = {}) {
+    this._inCount = inCount;
+    this._outCount = outCount;
+    this._materializer = materializer;
+    this._attributes = attributes;
+  }
+
+  _materialize() {
+    return this._materializer(this._attributes);
+  }
+
+  key(key) {
+    return this.withAttributes({ key });
+  }
+
+  withAttributes(attrs) {
+    return new Stream(
+      this._inCount,
+      this._outCount,
+      this._materializer,
+      { ...this._attributes, ...attrs }
+    );
   }
 
   /**
@@ -106,6 +118,9 @@ export default class Stream {
    * @return {Stream}
    */
   fanIn(fanInFactory) {
+    if (this._outCount <= 1) {
+      throw new Error('No more than 1 outputs');
+    }
     return this.pipe(fanInFactory(this._outCount));
   }
 
@@ -115,7 +130,7 @@ export default class Stream {
    * @param {Stream} sink
    */
   runWith(sink) {
-    return this.pipe(sink).run();
+    return this.pipe(sink.key('_result')).run()._result;
   }
 
   /**
@@ -127,16 +142,9 @@ export default class Stream {
 
   // Closed graph methods
 
-  /**
-   * @returns {Promise}
-   */
   run() {
-    const promises = this._materialize().run();
-
-    if (promises.length > 1) {
-      return Promise.all(promises);
-    } else {
-      return promises[0];
-    }
+    const module = this._materialize();
+    module.start();
+    return module.materializedValue;
   }
 }

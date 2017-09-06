@@ -44,7 +44,7 @@ class FlatMapConcat extends Stage {
         }
       },
 
-      doStart() {
+      onStart() {
         this.pull();
       }
     });

@@ -32,7 +32,7 @@ class PausedReadableSource extends SourceStage {
     }
   };
 
-  doStart() {
+  onStart() {
     this.readable.on('readable', this._onReadable);
     this.readable.on('end', this._onEnd);
     this.readable.on('error', this._onError);

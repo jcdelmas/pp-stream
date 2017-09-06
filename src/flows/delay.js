@@ -37,7 +37,7 @@ export class Delay extends Stage {
     this.overflowStrategy = overflowStrategy;
   }
 
-  doStart() {
+  onStart() {
     this.pull();
   }
 

@@ -15,7 +15,7 @@ class Tick extends SourceStage {
     this.value = value;
   }
 
-  doStart() {
+  onStart() {
     this.timerId = setInterval(() => {
       if (this.isOutputAvailable()) {
         this.push(this.value);

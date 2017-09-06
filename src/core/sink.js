@@ -40,7 +40,7 @@ export class SinkStage extends Stage {
 
   constructor(methods = {}) {
     super({ ...methods, outputs: 0 });
-    this.resultPromise = new Promise((resolve, reject) => {
+    this.materializedValue = new Promise((resolve, reject) => {
       this.resolve = resolve;
       this.reject = reject;
     });
@@ -50,18 +50,14 @@ export class SinkStage extends Stage {
     throw new Error('Not implemented');
   }
 
-  complete(result) {
+  complete() {
     this.cancel();
-    this.resolve(result);
+    this.resolve(this.result);
   }
 
   error(e) {
     this.cancel();
     this.reject(e);
-  }
-
-  _getResult() {
-    return this.resultPromise;
   }
 
   // Not supported methods
@@ -97,7 +93,7 @@ export class SinkStage extends Stage {
 
 export class BasicSinkStage extends SinkStage {
 
-  doStart() {
+  onStart() {
     this.pull();
   }
 

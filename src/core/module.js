@@ -22,22 +22,50 @@ export default class Module {
    * @param {Module[]} modules
    * @returns {Module}
    */
-  static group(modules) {
-    const inputs = _(modules).map(m => m.inputs).flatten().value();
-    const outputs = _(modules).map(m => m.outputs).flatten().value();
-    const sinks = _(modules).map(m => m._sinks).flatten().value();
-    return new Module(inputs, outputs, sinks);
+  static group(modules, attributes) {
+    return Module.create(
+      _(modules).map(m => m.inputs).flatten().value(),
+      _(modules).map(m => m.outputs).flatten().value(),
+      modules,
+      attributes
+    );
+  }
+
+  static create(inputs, outputs, modules, attributes) {
+    const materializedValue = Module._mergeMaterialiedValues(modules);
+    return new Module(
+      inputs,
+      outputs,
+      modules,
+      attributes.key ? { [attributes.key]: materializedValue } : materializedValue
+    );
+  }
+
+  static fromStageFactory(stageFactory, attributes) {
+    const stage = stageFactory();
+    return new Module(
+      stage.inputs,
+      stage.outputs,
+      [stage],
+      attributes.key ? { [attributes.key]: stage.materializedValue } : {}
+    );
+  }
+
+  static _mergeMaterialiedValues(modules) {
+    return modules.reduce((acc, m) => ({ ...m.materializedValue, ...acc }), {});
   }
 
   /**
    * @param {Inlet[]} inputs
    * @param {Outlet[]} outputs
-   * @param {SinkStage[]} sinks
+   * @param {(Module|Stage)[]} submodules
+   * @param {object} attributes
    */
-  constructor(inputs, outputs, sinks) {
-    this.inputs = inputs || [];
-    this.outputs = outputs || [];
-    this._sinks = sinks || [];
+  constructor(inputs, outputs, submodules, materializedValue = {}) {
+    this.inputs = inputs;
+    this.outputs = outputs;
+    this._submodules = submodules;
+    this.materializedValue = materializedValue;
   }
 
   wrapper() {
@@ -67,21 +95,13 @@ export default class Module {
     }
   }
 
-  /**
-   * @returns {Promise[]}
-   */
-  run() {
-    if (this.inputs.length > 0) {
-      throw new Error('Not runnable module: contains input(s)');
+  start() {
+    if (_.some(this.inputs, i => !i.isReady())) {
+      throw new Error('Not wired input');
     }
-    if (this.outputs.length > 0) {
-      throw new Error('Not runnable module: contains output(s)');
+    if (_.some(this.outputs, o => !o.isReady())) {
+      throw new Error('Not wired input');
     }
-    if (this._sinks.length === 0) {
-      throw new Error('Not runnable module: no sink(s)');
-    }
-
-    this._sinks.forEach(s => s.onStart());
-    return this._sinks.map(s => s._getResult());
+    this._submodules.forEach(m => m.start());
   }
 }

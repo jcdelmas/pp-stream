@@ -47,7 +47,7 @@ class FlatMapMerge extends Stage {
         }
       },
 
-      doStart() {
+      onStart() {
         this.pull();
       }
     });

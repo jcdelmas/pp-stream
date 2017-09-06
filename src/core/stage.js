@@ -19,6 +19,10 @@ export class Inlet {
     this._wire = wire;
   }
 
+  isReady() {
+    return !!this._wire;
+  }
+
   isAvailable() {
     return this._wire.hasPendingElement;
   }
@@ -37,10 +41,6 @@ export class Inlet {
 
   grab() {
     return this._wire.grab();
-  }
-
-  start() {
-    this._wire.start();
   }
 
   pull() {
@@ -81,6 +81,10 @@ export class Outlet {
     inlet._setWire(this._wire);
   }
 
+  isReady() {
+    return !!this._wire;
+  }
+
   isAvailable() {
     return this._wire.waitingForPush;
   }
@@ -116,7 +120,6 @@ class Wire {
   waitingForPush = false;
   hasBeenPulled = false;
 
-  started = false;
   completed = false;
   canceled = false;
   closed = false;
@@ -134,20 +137,7 @@ class Wire {
     return el;
   }
 
-  start() {
-    if (this.started) {
-      throw new Error('Already started');
-    }
-    this.started = true;
-    this._asyncIfRequired(() => {
-      this._upstreamHandler.onStart();
-    });
-  }
-
   pull() {
-    if (!this.started) {
-      throw new Error('Upstream stage not started');
-    }
     if (this.closed || this.canceled) {
       throw new Error('Input closed');
     }
@@ -169,9 +159,6 @@ class Wire {
   }
 
   cancel() {
-    if (!this.started) {
-      throw new Error('Not started');
-    }
     if (this.closed || this.canceled) {
       throw new Error('Input already closed');
     }
@@ -191,9 +178,6 @@ class Wire {
   }
 
   push(x) {
-    if (!this.started) {
-      throw new Error('Downstream stage not started');
-    }
     if (this.closed || this.completed) {
       throw new Error('Output closed');
     }
@@ -213,9 +197,6 @@ class Wire {
   }
 
   error(e) {
-    if (!this.started) {
-      throw new Error('Not started');
-    }
     this.waitingForPush = false;
     if (this.canceled) {
       return;
@@ -228,9 +209,6 @@ class Wire {
   }
 
   complete() {
-    if (!this.started) {
-      throw new Error('Not started');
-    }
     if (this.completed || this.closed) {
       throw new Error('Output already closed');
     }
@@ -302,10 +280,6 @@ export class DownstreamHandler {
  * @interface
  */
 export class UpstreamHandler {
-  onStart() {
-    throw new Error('Not implemented');
-  }
-
   onPull() {
     throw new Error('Not implemented');
   }
@@ -327,20 +301,8 @@ export class Stage {
    */
   outputs;
 
-  started = false;
-
-  defaultUpstreamHandler = {
-    onStart: () => {
-      if (!this.started) {
-        this.start();
-        this.doStart();
-        this.started = true;
-      }
-    }
-  };
-
-  constructor({ doStart, doFinish, onPush, onPull, onComplete, onCancel, onError, inputs = 1, outputs = 1 } = {}) {
-    if (doStart) this.doStart = doStart.bind(this);
+  constructor({ onStart, doFinish, onPush, onPull, onComplete, onCancel, onError, inputs = 1, outputs = 1 } = {}) {
+    if (onStart) this.onStart = onStart.bind(this);
     if (doFinish) this.doFinish = doFinish.bind(this);
     if (onPush) this.onPush = onPush.bind(this);
     if (onPull) this.onPull = onPull.bind(this);
@@ -348,12 +310,12 @@ export class Stage {
     if (onCancel) this.onCancel = onCancel.bind(this);
     if (onError) this.onError = onError.bind(this);
     this.inputs = _.range(inputs).map(i => new Inlet(this.createDownstreamHandler(i)));
-    this.outputs = _.range(outputs).map(i => new Outlet(this._createFullUpstreamHandler(i)));
+    this.outputs = _.range(outputs).map(i => new Outlet(this.createUpstreamHandler(i)));
   }
 
   // Lifecycle methods
 
-  doStart() {
+  onStart() {
   }
 
   doFinish() {
@@ -380,12 +342,6 @@ export class Stage {
 
   // Upstream handler methods
 
-  onStart() {
-    this.start();
-    this.doStart();
-    this.started = true;
-  }
-
   onPull() {
     this.inputs.forEach(input => input.pullIfAllowed());
   }
@@ -404,7 +360,7 @@ export class Stage {
   }
 
   start() {
-    this.inputs.forEach(input => input.start());
+    this.onStart();
   }
 
   cancel() {
@@ -492,13 +448,5 @@ export class Stage {
 
   createUpstreamHandler(index) {
     return this;
-  }
-
-  _createFullUpstreamHandler(index) {
-    const upstreamHandler = this.createUpstreamHandler(index);
-    if (!upstreamHandler.onStart) {
-      upstreamHandler.onStart = this.defaultUpstreamHandler.onStart;
-    }
-    return upstreamHandler;
   }
 }

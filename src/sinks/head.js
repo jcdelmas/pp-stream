@@ -10,9 +10,10 @@ import { createSimple, _registerSink } from '../core/sink';
 export function head() {
   return createSimple({
     onPush() {
-      this.complete(this.grab());
+      this.result = this.grab();
+      this.complete();
     },
-    doStart() {
+    onStart() {
       this.pull();
     }
   });

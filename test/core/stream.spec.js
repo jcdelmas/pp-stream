@@ -20,7 +20,7 @@ describe('routing', () => {
   });
   it('with Sink', async() => {
     const result = await Source.from([1, 2, 3])
-      .runWith(Flow.map(x => x + 1).pipe(Sink.toArray()));
+      .runWith(Flow.map(x => x + 1).pipe(Sink.toArray().key('result'))).result;
     result.should.be.eql([2, 3, 4]);
   });
 });

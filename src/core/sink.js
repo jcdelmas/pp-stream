@@ -70,10 +70,6 @@ export class SinkStage extends Stage {
     throw new Error('Not supported');
   }
 
-  onStart() {
-    throw new Error('Not supported');
-  }
-
   onPull() {
     throw new Error('Not supported');
   }
@@ -100,6 +96,10 @@ export class SinkStage extends Stage {
 }
 
 export class BasicSinkStage extends SinkStage {
+
+  doStart() {
+    this.pull();
+  }
 
   onPush() {
     this.onNext(this.grab());

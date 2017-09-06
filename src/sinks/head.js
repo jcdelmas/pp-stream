@@ -11,6 +11,9 @@ export function head() {
   return createSimple({
     onPush() {
       this.complete(this.grab());
+    },
+    doStart() {
+      this.pull();
     }
   });
 }

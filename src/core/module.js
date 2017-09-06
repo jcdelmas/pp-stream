@@ -80,8 +80,7 @@ export default class Module {
       throw new Error('Not runnable module: no sink(s)');
     }
 
-    this._sinks.forEach(s => s.start());
-    this._sinks.forEach(s => s.pull());
+    this._sinks.forEach(s => s.onStart());
     return this._sinks.map(s => s._getResult());
   }
 }

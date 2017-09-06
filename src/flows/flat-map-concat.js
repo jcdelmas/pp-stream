@@ -42,6 +42,10 @@ class FlatMapConcat extends Stage {
         if (parent.completePending) {
           parent.complete();
         }
+      },
+
+      doStart() {
+        this.pull();
       }
     });
     source.runWithLastStage(this.current);

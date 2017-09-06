@@ -13,6 +13,9 @@ export function forEach(cb) {
     onPush() {
       cb(this.grab());
       this.pull();
+    },
+    doStart() {
+      this.pull();
     }
   });
 }

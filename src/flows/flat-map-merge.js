@@ -45,6 +45,10 @@ class FlatMapMerge extends Stage {
         } else if (!parent.isInputClosed()) {
           parent.pull();
         }
+      },
+
+      doStart() {
+        this.pull();
       }
     });
     this.stages.push(stage);

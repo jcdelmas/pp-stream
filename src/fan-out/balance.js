@@ -1,7 +1,7 @@
 
 import { FanOutStage, _registerFanOut } from '../core/fan-out';
 
-_registerFanOut('balance', () => new Balance());
+_registerFanOut('balance', size => new Balance(size));
 
 class Balance extends FanOutStage {
 

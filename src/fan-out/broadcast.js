@@ -1,7 +1,7 @@
 
 import { FanOutStage, _registerFanOut } from '../core/fan-out';
 
-_registerFanOut('broadcast', () => new Broadcast());
+_registerFanOut('broadcast', size => new Broadcast(size));
 
 class Broadcast extends FanOutStage {
 

@@ -27,20 +27,24 @@ export function createPushOnly(methods) {
   return create(() => new PushSourceStage(methods));
 }
 
-export function fromGraphBuilder(factory) {
-  return Stream.fromGraphBuilder(builder => ({ outputs: [factory(builder)] }));
+export function fromGraph(factory) {
+  return Stream.fromGraph(0, 1, builder => ({ outputs: [factory(builder)] }));
 }
 
 const Source = {
   create,
   createSimple,
   createPushOnly,
-  fromGraphBuilder
+  fromGraph
 };
 
 export default Source;
 
 export class SourceStage extends Stage {
+
+  constructor(methods = {}) {
+    super({ ...methods, inputs: 0 })
+  }
 
   onStart() {
     this.doStart();

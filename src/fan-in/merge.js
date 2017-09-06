@@ -35,7 +35,7 @@ import { FanInStage, _registerSimpleFanIn } from '../core/fan-in';
  * @memberOf Stream#
  */
 
-_registerSimpleFanIn('merge', 'mergeStreams', () => new Merge());
+_registerSimpleFanIn('merge', 'mergeStreams', size => new Merge(size));
 
 class Merge extends FanInStage {
 

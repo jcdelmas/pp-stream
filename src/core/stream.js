@@ -1,35 +1,54 @@
 import Sink from './sink';
 import Module from './module';
+import _ from 'lodash';
+
 
 export default class Stream {
 
+  /**
+   * @param {function} stageFactory
+   * @returns {Stream}
+   */
   static fromSourceStageFactory(stageFactory) {
-    return new Stream(() => {
+    return new Stream(0, 1, () => {
       const stage = stageFactory();
-      return new Module([], [stage], []);
+      return new Module([], stage.outputs, []);
     });
   }
 
-  static fromFlowStageFactory(stageFactory) {
-    return new Stream(() => {
+  /**
+   * @param {function} stageFactory
+   * @param {number} inputs
+   * @param {number} outputs
+   * @returns {Stream}
+   */
+  static fromFlowStageFactory(stageFactory, inputs = 1, outputs = 1) {
+    return new Stream(inputs, outputs, () => {
       const stage = stageFactory();
-      return new Module([stage], [stage], []);
+      return new Module(stage.inputs, stage.outputs, []);
     });
   }
 
+  /**
+   * @param {function} stageFactory
+   * @returns {Stream}
+   */
   static fromSinkStageFactory(stageFactory) {
-    return new Stream(() => {
+    return new Stream(1, 0, () => {
       const stage = stageFactory();
-      return new Module([stage], [], [stage]);
+      return new Module(stage.inputs, [], [stage]);
     });
   }
 
   static groupStreams(streams) {
-    return new Stream(() => Module.group(streams.map(s => s._materialize())));
+    return new Stream(
+      _.sum(streams.map(s => s._inCount)),
+      _.sum(streams.map(s => s._outCount)),
+      () => Module.group(streams.map(s => s._materialize())));
   }
 
-  static fromGraphBuilder(factory) {
-    return new Stream(() => {
+  static fromGraph(inCount, outCount, factory) {
+    return new Stream(inCount, outCount, () => {
       const sinks = [];
       const { inputs = [], outputs = [] } = factory({
         add: s => {
@@ -38,6 +57,12 @@ export default class Stream {
           return module.wrapper();
         }
       });
+      if (inputs.length != inCount) {
+        throw new Error('Invalid inputs number');
+      }
+      if (outputs.length != outCount) {
+        throw new Error('Invalid outputs number');
+      }
       return new Module(
         inputs.map(i => i._input),
         outputs.map(o => o._output),
@@ -47,10 +72,13 @@ export default class Stream {
   }
 
   /**
-   *
+   * @param {number} inputs
+   * @param {number} outputs
    * @param {function} materializer
    */
-  constructor(materializer) {
+  constructor(inputs, outputs, materializer) {
+    this._inCount = inputs;
+    this._outCount = outputs;
     this._materialize = materializer;
   }
 
@@ -59,10 +87,13 @@ export default class Stream {
    * @return {Stream}
    */
   pipe(stream) {
-    return Stream.fromGraphBuilder(b => {
+    if (this._outCount != stream._inCount) {
+      throw new Error('Invalid wiring');
+    }
+    return Stream.fromGraph(this._inCount, stream._outCount, b => {
       const prev = b.add(this);
       const next = b.add(stream);
-      prev.out().wire(next.in());
+      prev.outputs().forEach((out, i) => out.wire(next.in(i)));
       return {
         inputs: prev.inputs(),
         outputs: next.outputs()
@@ -71,41 +102,11 @@ export default class Stream {
   }
 
   /**
-   * @param {Stream} stream
+   * @param {function} fanInFactory
    * @return {Stream}
    */
-  fanIn(stream) {
-    return Stream.fromGraphBuilder(b => {
-      const prev = b.add(this);
-      const fanIn = b.add(stream);
-
-      prev.outputs().forEach(out => out.wire(fanIn.in()));
-      return {
-        inputs: prev.inputs(),
-        outputs: fanIn.outputs()
-      };
-    });
-  }
-
-  /**
-   *
-   * @param {...Stream} streams
-   * @return {Stream}
-   */
-  fanOut(...streams) {
-    return Stream.fromGraphBuilder(b => {
-      const prev = b.add(this);
-      const outputs = [];
-      streams.forEach(stream => {
-        const s = b.add(stream);
-        prev.out().wire(s.in());
-        s.outputs().forEach(o => outputs.push(o));
-      });
-      return {
-        inputs: prev.inputs(),
-        outputs
-      }
-    });
+  fanIn(fanInFactory) {
+    return this.pipe(fanInFactory(this._outCount));
   }
 
   // Source methods

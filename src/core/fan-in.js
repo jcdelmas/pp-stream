@@ -1,12 +1,9 @@
-"use strict";
-
-import { Stage } from './stage';
+import {Stage} from './stage';
 import Source from './source';
-import Flow from './flow';
 import Stream from './stream';
 
-export function createFanIn(stageFactory) {
-  return Flow.create(stageFactory);
+export function createFanIn(size, stageFactory) {
+  return Stream.fromFlowStageFactory(() => stageFactory(size), size);
 }
 
 const FanIn = {
@@ -14,22 +11,24 @@ const FanIn = {
 };
 
 export function _registerSimpleFanIn(name, fanInName, stageFactory) {
-  Source[name] = (...sources) => FanIn[name](...sources);
-  FanIn[name] = (...streams) => {
-    const fanIn = createFanIn(stageFactory);
-    return streams.length > 0 ? Stream.groupStreams(streams).fanIn(fanIn) : fanIn;
-  };
+  const fanInStreams = streams => Stream.groupStreams(streams)[fanInName]();
+  Source[name] = (...sources) => fanInStreams(sources);
+  FanIn[name] = size => createFanIn(size, stageFactory);
   Stream.prototype[name] = function (source) {
-    return FanIn[name](this, source);
+    return fanInStreams([this, source]);
   };
   Stream.prototype[fanInName] = function () {
-    return this.fanIn(FanIn[name]());
+    return this.fanIn(FanIn[name]);
   };
 }
 
 export default FanIn;
 
 export class FanInStage extends Stage {
+
+  constructor(inputs) {
+    super({ inputs });
+  }
 
   createDownstreamHandler(index) {
     throw new Error('Not implemented');

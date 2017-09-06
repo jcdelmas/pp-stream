@@ -17,8 +17,8 @@ export function createSimple(stageMethods = {}) {
   return create(() => new Stage(stageMethods));
 }
 
-export function fromGraphBuilder(factory) {
-  return Stream.fromGraphBuilder(builder => {
+export function fromGraph(factory) {
+  return Stream.fromGraph(1, 1, builder => {
     const result = factory(builder);
     return { inputs: [result.input], outputs: [result.output] }
   });
@@ -28,7 +28,7 @@ const Flow = createSimple();
 
 Flow.create = create;
 Flow.createSimple = createSimple;
-Flow.fromGraphBuilder = fromGraphBuilder;
+Flow.fromGraph = fromGraph;
 
 export function _registerFlow(name, fn) {
   Stream.prototype[name] = function (...args) {

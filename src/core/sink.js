@@ -17,14 +17,14 @@ export function createSimple(stageMethods) {
   return create(() => new SinkStage(stageMethods));
 }
 
-export function fromGraphBuilder(factory) {
-  return Stream.fromGraphBuilder(builder => ({ inputs: [factory(builder)] }));
+export function fromGraph(factory) {
+  return Stream.fromGraph(1, 0, builder => ({ inputs: [factory(builder)] }));
 }
 
 const Sink = {
   create,
   createSimple,
-  fromGraphBuilder
+  fromGraph
 };
 
 export function _registerSink(name, fn) {
@@ -39,7 +39,7 @@ export default Sink;
 export class SinkStage extends Stage {
 
   constructor(methods = {}) {
-    super(methods);
+    super({ ...methods, outputs: 0 });
     this.resultPromise = new Promise((resolve, reject) => {
       this.resolve = resolve;
       this.reject = reject;

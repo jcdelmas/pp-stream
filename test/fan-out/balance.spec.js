@@ -34,7 +34,7 @@ describe('balance', () => {
     result.should.be.eql(["A2", "B3", "A4", "B5"]);
   });
   it('with sink', async() => {
-    const sink = FanOut.balance(
+    const sink = Flow.balance(
       delayedFlow(DELAY).map(x => "A" + x),
       delayedFlow(DELAY).map(x => "B" + x)
     ).mergeStreams().pipe(Sink.toArray());

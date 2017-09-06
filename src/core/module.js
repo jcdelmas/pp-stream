@@ -1,5 +1,21 @@
 import _ from 'lodash';
 
+class InputWrapper {
+  constructor(input) {
+    this._input = input;
+  }
+}
+
+class OutputWrapper {
+  constructor(output) {
+    this._output = output;
+  }
+
+  wire(input) {
+    return this._output.wire(input._input)
+  }
+}
+
 export default class Module {
 
   /**
@@ -27,30 +43,25 @@ export default class Module {
     const module = this;
     return {
       inputs() {
-        return module._inputs.map((input, i) => this.in(i));
+        return module._inputs.map(input => new InputWrapper(input));
       },
 
       outputs() {
-        return module._outputs.map((output, i) => this.out(i));
+        return module._outputs.map(output => new OutputWrapper(output));
       },
 
       in(i = 0) {
         if (module._inputs.length <= i) {
           throw new Error(`No input with index ${i}`);
         }
-        return {
-          _input: module._inputs[i]
-        }
+        return new InputWrapper(module._inputs[i]);
       },
 
       out(i = 0) {
         if (module._outputs.length <= i) {
           throw new Error(`No output with index ${i}`);
         }
-        return {
-          wire: input => module._outputs[i]._addDownstreamStage(input._input),
-          _output: module._outputs[i]
-        };
+        return new OutputWrapper(module._outputs[i]);
       }
     }
   }

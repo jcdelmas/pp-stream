@@ -32,7 +32,7 @@ describe('broadcast', () => {
     result.should.be.eql([[3, 4, 5], [4, 5, 6]]);
   });
   it('with sink', async() => {
-    const sink = FanOut.broadcast(
+    const sink = Sink.broadcast(
       Flow.map(x => x + 1).pipe(Sink.toArray()),
       Flow.map(x => x + 2).pipe(Sink.toArray())
     );

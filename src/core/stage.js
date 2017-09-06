@@ -1,12 +1,21 @@
+import _ from 'lodash';
+
 /**
  * @interface
  */
 export class Inlet {
 
   /**
-   * @param {Wire} wire
+   * @param downstreamHandler
    */
-  constructor(wire) {
+  constructor(downstreamHandler) {
+    this._downstreamHandler = downstreamHandler;
+  }
+
+  _setWire(wire) {
+    if (this._wire) {
+      throw new Error('Already wired!');
+    }
     this._wire = wire;
   }
 
@@ -55,10 +64,21 @@ export class Inlet {
 export class Outlet {
 
   /**
+   * @param upstreamHandler
+   */
+  constructor(upstreamHandler) {
+    this._upstreamHandler = upstreamHandler;
+  }
+
+  /**
    * @param {Wire} wire
    */
-  constructor(wire) {
-    this._wire = wire;
+  wire(inlet) {
+    if (this._wire) {
+      throw new Error('Already wired!');
+    }
+    this._wire = new Wire(this, inlet);
+    inlet._setWire(this._wire);
   }
 
   isAvailable() {
@@ -84,14 +104,12 @@ export class Outlet {
 
 class Wire {
   /**
-   * @param {UpstreamHandler} upstreamHandler
-   * @param {DownstreamHandler} downstreamHandler
+   * @param {Inlet} inlet
+   * @param {Outlet} outlet
    */
-  constructor(upstreamHandler, downstreamHandler) {
-    this._downstreamHandler = downstreamHandler;
-    this._upstreamHandler = upstreamHandler;
-    this.in = new Outlet(this);
-    this.out = new Inlet(this);
+  constructor(outlet, inlet) {
+    this._downstreamHandler = inlet._downstreamHandler;
+    this._upstreamHandler = outlet._upstreamHandler;
   }
 
   hasPendingElement = false;
@@ -302,12 +320,12 @@ export class Stage {
   /**
    * @type {Inlet[]}
    */
-  inputs = [];
+  inputs;
 
   /**
    * @type {Outlet[]}
    */
-  outputs = [];
+  outputs;
 
   started = false;
 
@@ -321,7 +339,7 @@ export class Stage {
     }
   };
 
-  constructor({ doStart, doFinish, onPush, onPull, onComplete, onCancel, onError } = {}) {
+  constructor({ doStart, doFinish, onPush, onPull, onComplete, onCancel, onError, inputs = 1, outputs = 1 } = {}) {
     if (doStart) this.doStart = doStart.bind(this);
     if (doFinish) this.doFinish = doFinish.bind(this);
     if (onPush) this.onPush = onPush.bind(this);
@@ -329,13 +347,17 @@ export class Stage {
     if (onComplete) this.onComplete = onComplete.bind(this);
     if (onCancel) this.onCancel = onCancel.bind(this);
     if (onError) this.onError = onError.bind(this);
+    this.inputs = _.range(inputs).map(i => new Inlet(this.createDownstreamHandler(i)));
+    this.outputs = _.range(outputs).map(i => new Outlet(this._createFullUpstreamHandler(i)));
   }
 
   // Lifecycle methods
 
-  doStart() {}
+  doStart() {
+  }
 
-  doFinish() {}
+  doFinish() {
+  }
 
   // Downstream handler methods
 
@@ -465,54 +487,18 @@ export class Stage {
   // Build methods
 
   createDownstreamHandler(index) {
-    if (index > 0) {
-      throw new Error('Input already exist');
-    }
     return this;
   }
 
   createUpstreamHandler(index) {
-    if (index > 0) {
-      throw new Error('Output already exist');
-    }
     return this;
   }
 
-  /**
-   * @param {Stage} downstreamStage
-   */
-  _addDownstreamStage(downstreamStage) {
-    const wire = new Wire(
-      this._createNextUpstreamHandler(),
-      downstreamStage._createNextDownstreamHandler()
-    );
-    this.outputs.push(wire.in);
-    downstreamStage._addInput(wire.out);
-  }
-
-  /**
-   * @returns {UpstreamHandler}
-   */
-  _createNextUpstreamHandler() {
-    const upstreamHandler = this.createUpstreamHandler(this.outputs.length);
+  _createFullUpstreamHandler(index) {
+    const upstreamHandler = this.createUpstreamHandler(index);
     if (!upstreamHandler.onStart) {
       upstreamHandler.onStart = this.defaultUpstreamHandler.onStart;
     }
     return upstreamHandler;
-  }
-
-  /**
-   * @returns {DownstreamHandler}
-   */
-  _createNextDownstreamHandler() {
-    return this.createDownstreamHandler(this.inputs.length);
-  }
-
-  /**
-   * @param {Inlet} input
-   * @private
-   */
-  _addInput(input) {
-    this.inputs.push(input)
   }
 }

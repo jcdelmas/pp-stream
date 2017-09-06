@@ -10,10 +10,10 @@ import Stream from '../core/stream'
  * @memberOf FanIn
  * @memberOf Stream#
  */
-function zipWith(fn) {
-  return FanIn.zip().map(xs => fn(...xs))
+function zipWith(size, fn) {
+  return FanIn.zip(size).map(xs => fn(...xs))
 }
 
 Stream.prototype.zipWith = function (fn) {
-  return this.fanIn(zipWith(fn));
+  return this.fanIn(size => zipWith(size, fn));
 };

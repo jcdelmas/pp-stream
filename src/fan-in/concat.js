@@ -35,7 +35,7 @@ import { FanInStage, _registerSimpleFanIn } from '../core/fan-in';
  * @memberOf Stream#
  */
 
-_registerSimpleFanIn('concat', 'concatStreams', () => new Concat());
+_registerSimpleFanIn('concat', 'concatStreams', size => new Concat(size));
 
 class Concat extends FanInStage {
 

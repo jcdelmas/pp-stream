@@ -23,6 +23,7 @@ import { FanInStage, _registerSimpleFanIn } from '../core/fan-in';
 /**
  * @function zip
  *
+ * @param {number} size
  * @return {Stream}
  *
  * @memberOf FanIn
@@ -35,7 +36,7 @@ import { FanInStage, _registerSimpleFanIn } from '../core/fan-in';
  * @memberOf Stream#
  */
 
-_registerSimpleFanIn('zip', 'zipStreams', () => new Zip());
+_registerSimpleFanIn('zip', 'zipStreams', size => new Zip(size));
 
 class Zip extends FanInStage {
 

@@ -11,7 +11,7 @@ import {
 describe('throttle', () => {
   it('simple', async() => {
     const startTime = new Date().getTime();
-    const result = await Source.repeat(1).throttle(100).take(4).map(x => new Date().getTime() - startTime).toArray();
+    const result = await Source.repeat(1).throttle(100).take(4).map(x => new Date().getTime() - startTime).runToArray();
     result.should.have.length(4);
     result.forEach((time, i) => {
       checkTime(time, i * 100);
@@ -22,7 +22,7 @@ describe('throttle', () => {
     const result = await Source.repeat(1).take(4)
       .throttle(200, { elements: 2 })
       .map(x => new Date().getTime() - startTime)
-      .toArray();
+      .runToArray();
     result.should.have.length(4);
     checkTime(result[0], 0);
     checkTime(result[1], 0);
@@ -41,7 +41,7 @@ describe('throttle', () => {
     ])
       .throttle(100, { maximumBurst: 2 })
       .map(x => new Date().getTime() - startTime)
-      .toArray();
+      .runToArray();
 
     result.should.have.length(6);
     checkTime(result[0], 0);
@@ -63,7 +63,7 @@ describe('throttle', () => {
     ])
       .throttle(100, { cost: 3, maximumBurst: 6, costCalculation: xs => xs.length })
       .map(x => new Date().getTime() - startTime)
-      .toArray();
+      .runToArray();
     result.should.have.length(6);
     checkTime(result[0], 0);
     checkTime(result[1], 0);
@@ -79,7 +79,7 @@ describe('throttle', () => {
       [0, 3]
     ])
       .throttle(100, { failOnPressure: true })
-      .toArray()
+      .runToArray()
       .should.be.rejected();
   });
 });

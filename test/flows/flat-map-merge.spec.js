@@ -17,7 +17,7 @@ describe('flatMapMerge', () => {
         .then(150, i + 2)
         .then(150, i + 3)
         .toSource();
-    }).toArray();
+    }).runToArray();
     result.should.be.eql([11, 21, 31, 12, 22, 32, 13, 23, 33]);
   });
   it('with breadth limit', async() => {
@@ -32,7 +32,7 @@ describe('flatMapMerge', () => {
         .then(150, i + 2)
         .then(150, i + 3)
         .toSource();
-    }, 2).toArray();
+    }, 2).runToArray();
     result.should.be.eql([11, 21, 12, 22, 13, 31, 23, 32, 33]);
   });
   it('with cancel', async() => {
@@ -48,7 +48,7 @@ describe('flatMapMerge', () => {
         .then(150, i + 2)
         .then(150, i + 3)
         .toSource();
-    }).take(5).toArray();
+    }).take(5).runToArray();
     result.should.be.eql([11, 21, 31, 12, 22]);
   });
 });

@@ -8,7 +8,7 @@ import {
 
 describe('toArray', () => {
   it('simple', async () => {
-    const result = await Source.from([1, 2, 3]).toArray();
+    const result = await Source.from([1, 2, 3]).runToArray();
     result.should.be.eql([1, 2, 3]);
   });
   it('with to', async () => {

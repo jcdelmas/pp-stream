@@ -5,7 +5,7 @@ import { Source } from '../../src/index';
 
 describe('head', () => {
   it('simple', async () => {
-    const result = await Source.from(['foo', 'bar', 'baz']).head();
+    const result = await Source.from(['foo', 'bar', 'baz']).runHead();
     result.should.be.eql('foo');
   });
 
@@ -14,7 +14,7 @@ describe('head', () => {
     await Source.from(['foo', 'bar', 'baz']).map(x => {
       log.push(x);
       return x;
-    }).head();
+    }).runHead();
     log.should.be.eql(['foo']);
   });
 });

@@ -8,7 +8,7 @@ import {
 
 describe('concat', () => {
   it('with sources', async() => {
-    const result = await Source.from([1, 2]).concat(Source.from([3, 4])).toArray();
+    const result = await Source.from([1, 2]).concat(Source.from([3, 4])).runToArray();
     result.should.be.eql([1, 2, 3, 4]);
   });
   it('with multiple sources', async() => {
@@ -16,17 +16,17 @@ describe('concat', () => {
       Source.from([1, 2]),
       Source.from([3, 4]),
       Source.from([5, 6])
-    ).toArray();
+    ).runToArray();
     result.should.be.eql([1, 2, 3, 4, 5, 6]);
   });
 
   it('with flow', async() => {
-    const result = await Source.from([1, 2]).pipe(Flow.concat(Source.from([3, 4]))).toArray();
+    const result = await Source.from([1, 2]).pipe(Flow.concat(Source.from([3, 4]))).runToArray();
     result.should.be.eql([1, 2, 3, 4]);
   });
 
   it('with flow 2', async() => {
-    const result = await Source.from([3, 4]).pipe(Flow.map(x => x - 2).concat(Source.from([3, 4]))).toArray();
+    const result = await Source.from([3, 4]).pipe(Flow.map(x => x - 2).concat(Source.from([3, 4]))).runToArray();
     result.should.be.eql([1, 2, 3, 4]);
   });
 });

@@ -11,11 +11,11 @@ describe('from callback sources', () => {
       push(2);
       push(3);
       done();
-    }).toArray();
+    }).runToArray();
     result.should.be.eql([1, 2, 3]);
   });
   it('with interval', async () => {
-    const result = await TimedSource.then(50, 1).then(50, 2).then(50, 3).toSource().toArray();
+    const result = await TimedSource.then(50, 1).then(50, 2).then(50, 3).toSource().runToArray();
     result.should.be.eql([1, 2, 3]);
   });
   it('with cancel', async () => {
@@ -27,7 +27,7 @@ describe('from callback sources', () => {
       .then(50, 5)
       .toSource()
       .take(3)
-      .toArray();
+      .runToArray();
     result.should.be.eql([1, 2, 3]);
   });
 });

@@ -9,15 +9,15 @@ import {
 
 describe('interleave', () => {
   it('simple', async() => {
-    const result = await Source.from([1, 2, 3]).interleave(Source.from([4, 5, 6, 7, 8])).toArray();
+    const result = await Source.from([1, 2, 3]).interleave(Source.from([4, 5, 6, 7, 8])).runToArray();
     result.should.be.eql([1, 4, 2, 5, 3, 6, 7, 8]);
   });
   it('with segment size > 1', async() => {
-    const result = await Source.from([1, 2, 3]).interleave(Source.from([4, 5, 6, 7, 8]), 2).toArray();
+    const result = await Source.from([1, 2, 3]).interleave(Source.from([4, 5, 6, 7, 8]), 2).runToArray();
     result.should.be.eql([1, 2, 4, 5, 3, 6, 7, 8]);
   });
   it('with cancel', async() => {
-    const result = await Source.from([1, 2, 3]).interleave(Source.from([4, 5, 6, 7, 8])).take(6).toArray();
+    const result = await Source.from([1, 2, 3]).interleave(Source.from([4, 5, 6, 7, 8])).take(6).runToArray();
     result.should.be.eql([1, 4, 2, 5, 3, 6]);
   });
   it('with more than 2 sources', async() => {
@@ -25,7 +25,7 @@ describe('interleave', () => {
       Source.from([1, 2, 3]),
       Source.from([4, 5, 6]),
       Source.from([7, 8, 9])
-    ]).toArray();
+    ]).runToArray();
     result.should.be.eql([1, 4, 7, 2, 5, 8, 3, 6, 9]);
   });
   it('with broadcast', async() => {
@@ -33,7 +33,7 @@ describe('interleave', () => {
       Flow.map(x => x).buffer(1, OverflowStrategy.BACK_PRESSURE),
       Flow.map(x => x * 2).buffer(1, OverflowStrategy.BACK_PRESSURE),
       Flow.map(x => x * 3).buffer(1, OverflowStrategy.BACK_PRESSURE)
-    ).interleaveStreams().toArray();
+    ).interleaveStreams().runToArray();
     result.should.be.eql([1, 2, 3, 2, 4, 6, 3, 6, 9]);
   });
 });

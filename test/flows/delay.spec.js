@@ -18,7 +18,7 @@ describe('delay', () => {
       [0, 1],
       [100, 2],
       [100, 3]
-    ]).delay(200).pipe(WithTime).toArray();
+    ]).delay(200).pipe(WithTime).runToArray();
     timeChecker(result, [
       [1, 200],
       [2, 300],
@@ -31,7 +31,7 @@ describe('delay', () => {
       [100, 2],
       [100, 3],
       [300, 4]
-    ]).delay(300, 2, OverflowStrategy.DROP_HEAD).pipe(WithTime).toArray();
+    ]).delay(300, 2, OverflowStrategy.DROP_HEAD).pipe(WithTime).runToArray();
     timeChecker(result, [
       [2, 400],
       [3, 500],
@@ -44,7 +44,7 @@ describe('delay', () => {
       [100, 2],
       [100, 3],
       [200, 4]
-    ]).delay(300, 2, OverflowStrategy.DROP_TAIL).pipe(WithTime).toArray();
+    ]).delay(300, 2, OverflowStrategy.DROP_TAIL).pipe(WithTime).runToArray();
     timeChecker(result, [
       [1, 300],
       [3, 500],
@@ -57,7 +57,7 @@ describe('delay', () => {
       [100, 2],
       [100, 3],
       [200, 4]
-    ]).delay(300, 2, OverflowStrategy.DROP_NEW).pipe(WithTime).toArray();
+    ]).delay(300, 2, OverflowStrategy.DROP_NEW).pipe(WithTime).runToArray();
     timeChecker(result, [
       [1, 300],
       [2, 400],
@@ -70,7 +70,7 @@ describe('delay', () => {
       [100, 2],
       [100, 3],
       [100, 4]
-    ]).delay(300, 2, OverflowStrategy.DROP_BUFFER).pipe(WithTime).toArray();
+    ]).delay(300, 2, OverflowStrategy.DROP_BUFFER).pipe(WithTime).runToArray();
     timeChecker(result, [
       [3, 500],
       [4, 600]
@@ -82,7 +82,7 @@ describe('delay', () => {
       [100, 2],
       [100, 3],
       [100, 4]
-    ]).delay(300, 2, OverflowStrategy.BACK_PRESSURE).pipe(WithTime).toArray();
+    ]).delay(300, 2, OverflowStrategy.BACK_PRESSURE).pipe(WithTime).runToArray();
     timeChecker(result, [
       [1, 300],
       [2, 400],
@@ -93,7 +93,7 @@ describe('delay', () => {
   it('fail', async() => {
     Source.from([1, 2, 3])
       .delay(100, 2, OverflowStrategy.FAIL)
-      .toArray()
+      .runToArray()
       .should.be.rejectedWith({ message: 'Buffer overflow' });
   });
   it('with cancel', async() => {
@@ -101,7 +101,7 @@ describe('delay', () => {
       [0, 1],
       [100, 2],
       [100, 3]
-    ]).delay(300).take(2).pipe(WithTime).toArray();
+    ]).delay(300).take(2).pipe(WithTime).runToArray();
     timeChecker(result, [
       [1, 300],
       [2, 400]
@@ -116,7 +116,7 @@ describe('debounce', () => {
       [100, 2],
       [100, 3],
       [400, 4],
-    ]).debounce(300).pipe(WithTime).toArray();
+    ]).debounce(300).pipe(WithTime).runToArray();
     timeChecker(result, [
       [3, 500],
       [4, 900]

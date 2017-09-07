@@ -13,7 +13,7 @@ describe('push only sources', () => {
         this.push(3);
         this.pushAndComplete(4);
       }
-    }).map(x => x + 1).toArray();
+    }).map(x => x + 1).runToArray();
     result.should.be.eql([2, 3, 4, 5]);
   });
 });

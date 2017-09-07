@@ -12,7 +12,7 @@ describe('fromPausedReadable', () => {
       encoding: 'UTF-8',
       autoClose: true
     });
-    const result = await Source.fromPausedReadable(readable).toArray();
+    const result = await Source.fromPausedReadable(readable).runToArray();
     result.should.be.eql(["foo\nbar\nbaz\n"]);
   });
 

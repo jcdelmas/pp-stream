@@ -9,7 +9,7 @@ import {
 
 describe('tick', () => {
   it('simple', async () => {
-    const result = await Source.tick(100, 1).pipe(WithTime).take(5).toArray();
+    const result = await Source.tick(100, 1).pipe(WithTime).take(5).runToArray();
     timeChecker(result, [
       [1, 100],
       [1, 200],

@@ -1,4 +1,5 @@
-import { Stage } from './stage';
+import _ from 'lodash';
+import {Stage} from './stage';
 import Stream from './stream';
 
 /**
@@ -29,7 +30,7 @@ const Sink = {
 
 export function _registerSink(name, fn) {
   Sink[name] = fn;
-  Stream.prototype[name] = function (...args) {
+  Stream.prototype['run' + _.upperFirst(name)] = function (...args) {
     return this.runWith(fn(...args));
   };
 }

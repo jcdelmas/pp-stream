@@ -14,7 +14,7 @@ describe('zipWith', () => {
         Flow.map(x => x * 2)
       )
       .zipWith((x, y) => x + y)
-      .toArray();
+      .runToArray();
     result.should.be.eql([4, 7, 10]);
   });
 });

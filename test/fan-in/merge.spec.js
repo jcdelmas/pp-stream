@@ -16,7 +16,7 @@ describe('merge', () => {
       .then(50, 3)
       .then(100, 5)
       .toSource();
-    const result = await Source.merge(source1, source2).toArray();
+    const result = await Source.merge(source1, source2).runToArray();
     result.should.be.eql([1, 2, 3, 4, 5, 6]);
   });
 
@@ -27,7 +27,7 @@ describe('merge', () => {
     const result = await Source.from([1, 2, 3, 4, 5, 6])
       .balance(...workers)
       .mergeStreams()
-      .toArray();
+      .runToArray();
     result.sort().should.be.eql([2, 3, 4, 5, 6, 7]);
   });
 });

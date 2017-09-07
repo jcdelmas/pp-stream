@@ -11,7 +11,7 @@ describe('recover', () => {
         throw new Error();
       }
       return x;
-    }).recover().toArray();
+    }).recover().runToArray();
     result.should.be.eql([1, 3, 5]);
   });
 
@@ -21,7 +21,7 @@ describe('recover', () => {
         throw new Error();
       }
       return x;
-    }).recover(() => 'error').toArray();
+    }).recover(() => 'error').runToArray();
     result.should.be.eql([1, 'error', 3, 'error', 5]);
   });
 
@@ -36,7 +36,7 @@ describe('recover', () => {
         return 'first';
       }
       throw err;
-    }).recover(() => 'second').toArray();
+    }).recover(() => 'second').runToArray();
     result.should.be.eql([1, 'first', 3, 'second', 5]);
   });
 });

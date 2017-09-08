@@ -1,3 +1,6 @@
+import path from 'path';
+import fs from 'fs';
+
 import {
   Stage,
   UpstreamHandler,
@@ -14,51 +17,15 @@ import Sink, { SinkStage, BasicSinkStage } from './core/sink';
 import FanOut, { FanOutStage } from './core/fan-out';
 import FanIn, { FanInStage } from './core/fan-in';
 
-import './sources/empty';
-import './sources/from-array';
-import './sources/from-callback';
-import './sources/from-promise';
-import './sources/from-readable';
-import './sources/repeat';
-import './sources/single';
-import './sources/tick';
-import './sources/unfold';
-import './sources/unfold-async';
+function importFolder(folder) {
+  fs.readdirSync(path.join(__dirname, folder)).forEach(file => require(`${folder}/${file}`));
+}
 
-import './flows/buffer';
-import './flows/delay';
-import './flows/distinct';
-import './flows/drop';
-import './flows/drop-while';
-import './flows/filter';
-import './flows/flat-map-concat';
-import './flows/flat-map-merge';
-import './flows/grouped';
-import './flows/map';
-import './flows/map-async';
-import './flows/map-concat';
-import './flows/recover';
-import './flows/scan';
-import './flows/sliding';
-import './flows/take';
-import './flows/take-while';
-import './flows/throttle';
-
-import './sinks/ignore';
-import './sinks/head';
-import './sinks/last';
-import './sinks/for-each';
-import './sinks/reduce';
-import './sinks/to-array';
-
-import './fan-out/broadcast';
-import './fan-out/balance';
-
-import './fan-in/concat';
-import './fan-in/merge';
-import './fan-in/zip';
-import './fan-in/zip-with';
-import './fan-in/interleave';
+importFolder('./sources');
+importFolder('./flows');
+importFolder('./sinks');
+importFolder('./fan-in');
+importFolder('./fan-out');
 
 export {
   Stream,

@@ -5,6 +5,7 @@
 
  * failed
  * fromFile
+ * fromQueue
  
 ## Sinks
 

@@ -1,7 +1,6 @@
 import Buffer from './buffer';
 import { Stage } from './stage';
 import Stream from './stream';
-import Module from './module';
 
 /**
  * @param stageFactory

@@ -4,7 +4,6 @@ import 'should';
 import {
   Source,
   Flow,
-  FanOut,
   Sink
 } from '../../src/index';
 import { delayedFlow } from '../utils';

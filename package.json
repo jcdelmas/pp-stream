@@ -1,8 +1,8 @@
 {
   "name": "pp-stream",
-  "version": "0.0.1",
-  "description": "Push/pull streams",
-  "main": "index.js",
+  "version": "0.1.0",
+  "description": "High-level stream library with back-pressure support.",
+  "main": "./dist/index.js",
   "directories": {
     "test": "test"
   },
@@ -21,12 +21,18 @@
     "eslint": "^4.6.1",
     "eslint-plugin-import": "^2.7.0",
     "jest": "^20.0.4",
+    "npm-run-all": "^4.1.1",
+    "rimraf": "^2.6.2",
     "should": "^11.2.1",
     "should-promised": "^0.3.1"
   },
   "scripts": {
+    "clean": "rimraf dist",
     "test": "jest",
-    "lint": "eslint src test"
+    "lint": "eslint src test",
+    "check": "run-s lint test",
+    "build": "babel src --out-dir dist",
+    "release": "run-s clean check build"
   },
   "repository": {
     "type": "git",

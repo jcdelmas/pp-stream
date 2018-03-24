@@ -1,16 +1,20 @@
 
-export const OverflowStrategy = {
-  DROP_BUFFER: "DROP_BUFFER",
-  DROP_HEAD: "DROP_HEAD",
-  DROP_NEW: "DROP_NEW",
-  DROP_TAIL: "DROP_TAIL",
-  FAIL: "FAIL",
-  BACK_PRESSURE: "BACK_PRESSURE"
-};
+export enum OverflowStrategy {
+  DROP_BUFFER = "DROP_BUFFER",
+  DROP_HEAD = "DROP_HEAD",
+  DROP_NEW = "DROP_NEW",
+  DROP_TAIL = "DROP_TAIL",
+  FAIL = "FAIL",
+  BACK_PRESSURE = "BACK_PRESSURE",
+}
 
-export default class Buffer {
+export default class Buffer<A> {
 
-  buf = [];
+  buf: A[] = []
+
+  maxSize: number
+  overflowStrategy: OverflowStrategy
+  dropCallback: (A) => void
 
   constructor(maxSize = 16, overflowStrategy = OverflowStrategy.FAIL, dropCallback = () => {}) {
     this.maxSize = maxSize;
@@ -18,19 +22,19 @@ export default class Buffer {
     this.dropCallback = dropCallback;
   }
 
-  size() {
+  size(): number {
     return this.buf.length;
   }
 
-  isEmpty() {
+  isEmpty(): boolean {
     return this.buf.length === 0;
   }
 
-  isFull() {
+  isFull(): boolean {
     return this.buf.length === this.maxSize;
   }
 
-  push(x) {
+  push(x): void {
     if (this.isFull()) {
       switch (this.overflowStrategy) {
         case OverflowStrategy.FAIL:
@@ -56,24 +60,21 @@ export default class Buffer {
     this.buf.push(x);
   }
 
-  pull() {
+  pull(): A {
     if (this.isEmpty()) {
       throw new Error('Empty buffer');
     }
     return this.buf.shift();
   }
 
-  head() {
+  head(): A {
     if (this.isEmpty()) {
       throw new Error('Empty buffer');
     }
     return this.buf[0];
   }
 
-  /**
-   * @return {Array}
-   */
-  drain() {
+  drain(): A[] {
     const buf = this.buf;
     this.buf = [];
     return buf;

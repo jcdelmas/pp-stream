@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "baseUrl": "src/",
+    "target": "es5",
+    "module": "es6",
+    "moduleResolution": "node",
+    "strict": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "sourceMap": true
+  }
+}

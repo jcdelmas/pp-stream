@@ -1,12 +1,10 @@
-
-import 'babel-polyfill';
-import 'should';
-
-import { Source } from '../../src/index';
+import 'babel-polyfill'
+import 'should'
+import { fromArray } from '../../src/index'
 
 describe('recover', () => {
   it('without message', async () => {
-    const result = await Source.from([1, 2, 3, 4, 5]).map(x => {
+    const result = await fromArray([1, 2, 3, 4, 5]).map(x => {
       if (x % 2 === 0) {
         throw new Error();
       }
@@ -16,7 +14,7 @@ describe('recover', () => {
   });
 
   it('with message', async () => {
-    const result = await Source.from([1, 2, 3, 4, 5]).map(x => {
+    const result = await fromArray([1, 2, 3, 4, 5]).map(x => {
       if (x % 2 === 0) {
         throw new Error();
       }
@@ -26,7 +24,7 @@ describe('recover', () => {
   });
 
   it('with rethrow', async () => {
-    const result = await Source.from([1, 2, 3, 4, 5]).map(x => {
+    const result = await fromArray([1, 2, 3, 4, 5]).map(x => {
       if (x % 2 === 0) {
         throw new Error('error' + x);
       }

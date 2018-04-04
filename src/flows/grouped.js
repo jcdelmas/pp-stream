@@ -1,45 +1,29 @@
-
-import { Stage } from '../core/stage';
-import { create, _registerFlow } from '../core/flow';
-
-/**
- * @param {number} n
- * @returns {Stream}
- *
- * @memberOf Stream#
- * @memberOf Flow
- */
+import { _registerFlow, Flow, FlowStage } from '../core/flow';
 export function grouped(n) {
-  return create(() => new Grouped(n));
+    return Flow.fromStageFactory(() => new Grouped(n));
 }
-
 _registerFlow('grouped', grouped);
-
-class Grouped extends Stage {
-  constructor(size) {
-    super();
-    this.size = size;
-  }
-
-  /**
-   * @type {Array}
-   */
-  buffer = [];
-
-  onPush() {
-    this.buffer.push(this.grab());
-    if (this.buffer.length >= this.size) {
-      this.push(this.buffer);
-      this.buffer = [];
-    } else {
-      this.pull();
+class Grouped extends FlowStage {
+    constructor(size) {
+        super();
+        this.size = size;
+        this.buffer = [];
     }
-  }
-
-  onComplete() {
-    if (this.buffer.length) {
-      this.push(this.buffer);
+    onPush() {
+        this.buffer.push(this.grab());
+        if (this.buffer.length >= this.size) {
+            this.push(this.buffer);
+            this.buffer = [];
+        }
+        else {
+            this.pull();
+        }
     }
-    this.complete();
-  }
+    onComplete() {
+        if (this.buffer.length) {
+            this.push(this.buffer);
+        }
+        this.complete();
+    }
 }
+//# sourceMappingURL=grouped.js.map

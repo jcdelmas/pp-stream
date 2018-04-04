@@ -1,22 +1,15 @@
-
-import { createSimple, _registerSink } from '../core/sink';
-
-/**
- * @return {Stream}
- *
- * @memberOf Sink
- * @memberOf Stream#
- */
+import { _registerSink, Sink, SinkStage } from '../core/sink';
 export function head() {
-  return createSimple({
-    onPush() {
-      this.result = this.grab();
-      this.complete();
-    },
-    onStart() {
-      this.pull();
-    }
-  });
+    return Sink.fromStageFactory(() => new Head());
 }
-
 _registerSink('head', head);
+class Head extends SinkStage {
+    onPush() {
+        this.result = this.grab();
+        this.complete();
+    }
+    onStart() {
+        this.pull();
+    }
+}
+//# sourceMappingURL=head.js.map

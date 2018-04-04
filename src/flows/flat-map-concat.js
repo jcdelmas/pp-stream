@@ -1,76 +1,59 @@
-import { Stage } from '../core/stage';
-import { create, _registerFlow } from '../core/flow';
+import { _registerFlow, Flow, FlowStage } from '../core/flow';
 import { SinkStage } from '../core/sink';
-
-/**
- * @param fn
- * @returns {Stream}
- *
- * @memberOf Stream#
- * @memberOf Flow
- */
 export function flatMapConcat(fn) {
-  return create(() => new FlatMapConcat(fn));
+    return Flow.fromStageFactory(() => new FlatMapConcat(fn));
 }
-
 _registerFlow('flatMapConcat', flatMapConcat);
-
-class FlatMapConcat extends Stage {
-  constructor(fn) {
-    super();
-    this.fn = fn;
-  }
-
-  /**
-   * @type {SinkStage|null}
-   */
-  current = null;
-
-  completePending = false;
-
-  onPush() {
-    const parent = this;
-    const source = this.fn(this.grab());
-
-    this.current = new SinkStage({
-      onPush() {
-        parent.push(this.grab())
-      },
-
-      onComplete() {
-        parent.current = null;
-        if (parent.completePending) {
-          parent.complete();
+class FlatMapConcat extends FlowStage {
+    constructor(fn) {
+        super();
+        this.fn = fn;
+        this.completePending = false;
+    }
+    onPush() {
+        const source = this.fn(this.grab());
+        this.current = new FlatMapSink(this);
+        source.runWithLastStage(this.current);
+    }
+    onPull() {
+        if (this.current) {
+            this.current.pullIfAllowed();
         }
-      },
-
-      onStart() {
-        this.pull();
-      }
-    });
-    source.runWithLastStage(this.current);
-  }
-
-  onPull() {
-    if (this.current) {
-      this.current.pullIfAllowed();
-    } else {
-      this.pull();
+        else {
+            this.pull();
+        }
     }
-  }
-
-  onCancel() {
-    if (this.current) {
-      this.current.onCancel();
+    onCancel() {
+        if (this.current) {
+            this.current.finish();
+        }
+        this.cancel();
     }
-    this.cancel();
-  }
-
-  onComplete() {
-    if (!this.current) {
-      this.complete();
-    } else {
-      this.completePending = true;
+    onComplete() {
+        if (!this.current) {
+            this.complete();
+        }
+        else {
+            this.completePending = true;
+        }
     }
-  }
 }
+class FlatMapSink extends SinkStage {
+    constructor(parent) {
+        super();
+        this.parent = parent;
+    }
+    onPush() {
+        this.parent.push(this.grab());
+    }
+    onComplete() {
+        this.parent.current = undefined;
+        if (this.parent.completePending) {
+            this.parent.complete();
+        }
+    }
+    onStart() {
+        this.pull();
+    }
+}
+//# sourceMappingURL=flat-map-concat.js.map

@@ -1,13 +1,12 @@
-
-import 'babel-polyfill';
-import 'should';
-import { Source } from '../../src/index';
+import 'babel-polyfill'
+import 'should'
+import { fromArray } from '../../src'
 
 describe('errors', () => {
   it('simple', async() => {
     const log = [];
     try {
-      await Source.from([1, 2, 3]).map(x => {
+      await fromArray([1, 2, 3]).map(x => {
         log.push(x);
         return x;
       }).mapAsync(() => Promise.reject('my error')).runToArray();

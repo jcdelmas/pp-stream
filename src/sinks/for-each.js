@@ -1,23 +1,19 @@
-
-import { createSimple, _registerSink } from '../core/sink';
-
-/**
- * @param cb
- * @return {Stream}
- *
- * @memberOf Sink
- * @memberOf Stream#
- */
+import { _registerSink, SinkStage, Sink } from '../core/sink';
 export function forEach(cb) {
-  return createSimple({
-    onPush() {
-      cb(this.grab());
-      this.pull();
-    },
-    onStart() {
-      this.pull();
-    }
-  });
+    return Sink.fromStageFactory(() => new ForEach(cb));
 }
-
 _registerSink('forEach', forEach);
+class ForEach extends SinkStage {
+    constructor(cb) {
+        super();
+        this.cb = cb;
+    }
+    onPush() {
+        this.cb(this.grab());
+        this.pull();
+    }
+    onStart() {
+        this.pull();
+    }
+}
+//# sourceMappingURL=for-each.js.map

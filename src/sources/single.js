@@ -1,15 +1,14 @@
-
-import Source, { createSimple } from '../core/source';
-
-/**
- * @returns {Stream}
- */
+import { Source, SourceStage } from '../core/source';
 export function single(x) {
-  return createSimple({
-    onPull() {
-      this.pushAndComplete(x);
-    }
-  });
+    return Source.fromStageFactory(() => new Single(x));
 }
-
-Source.single = single;
+class Single extends SourceStage {
+    constructor(x) {
+        super();
+        this.x = x;
+    }
+    onPull() {
+        this.pushAndComplete(this.x);
+    }
+}
+//# sourceMappingURL=single.js.map

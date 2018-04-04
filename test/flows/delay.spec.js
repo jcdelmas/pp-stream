@@ -1,16 +1,7 @@
-
-import 'babel-polyfill';
-import 'should';
-import {
-  Source,
-  OverflowStrategy
-} from '../../src/index';
-
-import {
-  TimedSource,
-  WithTime,
-  timeChecker
-} from '../utils';
+import 'babel-polyfill'
+import 'should'
+import { fromArray, OverflowStrategy } from '../../src/index'
+import { timeChecker, TimedSource, withTime } from '../utils'
 
 describe('delay', () => {
   it('simple', async () => {
@@ -18,7 +9,7 @@ describe('delay', () => {
       [0, 1],
       [100, 2],
       [100, 3]
-    ]).delay(200).pipe(WithTime).runToArray();
+    ]).delay(200).pipe(withTime()).runToArray();
     timeChecker(result, [
       [1, 200],
       [2, 300],
@@ -31,7 +22,7 @@ describe('delay', () => {
       [100, 2],
       [100, 3],
       [300, 4]
-    ]).delay(300, 2, OverflowStrategy.DROP_HEAD).pipe(WithTime).runToArray();
+    ]).delay(300, 2, OverflowStrategy.DROP_HEAD).pipe(withTime()).runToArray();
     timeChecker(result, [
       [2, 400],
       [3, 500],
@@ -44,7 +35,7 @@ describe('delay', () => {
       [100, 2],
       [100, 3],
       [200, 4]
-    ]).delay(300, 2, OverflowStrategy.DROP_TAIL).pipe(WithTime).runToArray();
+    ]).delay(300, 2, OverflowStrategy.DROP_TAIL).pipe(withTime()).runToArray();
     timeChecker(result, [
       [1, 300],
       [3, 500],
@@ -57,7 +48,7 @@ describe('delay', () => {
       [100, 2],
       [100, 3],
       [200, 4]
-    ]).delay(300, 2, OverflowStrategy.DROP_NEW).pipe(WithTime).runToArray();
+    ]).delay(300, 2, OverflowStrategy.DROP_NEW).pipe(withTime()).runToArray();
     timeChecker(result, [
       [1, 300],
       [2, 400],
@@ -70,7 +61,7 @@ describe('delay', () => {
       [100, 2],
       [100, 3],
       [100, 4]
-    ]).delay(300, 2, OverflowStrategy.DROP_BUFFER).pipe(WithTime).runToArray();
+    ]).delay(300, 2, OverflowStrategy.DROP_BUFFER).pipe(withTime()).runToArray();
     timeChecker(result, [
       [3, 500],
       [4, 600]
@@ -82,7 +73,7 @@ describe('delay', () => {
       [100, 2],
       [100, 3],
       [100, 4]
-    ]).delay(300, 2, OverflowStrategy.BACK_PRESSURE).pipe(WithTime).runToArray();
+    ]).delay(300, 2, OverflowStrategy.BACK_PRESSURE).pipe(withTime()).runToArray();
     timeChecker(result, [
       [1, 300],
       [2, 400],
@@ -91,7 +82,7 @@ describe('delay', () => {
     ]);
   });
   it('fail', async() => {
-    Source.from([1, 2, 3])
+    fromArray([1, 2, 3])
       .delay(100, 2, OverflowStrategy.FAIL)
       .runToArray()
       .should.be.rejectedWith({ message: 'Buffer overflow' });
@@ -101,7 +92,7 @@ describe('delay', () => {
       [0, 1],
       [100, 2],
       [100, 3]
-    ]).delay(300).take(2).pipe(WithTime).runToArray();
+    ]).delay(300).take(2).pipe(withTime()).runToArray();
     timeChecker(result, [
       [1, 300],
       [2, 400]
@@ -116,7 +107,7 @@ describe('debounce', () => {
       [100, 2],
       [100, 3],
       [400, 4],
-    ]).debounce(300).pipe(WithTime).runToArray();
+    ]).debounce(300).pipe(withTime()).runToArray();
     timeChecker(result, [
       [3, 500],
       [4, 900]

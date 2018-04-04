@@ -1,24 +1,21 @@
-
-import { createSimple, _registerFlow } from '../core/flow';
-
-/**
- * @param fn
- * @returns {Stream}
- *
- * @memberOf Stream#
- * @memberOf Flow
- */
+import { _registerFlow, FlowStage, Flow } from '../core/flow';
 export function filter(fn) {
-  return createSimple({
-    onPush() {
-      const x = this.grab();
-      if (fn(x)) {
-        this.push(x)
-      } else {
-        this.pull();
-      }
-    },
-  });
+    return Flow.fromStageFactory(() => new Filter(fn));
 }
-
 _registerFlow('filter', filter);
+class Filter extends FlowStage {
+    constructor(fn) {
+        super();
+        this.fn = fn;
+    }
+    onPush() {
+        const x = this.grab();
+        if (this.fn(x)) {
+            this.push(x);
+        }
+        else {
+            this.pull();
+        }
+    }
+}
+//# sourceMappingURL=filter.js.map

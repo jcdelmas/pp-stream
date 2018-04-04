@@ -1,12 +1,12 @@
 
-import 'babel-polyfill';
-import 'should';
-import { Source } from '../../src/index';
-import { TimedSource } from '../utils';
+import 'babel-polyfill'
+import 'should'
+import { fromCallback } from '../../src/index'
+import { TimedSource } from '../utils'
 
 describe('from callback sources', () => {
   it('simple', async () => {
-    const result = await Source.fromCallback((push, done) => {
+    const result = await fromCallback((push, done) => {
       push(1);
       push(2);
       push(3);

@@ -12,14 +12,10 @@ export default class Buffer<A> {
 
   buf: A[] = []
 
-  maxSize: number
-  overflowStrategy: OverflowStrategy
-  dropCallback: (A) => void
-
-  constructor(maxSize = 16, overflowStrategy = OverflowStrategy.FAIL, dropCallback = () => {}) {
-    this.maxSize = maxSize;
-    this.overflowStrategy = overflowStrategy;
-    this.dropCallback = dropCallback;
+  constructor(
+    private readonly maxSize: number = 16,
+    private readonly overflowStrategy: OverflowStrategy = OverflowStrategy.FAIL,
+    private readonly dropCallback: (x: A) => void = () => {}) {
   }
 
   size(): number {
@@ -34,7 +30,7 @@ export default class Buffer<A> {
     return this.buf.length === this.maxSize;
   }
 
-  push(x): void {
+  push(x: A): void {
     if (this.isFull()) {
       switch (this.overflowStrategy) {
         case OverflowStrategy.FAIL:
@@ -64,7 +60,7 @@ export default class Buffer<A> {
     if (this.isEmpty()) {
       throw new Error('Empty buffer');
     }
-    return this.buf.shift();
+    return this.buf.shift() as A
   }
 
   head(): A {

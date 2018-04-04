@@ -1,9 +1,8 @@
 
-import 'babel-polyfill';
-import 'should';
-
-import fs from 'fs';
-import { Source } from '../../src/index';
+import 'babel-polyfill'
+import 'should'
+import fs from 'fs'
+import { fromPausedReadable } from '../../src/index'
 
 describe('fromPausedReadable', () => {
   it('fromFile', async() => {
@@ -12,7 +11,7 @@ describe('fromPausedReadable', () => {
       encoding: 'UTF-8',
       autoClose: true
     });
-    const result = await Source.fromPausedReadable(readable).runToArray();
+    const result = await fromPausedReadable(readable).runToArray();
     result.should.be.eql(["foo\nbar\nbaz\n"]);
   });
 

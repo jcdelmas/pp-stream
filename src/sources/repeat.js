@@ -1,15 +1,14 @@
-
-import Source, { createSimple } from '../core/source';
-
-/**
- * @returns {Stream}
- */
+import { Source, SourceStage } from '../core/source';
 export function repeat(x) {
-  return createSimple({
-    onPull() {
-      this.push(x);
-    }
-  });
+    return Source.fromStageFactory(() => new Repeat(x));
 }
-
-Source.repeat = repeat;
+class Repeat extends SourceStage {
+    constructor(x) {
+        super();
+        this.x = x;
+    }
+    onPull() {
+        this.push(this.x);
+    }
+}
+//# sourceMappingURL=repeat.js.map

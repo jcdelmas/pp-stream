@@ -7,6 +7,9 @@
     "test": "test"
   },
   "dependencies": {
+    "@types/lodash": "^4.14.106",
+    "@types/node": "^9.6.0",
+    "@types/should": "^13.0.0",
     "bluebird": "^3.5.0",
     "lodash": "^4.17.4"
   },
@@ -35,7 +38,8 @@
     "lint": "eslint src test",
     "check": "run-s lint test",
     "build": "babel src --out-dir dist",
-    "release": "run-s clean check build"
+    "release": "run-s clean check build",
+    "typescript": "tsc --project ."
   },
   "repository": {
     "type": "git",

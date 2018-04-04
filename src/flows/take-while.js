@@ -1,33 +1,21 @@
-
-import { Stage } from '../core/stage';
-import { create, _registerFlow } from '../core/flow';
-
-/**
- * @param {function} fn
- * @returns {Stream}
- *
- * @memberOf Stream#
- * @memberOf Flow
- */
+import { _registerFlow, Flow, FlowStage } from '../core/flow';
 export function takeWhile(fn) {
-  return create(() => new TakeWhile(fn));
+    return Flow.fromStageFactory(() => new TakeWhile(fn));
 }
-
 _registerFlow('takeWhile', takeWhile);
-
-export class TakeWhile extends Stage {
-
-  constructor(fn) {
-    super();
-    this.fn = fn;
-  }
-
-  onPush() {
-    const v = this.grab();
-    if (this.fn(v)) {
-      this.push(v);
-    } else {
-      this.finish();
+export class TakeWhile extends FlowStage {
+    constructor(fn) {
+        super();
+        this.fn = fn;
     }
-  }
+    onPush() {
+        const v = this.grab();
+        if (this.fn(v)) {
+            this.push(v);
+        }
+        else {
+            this.finish();
+        }
+    }
 }
+//# sourceMappingURL=take-while.js.map

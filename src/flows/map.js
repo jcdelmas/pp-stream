@@ -1,19 +1,15 @@
-
-import { createSimple, _registerFlow } from '../core/flow';
-
-/**
- * @param fn
- * @returns {Stream}
- *
- * @memberOf Stream#
- * @memberOf Flow
- */
+import { _registerFlow, Flow, FlowStage } from '../core/flow';
 export function map(fn) {
-  return createSimple({
-    onPush() {
-      this.push(fn(this.grab()))
-    },
-  });
+    return Flow.fromStageFactory(() => new Map(fn));
 }
-
 _registerFlow('map', map);
+class Map extends FlowStage {
+    constructor(fn) {
+        super();
+        this.fn = fn;
+    }
+    onPush() {
+        this.push(this.fn(this.grab()));
+    }
+}
+//# sourceMappingURL=map.js.map

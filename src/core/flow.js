@@ -1,39 +1,59 @@
-import { Stage } from './stage';
-import Stream from './stream';
-
-/**
- * @param stageFactory
- * @return {Stream}
- */
-export function create(stageFactory) {
-  return Stream.fromStageFactory(stageFactory);
+import { Inlet, Outlet, SingleInputStage, SingleOutputStage, Stage } from './stage';
+import { Graph, materializerFromGraphFactory, materializerFromStageFactory } from './stream';
+import { applyMixins } from '../utils/mixins';
+import { Sink, SinkShape } from './sink';
+import { Source } from './source';
+export class FlowShape {
+    constructor(input, output) {
+        this.input = input;
+        this.output = output;
+        this.inputs = [input];
+        this.outputs = [output];
+    }
 }
-
-/**
- * @param stageMethods
- * @returns {Stream}
- */
-export function createSimple(stageMethods = {}) {
-  return create(() => new Stage(stageMethods));
-}
-
-export function fromGraph(factory) {
-  return Stream.fromGraph(1, 1, builder => {
-    const result = factory(builder);
-    return { inputs: [result.input], outputs: [result.output] }
-  });
-}
-
-const Flow = createSimple();
-
-Flow.create = create;
-Flow.createSimple = createSimple;
-Flow.fromGraph = fromGraph;
-
 export function _registerFlow(name, fn) {
-  Stream.prototype[name] = function (...args) {
-    return this.pipe(fn(...args));
-  };
+    Source.prototype[name] = function (...args) {
+        return this.pipe(fn(...args));
+    };
+    Flow.prototype[name] = function (...args) {
+        return this.pipe(fn(...args));
+    };
 }
-
-export default Flow;
+export class FlowStage extends Stage {
+    constructor() {
+        super();
+        this.shape = new FlowShape(new Inlet(this), new Outlet(this));
+    }
+    onPull() {
+        this.pullIfAllowed();
+    }
+}
+applyMixins(FlowStage, [SingleInputStage, SingleOutputStage]);
+export class Flow extends Graph {
+    constructor(materializer) {
+        super(materializer);
+    }
+    static create(factory) {
+        return new Flow(materializerFromGraphFactory(factory));
+    }
+    static fromStageFactory(factory) {
+        return new Flow(materializerFromStageFactory(factory));
+    }
+    pipe(flow) {
+        return Flow.create(b => {
+            const prev = b.add(this);
+            const next = b.add(flow);
+            prev.output.wire(next.input);
+            return new FlowShape(prev.input, next.output);
+        });
+    }
+    to(sink) {
+        return Sink.create(b => {
+            const prev = b.add(this);
+            const next = b.add(sink);
+            prev.output.wire(next.input);
+            return new SinkShape(prev.input);
+        });
+    }
+}
+//# sourceMappingURL=flow.js.map

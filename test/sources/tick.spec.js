@@ -1,15 +1,15 @@
 
-import 'babel-polyfill';
-import 'should';
-import { Source } from '../../src/index';
+import 'babel-polyfill'
+import 'should'
+import { tick } from '../../src/index'
 import {
-  WithTime,
+  withTime,
   timeChecker
-} from '../utils';
+} from '../utils'
 
 describe('tick', () => {
   it('simple', async () => {
-    const result = await Source.tick(100, 1).pipe(WithTime).take(5).runToArray();
+    const result = await tick(100, 1).pipe(withTime()).take(5).runToArray();
     timeChecker(result, [
       [1, 100],
       [1, 200],

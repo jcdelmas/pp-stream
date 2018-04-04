@@ -1,17 +1,16 @@
-
-import 'babel-polyfill';
-import 'should';
-import { Source } from '../../src/index';
+import 'babel-polyfill'
+import 'should'
+import { fromArray } from '../../src/index'
 
 describe('head', () => {
   it('simple', async () => {
-    const result = await Source.from(['foo', 'bar', 'baz']).runHead();
+    const result = await fromArray(['foo', 'bar', 'baz']).runHead();
     result.should.be.eql('foo');
   });
 
   it('check cancel', async () => {
     const log = [];
-    await Source.from(['foo', 'bar', 'baz']).map(x => {
+    await fromArray(['foo', 'bar', 'baz']).map(x => {
       log.push(x);
       return x;
     }).runHead();

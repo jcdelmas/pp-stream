@@ -1,17 +1,12 @@
-
-import 'babel-polyfill';
-import 'should';
-
-import { Source } from '../../src/index';
-import {
-  TimedSource,
-  checkTime
-} from '../utils';
+import 'babel-polyfill'
+import 'should'
+import { checkTime, TimedSource } from '../utils'
+import { repeat, fromArray } from '../../src/index'
 
 describe('throttle', () => {
   it('simple', async() => {
     const startTime = new Date().getTime();
-    const result = await Source.repeat(1).throttle(100).take(4).map(x => new Date().getTime() - startTime).runToArray();
+    const result = await repeat(1).throttle(100).take(4).map(x => new Date().getTime() - startTime).runToArray();
     result.should.have.length(4);
     result.forEach((time, i) => {
       checkTime(time, i * 100);
@@ -19,7 +14,7 @@ describe('throttle', () => {
   });
   it('with elements > 1', async() => {
     const startTime = new Date().getTime();
-    const result = await Source.repeat(1).take(4)
+    const result = await repeat(1).take(4)
       .throttle(200, { elements: 2 })
       .map(x => new Date().getTime() - startTime)
       .runToArray();
@@ -53,7 +48,7 @@ describe('throttle', () => {
   });
   it('with cost calculation', async() => {
     const startTime = new Date().getTime();
-    const result = await Source.from([
+    const result = await fromArray([
       [1],
       [2, 3],
       [4, 5, 6, 7],

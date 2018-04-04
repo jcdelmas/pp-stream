@@ -1,15 +1,8 @@
-
-import Source, { createSimple } from '../core/source';
-
-/**
- * @returns {Stream}
- */
-export function empty() {
-  return createSimple({
+import { Source, SourceStage } from '../core/source';
+export const emptySource = Source.fromStageFactory(() => new Empty());
+class Empty extends SourceStage {
     onPull() {
-      this.complete();
+        this.complete();
     }
-  });
 }
-
-Source.empty = empty;
+//# sourceMappingURL=empty.js.map

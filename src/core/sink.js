@@ -1,109 +1,61 @@
-import _ from 'lodash';
-import {Stage} from './stage';
-import Stream from './stream';
-
-/**
- * @param stageFactory
- * @returns {Stream}
- */
-export function create(stageFactory) {
-  return Stream.fromSinkStageFactory(stageFactory);
+import { Inlet, SingleInputStage } from './stage';
+import { upperFirst } from 'lodash';
+import { Graph, materializerFromGraphFactory, materializerFromStageFactory } from './stream';
+import { Source } from './source';
+export class SinkShape {
+    constructor(input) {
+        this.input = input;
+        this.outputs = [];
+        this.inputs = [input];
+    }
 }
-
-/**
- * @param stageMethods
- * @return {Stream}
- */
-export function createSimple(stageMethods) {
-  return create(() => new SinkStage(stageMethods));
-}
-
-export function fromGraph(factory) {
-  return Stream.fromGraph(1, 0, builder => ({ inputs: [factory(builder)] }));
-}
-
-const Sink = {
-  create,
-  createSimple,
-  fromGraph
-};
-
 export function _registerSink(name, fn) {
-  Sink[name] = fn;
-  Stream.prototype['run' + _.upperFirst(name)] = function (...args) {
-    return this.runWith(fn(...args));
-  };
+    Sink[name] = fn;
+    Source.prototype['run' + upperFirst(name)] = function () {
+        return this.runWith(fn());
+    };
 }
-
-export default Sink;
-
-export class SinkStage extends Stage {
-
-  constructor(methods = {}) {
-    super({ ...methods, outputs: 0 });
-    this.materializedValue = new Promise((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-    });
-  }
-
-  onPush() {
-    throw new Error('Not implemented');
-  }
-
-  complete() {
-    this.cancel();
-    this.resolve(this.result);
-  }
-
-  error(e) {
-    this.cancel();
-    this.reject(e);
-  }
-
-  // Not supported methods
-
-  _addDownstreamStage(stage) {
-    throw new Error('Not supported');
-  }
-
-  onPull() {
-    throw new Error('Not supported');
-  }
-
-  onCancel() {
-    throw new Error('Not supported');
-  }
-
-  push(x) {
-    throw new Error('Not supported');
-  }
-
-  pushAndComplete(x) {
-    throw new Error('Not supported');
-  }
-
-  isOutputAvailable() {
-    throw new Error('Not supported');
-  }
-
-  isOutputClosed() {
-    throw new Error('Not supported');
-  }
+export class SinkStage extends SingleInputStage {
+    constructor() {
+        super();
+        this.shape = new SinkShape(new Inlet(this));
+        this.result = undefined;
+        this.materializedValue = new Promise((resolve, reject) => {
+            this.resolve = resolve;
+            this.reject = reject;
+        });
+    }
+    complete() {
+        this.cancel();
+        if (this.resolve) {
+            this.resolve(this.result);
+        }
+    }
+    error(e) {
+        this.cancel();
+        if (this.reject) {
+            this.reject(e);
+        }
+    }
 }
-
 export class BasicSinkStage extends SinkStage {
-
-  onStart() {
-    this.pull();
-  }
-
-  onPush() {
-    this.onNext(this.grab());
-    this.pull();
-  }
-
-  onNext(x) {
-    throw new Error('Not implemented');
-  }
+    onStart() {
+        this.pull();
+    }
+    onPush() {
+        this.onNext(this.grab());
+        this.pull();
+    }
 }
+export class Sink extends Graph {
+    constructor(materializer) {
+        super(materializer);
+    }
+    static create(factory) {
+        return new Sink(materializerFromGraphFactory(factory));
+    }
+    static fromStageFactory(factory) {
+        return new Sink(materializerFromStageFactory(factory));
+    }
+}
+//# sourceMappingURL=sink.js.map

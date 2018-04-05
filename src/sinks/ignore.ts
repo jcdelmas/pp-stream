@@ -1,8 +1,11 @@
-import { _registerSink, Sink } from '../core/sink'
-import { forEach } from './for-each'
+import { _registerSink, Sink, BasicSinkStage } from '../core/sink'
 
-export function ignore(): Sink<any> {
-  return forEach<any>(() => {})
+export function ignore(): Sink<any, Promise<void>> {
+  return Sink.fromStageFactory(() => new Ignore())
 }
 
 _registerSink('ignore', ignore)
+
+class Ignore extends BasicSinkStage<any, void> {
+  onNext(): void {}
+}

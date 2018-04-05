@@ -1,7 +1,8 @@
 import Buffer, { OverflowStrategy } from './buffer'
 import { Inlet, Outlet, Shape, SingleOutputStage } from './stage'
 import {
-  materializerFromGraphFactory, Graph, GraphFactory, materializerFromStageFactory,
+  Graph, 
+  materializerFromStageFactory,
   StreamAttributes
 } from './stream'
 import Module from './module'
@@ -9,6 +10,7 @@ import { FlowShape } from './flow'
 import { SinkShape, SinkStage } from './sink'
 import { ClosedShape, RunnableGraph } from './runnable'
 import { Sink } from './sink'
+import { keepLeft, keepRight } from './keep'
 
 class SourceShape<O> implements Shape {
 
@@ -63,41 +65,46 @@ export class PushSourceStage<O, M> extends SourceStage<O, M> {
 
 export class Source<O, M> extends Graph<SourceShape<O>, M> {
 
-  static create<O>(factory: GraphFactory<SourceShape<O>, M>): Source<O> {
-    return new Source(materializerFromGraphFactory(factory))
+  static fromGraph<O, M>(factory: Graph<SourceShape<O>, M>): Source<O, M> {
+    return new Source<O, M>(factory.materializer, factory.attributes)
   }
 
-  static fromStageFactory<O>(factory: () => SourceStage<O, M>): Source<O> {
+  static fromStageFactory<O, M>(factory: () => SourceStage<O, M>): Source<O, M> {
     return new Source(materializerFromStageFactory(factory))
   }
 
-  constructor(materializer: (attrs: StreamAttributes) => Module<SourceShape<O>>) {
-    super(materializer)
+  constructor(materializer: (attrs: StreamAttributes) => Module<SourceShape<O>, M>,
+              attributes: StreamAttributes = {}) {
+    super(materializer, attributes)
   }
 
-  pipe<O2>(flow: Graph<FlowShape<O, O2>>): Source<O2> {
-    return Source.create(b => {
-      const prev = b.add(this)
-      const next = b.add(flow)
+  pipe<O2>(flow: Graph<FlowShape<O, O2>, M>): Source<O2, M> {
+    return this.pipeMat(flow, keepLeft)
+  }
+
+  pipeMat<O2, M2, M3>(flow: Graph<FlowShape<O, O2>, M2>, combine: (m1: M, m2: M2) => M3): Source<O2, M3> {
+    return Source.fromGraph(Graph.createWithMat2(this, flow, combine,(_, prev, next) => {
       prev.output.wire(next.input)
       return new SourceShape(next.output)
-    })
+    }))
   }
 
-  to(sink: Graph<SinkShape<O>>): RunnableGraph {
-    return RunnableGraph.create(b => {
-      const prev = b.add(this)
-      const next = b.add(sink)
+  to(sink: Graph<SinkShape<O>, M>): RunnableGraph<M> {
+    return this.toMat(sink, keepLeft)
+  }
+
+  toMat<M2, M3>(sink: Graph<SinkShape<O>, M2>, combine: (m1: M, m2: M2) => M3): RunnableGraph<M3> {
+    return RunnableGraph.fromGraph(Graph.createWithMat2(this, sink, combine, (_, prev, next) => {
       prev.output.wire(next.input)
       return ClosedShape.instance
-    })
+    }))
   }
 
-  runWith(sink: Graph<SinkShape<O>>): any {
-    return this.to(sink.key('_result')).run()._result;
+  runWith<M2>(sink: Graph<SinkShape<O>, M2>): M2 {
+    return this.toMat(sink, keepRight).run()
   }
 
-  runWithLastStage(sinkStage: SinkStage<O>): any {
-    return this.runWith(Sink.fromStageFactory(() => sinkStage));
+  runWithLastStage<M2>(sinkStage: SinkStage<O, M2>): M2 {
+    return this.runWith(Sink.fromStageFactory(() => sinkStage))
   }
 }

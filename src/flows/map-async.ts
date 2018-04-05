@@ -1,17 +1,17 @@
 import { _registerFlow, Flow, FlowStage } from '../core/flow'
 
-export function mapAsync<I, O>(fn: (x: I) => Promise<O>, parallelism: number = 1): Flow<I, O> {
-  return Flow.fromStageFactory<I, O>(() => new MapAsync(fn, parallelism));
+export function mapAsync<I, O>(fn: (x: I) => Promise<O>, parallelism: number = 1): Flow<I, O, void> {
+  return Flow.fromStageFactory<I, O, void>(() => new MapAsync(fn, parallelism));
 }
 
-export function mapAsyncUnordered<I, O>(fn: (x: I) => Promise<O>, parallelism = 1): Flow<I, O> {
+export function mapAsyncUnordered<I, O>(fn: (x: I) => Promise<O>, parallelism = 1): Flow<I, O, void> {
   return Flow.fromStageFactory(() => new MapAsyncUnordered(fn, parallelism));
 }
 
 _registerFlow('mapAsync', mapAsync);
 _registerFlow('mapAsyncUnordered', mapAsyncUnordered);
 
-class MapAsyncUnordered<I, O> extends FlowStage<I, O> {
+class MapAsyncUnordered<I, O> extends FlowStage<I, O, void> {
 
   protected buffer: O[] = [];
   protected readonly maxWorkers: number

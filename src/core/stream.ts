@@ -11,7 +11,7 @@ export class GraphBuilder {
   }
 
   _addAndMaterialize<S extends Shape, M>(s: Graph<S, M>): [S, M] {
-    this.addModule(s)
+    const module = this.addModule(s)
     return [module.shape, module.materializedValue]
   }
 
@@ -30,32 +30,21 @@ export interface Materializer<S extends Shape, M> {
   (attrs: StreamAttributes): Module<S, M>
 }
 
-export function materializerFromGraphFactory<S extends Shape, M>(factory: GraphFactory<S>): Materializer<S, M> {
-  return (attrs: StreamAttributes) => {
-    const builder = new GraphBuilder()
-    const shape = factory(builder)
-    return Module.create(
-      shape,
-      builder.submodules,
-      attrs
-    )
-  }
-}
-
-export function materializerFromStageFactory<S extends Shape>(stageFactory: () => Stage<S>): Materializer<S> {
+export function materializerFromStageFactory<S extends Shape, M>(stageFactory: () => Stage<S, M>): Materializer<S, M> {
   return (attrs: StreamAttributes) => {
     const stage = stageFactory();
     return new Module(
       stage.shape,
       [stage],
-      attrs.key ? { [attrs.key]: stage.materializedValue } : {}
+      attrs,
+      stage.materializedValue
     )
   }
 }
 
 export class Graph<S extends Shape, M> {
-  constructor(private materializer: Materializer<S, M>,
-              private attributes: StreamAttributes = {}) {
+  constructor(public materializer: Materializer<S, M>,
+              public attributes: StreamAttributes = {}) {
   }
 
   private static createGraph<S extends Shape, M>(factory: (b: GraphBuilder) => [S, M]): Graph<S, M> {
@@ -104,7 +93,7 @@ export class Graph<S extends Shape, M> {
   }
 
   withAttributes(attrs: StreamAttributes): Graph<S, M> {
-    return new Graph<S>(
+    return new Graph<S, M>(
       this.materializer,
       { ...this.attributes, ...attrs }
     )

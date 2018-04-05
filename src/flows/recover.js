@@ -1,6 +1,6 @@
 import { _registerFlow, Flow, FlowStage } from '../core/flow';
 import { isUndefined } from 'util';
-export function recover(fn) {
+export function recover(fn = () => undefined) {
     return Flow.fromStageFactory(() => new Recover(fn));
 }
 _registerFlow('recover', recover);

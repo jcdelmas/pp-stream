@@ -1,12 +1,12 @@
 import { _registerFlow, Flow, FlowStage } from '../core/flow'
 
-export function dropWhile<A>(fn: (x: A) => boolean): Flow<A, A> {
+export function dropWhile<A>(fn: (x: A) => boolean): Flow<A, A, void> {
   return Flow.fromStageFactory(() => new DropWhile<A>(fn))
 }
 
 _registerFlow('dropWhile', dropWhile);
 
-class DropWhile<A> extends FlowStage<A, A> {
+class DropWhile<A> extends FlowStage<A, A, void> {
 
   private dropFinished: boolean = false
 

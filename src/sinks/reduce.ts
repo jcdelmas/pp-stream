@@ -1,12 +1,12 @@
 import { _registerSink, BasicSinkStage, Sink } from '../core/sink'
 
-export function reduce<I, R>(fn: (acc: R, x: I) => R, zero: R): Sink<I> {
+export function reduce<I, R>(fn: (acc: R, x: I) => R, zero: R): Sink<I, Promise<R>> {
   return Sink.fromStageFactory(() => new Reduce(fn, zero))
 }
 
 _registerSink('reduce', reduce)
 
-class Reduce<I, R> extends BasicSinkStage<I> {
+class Reduce<I, R> extends BasicSinkStage<I, R> {
 
   constructor(private readonly fn: (acc: R, x: I) => R, zero: R) {
     super()

@@ -2,18 +2,18 @@ import { _registerFlow, Flow, FlowStage } from '../core/flow'
 import { SinkStage } from '../core/sink'
 import { Source } from '../core/source'
 
-export function flatMapConcat<I, O>(fn: (x: I) => Source<O>) {
+export function flatMapConcat<I, O>(fn: (x: I) => Source<O, any>) {
   return Flow.fromStageFactory(() => new FlatMapConcat<I, O>(fn));
 }
 
 _registerFlow('flatMapConcat', flatMapConcat);
 
-class FlatMapConcat<I, O> extends FlowStage<I, O> {
-  constructor(private readonly fn: (x: I) => Source<O>) {
+class FlatMapConcat<I, O> extends FlowStage<I, O, void> {
+  constructor(private readonly fn: (x: I) => Source<O, void>) {
     super()
   }
 
-  current?: SinkStage<O>;
+  current?: SinkStage<O, void>
   completePending: boolean = false;
 
   onPush() {
@@ -46,7 +46,7 @@ class FlatMapConcat<I, O> extends FlowStage<I, O> {
   }
 }
 
-class FlatMapSink<I> extends SinkStage<I> {
+class FlatMapSink<I> extends SinkStage<I, void> {
 
   constructor (private readonly parent: FlatMapConcat<any, I>) {
     super()

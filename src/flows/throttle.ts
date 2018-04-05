@@ -1,6 +1,6 @@
 import { _registerFlow, Flow, FlowStage } from '../core/flow'
 
-export function throttle<A>(duration: number, opts: ThrottleOptions<A> = {}): Flow<A, A> {
+export function throttle<A>(duration: number, opts: ThrottleOptions<A> = {}): Flow<A, A, void> {
   return Flow.fromStageFactory(() => new Throttle<A>(duration, opts));
 }
 
@@ -15,7 +15,7 @@ export type ThrottleOptions<A> = {
 _registerFlow('throttle', throttle);
 
 
-class Throttle<A> extends FlowStage<A, A> {
+class Throttle<A> extends FlowStage<A, A, void> {
 
   private pending?: A
   private completePending: boolean = false

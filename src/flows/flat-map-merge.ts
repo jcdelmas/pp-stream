@@ -2,15 +2,15 @@ import { _registerFlow, Flow, FlowStage } from '../core/flow'
 import { SinkStage } from '../core/sink'
 import { Source } from '../core/source'
 
-export function flatMapMerge<I, O>(fn: (x: I) => Source<O>, breadth: number = 16): Flow<I, O> {
-  return Flow.fromStageFactory(() => new FlatMapMerge(fn, breadth));
+export function flatMapMerge<I, O>(fn: (x: I) => Source<O, void>, breadth: number = 16): Flow<I, O, void> {
+  return Flow.fromStageFactory(() => new FlatMapMerge(fn, breadth))
 }
 
 _registerFlow('flatMapMerge', flatMapMerge);
 
-class FlatMapMerge<I, O> extends FlowStage<I, O> {
+class FlatMapMerge<I, O> extends FlowStage<I, O, void> {
   constructor(
-    private readonly fn: (x: I) => Source<O>,
+    private readonly fn: (x: I) => Source<O, void>,
     private readonly breadth: number = 16
   ) {
     super()
@@ -58,7 +58,7 @@ class FlatMapMerge<I, O> extends FlowStage<I, O> {
   }
 }
 
-class FlatMapSink<I> extends SinkStage<I> {
+class FlatMapSink<I> extends SinkStage<I, void> {
 
   constructor (private readonly parent: FlatMapMerge<any, I>) {
     super()

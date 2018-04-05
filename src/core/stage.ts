@@ -307,7 +307,7 @@ export interface UpstreamHandler {
   onCancel(): void
 }
 
-export abstract class Stage<S extends Shape, M> implements Startable<M> {
+export abstract class Stage<S extends Shape, M> implements Startable {
 
   materializedValue: M
 
@@ -408,7 +408,6 @@ export abstract class SingleInputStage<I, S extends { input: Inlet<I> } & Shape,
 }
 
 export abstract class SingleOutputStage<O, S extends { output: Outlet<O> } & Shape, M> extends Stage<S, M> implements UpstreamHandler {
-
 
   abstract onPull(): void
 

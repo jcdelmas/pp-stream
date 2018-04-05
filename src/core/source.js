@@ -1,8 +1,9 @@
 import Buffer from './buffer';
 import { Outlet, SingleOutputStage } from './stage';
-import { materializerFromGraphFactory, Graph, materializerFromStageFactory } from './stream';
+import { Graph, materializerFromStageFactory } from './stream';
 import { ClosedShape, RunnableGraph } from './runnable';
 import { Sink } from './sink';
+import { keepLeft, keepRight } from './keep';
 class SourceShape {
     constructor(output) {
         this.output = output;
@@ -48,33 +49,35 @@ export class PushSourceStage extends SourceStage {
     }
 }
 export class Source extends Graph {
-    constructor(materializer) {
-        super(materializer);
+    constructor(materializer, attributes = {}) {
+        super(materializer, attributes);
     }
-    static create(factory) {
-        return new Source(materializerFromGraphFactory(factory));
+    static fromGraph(factory) {
+        return new Source(factory.materializer, factory.attributes);
     }
     static fromStageFactory(factory) {
         return new Source(materializerFromStageFactory(factory));
     }
     pipe(flow) {
-        return Source.create(b => {
-            const prev = b.add(this);
-            const next = b.add(flow);
+        return this.pipeMat(flow, keepLeft);
+    }
+    pipeMat(flow, combine) {
+        return Source.fromGraph(Graph.createWithMat2(this, flow, combine, (_, prev, next) => {
             prev.output.wire(next.input);
             return new SourceShape(next.output);
-        });
+        }));
     }
     to(sink) {
-        return RunnableGraph.create(b => {
-            const prev = b.add(this);
-            const next = b.add(sink);
+        return this.toMat(sink, keepLeft);
+    }
+    toMat(sink, combine) {
+        return RunnableGraph.fromGraph(Graph.createWithMat2(this, sink, combine, (_, prev, next) => {
             prev.output.wire(next.input);
             return ClosedShape.instance;
-        });
+        }));
     }
     runWith(sink) {
-        return this.to(sink.key('_result')).run()._result;
+        return this.toMat(sink, keepRight).run();
     }
     runWithLastStage(sinkStage) {
         return this.runWith(Sink.fromStageFactory(() => sinkStage));

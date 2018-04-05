@@ -1,8 +1,8 @@
 import { Source, SourceStage } from '../core/source'
 
-export const emptySource: Source<never> = Source.fromStageFactory(() => new Empty())
+export const emptySource: Source<never, void> = Source.fromStageFactory(() => new Empty())
 
-class Empty extends SourceStage<never> {
+class Empty extends SourceStage<never, void> {
   onPull() {
     this.complete()
   }

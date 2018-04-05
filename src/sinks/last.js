@@ -1,7 +1,11 @@
-import { _registerSink } from '../core/sink';
-import { reduce } from './reduce';
+import { _registerSink, Sink, BasicSinkStage } from '../core/sink';
 export function last() {
-    return reduce((last, x) => x, undefined);
+    return Sink.fromStageFactory(() => new Last());
 }
 _registerSink('last', last);
+class Last extends BasicSinkStage {
+    onNext() {
+        this.result = this.grab();
+    }
+}
 //# sourceMappingURL=last.js.map

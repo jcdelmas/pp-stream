@@ -1,15 +1,19 @@
 import {
-  DownstreamHandler, Inlet, Outlet, Shape, SingleInputStage, SingleOutputStage, Stage,
+  DownstreamHandler,
+  Inlet,
+  Outlet,
+  Shape,
+  SingleInputStage,
+  SingleOutputStage,
+  Stage,
   UpstreamHandler
 } from './stage'
-import {
-  Graph, GraphFactory, materializerFromGraphFactory, materializerFromStageFactory,
-  StreamAttributes
-} from './stream'
+import { Graph, materializerFromStageFactory, StreamAttributes } from './stream'
 import Module from './module'
 import { applyMixins } from '../utils/mixins'
 import { Sink, SinkShape } from './sink'
 import { Source } from './source'
+import { keepLeft } from './keep'
 
 export class FlowShape<I, O> implements Shape {
 
@@ -22,19 +26,19 @@ export class FlowShape<I, O> implements Shape {
   }
 }
 
-export function _registerFlow<I, O>(name: string, fn: (...args: any[]) => Flow<I, O>): void {
-  Source.prototype[name] = function(this: Source<I>, ...args: any[]): Source<O> {
+export function _registerFlow<I, O, M>(name: string, fn: (...args: any[]) => Flow<I, O, M>): void {
+  Source.prototype[name] = function(this: Source<I, M>, ...args: any[]): Source<O, M> {
     return this.pipe(fn(...args))
   }
-  Flow.prototype[name] = function<I2>(this: Flow<I2, I>, ...args: any[]): Flow<I2, O> {
+  Flow.prototype[name] = function<I2>(this: Flow<I2, I, M>, ...args: any[]): Flow<I2, O, M> {
     return this.pipe(fn(...args))
   }
 }
 
-export abstract class FlowStage<I, O> extends Stage<FlowShape<I, O>>
+export abstract class FlowStage<I, O, M> extends Stage<FlowShape<I, O>, M>
   implements
-    SingleInputStage<I, FlowShape<I, O>>,
-    SingleOutputStage<O, FlowShape<I, O>>,
+    SingleInputStage<I, FlowShape<I, O>, M>,
+    SingleOutputStage<O, FlowShape<I, O>, M>,
     DownstreamHandler, UpstreamHandler {
 
   shape = new FlowShape<I, O>(new Inlet<I>(this), new Outlet<O>(this))
@@ -74,35 +78,40 @@ export abstract class FlowStage<I, O> extends Stage<FlowShape<I, O>>
 
 applyMixins(FlowStage, [SingleInputStage, SingleOutputStage])
 
-export class Flow<I, O> extends Graph<FlowShape<I, O>> {
+export class Flow<I, O, M> extends Graph<FlowShape<I, O>, M> {
 
-  static create<I, O>(factory: GraphFactory<FlowShape<I, O>>): Flow<I, O> {
-    return new Flow<I, O>(materializerFromGraphFactory(factory))
+  static fromGraph<I, O, M>(factory: Graph<FlowShape<I, O>, M>): Flow<I, O, M> {
+    return new Flow<I, O, M>(factory.materializer, factory.attributes)
   }
 
-  static fromStageFactory<I, O>(factory: () => FlowStage<I, O>): Flow<I, O> {
-    return new Flow<I, O>(materializerFromStageFactory(factory))
+  static fromStageFactory<I, O, M>(factory: () => FlowStage<I, O, M>): Flow<I, O, M> {
+    return new Flow<I, O, M>(materializerFromStageFactory(factory))
   }
 
-  constructor(materializer: (attrs: StreamAttributes) => Module<FlowShape<I, O>>) {
-    super(materializer)
+  constructor(materializer: (attrs: StreamAttributes) => Module<FlowShape<I, O>, M>,
+              attributes: StreamAttributes = {}) {
+    super(materializer, attributes)
   }
 
-  pipe<O2>(flow: Graph<FlowShape<O, O2>>): Flow<I, O2> {
-    return Flow.create(b => {
-      const prev = b.add(this)
-      const next = b.add(flow)
+  pipe<O2>(flow: Graph<FlowShape<O, O2>, M>): Flow<I, O2, M> {
+    return this.pipeMat(flow, keepLeft)
+  }
+
+  pipeMat<O2, M2, M3>(flow: Graph<FlowShape<O, O2>, M2>, combine: (m1: M, m2: M2) => M3): Flow<I, O2, M3> {
+    return Flow.fromGraph(Graph.createWithMat2(this, flow, combine,(_, prev, next) => {
       prev.output.wire(next.input)
       return new FlowShape(prev.input, next.output)
-    })
+    }))
   }
 
-  to(sink: Graph<SinkShape<O>>): Sink<I> {
-    return Sink.create(b => {
-      const prev = b.add(this)
-      const next = b.add(sink)
+  to<M>(sink: Graph<SinkShape<O>, M>): Sink<I, M> {
+    return this.toMat(sink, keepLeft)
+  }
+
+  toMat<M2, M3>(sink: Graph<SinkShape<O>, M2>, combine: (m1: M, m2: M2) => M3): Sink<I, M3> {
+    return Sink.fromGraph(Graph.createWithMat2(this, sink, combine, (_, prev, next) => {
       prev.output.wire(next.input)
       return new SinkShape(prev.input)
-    })
+    }))
   }
 }

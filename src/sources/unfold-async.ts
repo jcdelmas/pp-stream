@@ -1,11 +1,11 @@
 
 import { Source, SourceStage } from '../core/source';
 
-export function unfoldAsync<O, S>(fn: (x: S) => Promise<[S, O]>, zero: S): Source<O> {
+export function unfoldAsync<O, S>(fn: (x: S) => Promise<[S, O]>, zero: S): Source<O, void> {
   return Source.fromStageFactory(() => new UnfoldAsync(fn, zero));
 }
 
-class UnfoldAsync<O, S> extends SourceStage<O> {
+class UnfoldAsync<O, S> extends SourceStage<O, void> {
 
   state: S
 

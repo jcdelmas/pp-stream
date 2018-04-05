@@ -1,11 +1,11 @@
 
 import { Source, SourceStage } from '../core/source';
 
-export function unfold<O, S>(fn: (x: S) => [S, O], zero: S): Source<O> {
+export function unfold<O, S>(fn: (x: S) => [S, O], zero: S): Source<O, void> {
   return Source.fromStageFactory(() => new Unfold(fn, zero));
 }
 
-class Unfold<O, S> extends SourceStage<O> {
+class Unfold<O, S> extends SourceStage<O, void> {
 
   state: S
 

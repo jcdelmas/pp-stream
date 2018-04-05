@@ -1,27 +1,25 @@
-
 import Buffer, { OverflowStrategy } from '../core/buffer'
 import { _registerFlow, Flow, FlowStage } from '../core/flow'
-import { Source } from '../core/source'
 
-export function buffer<A>(size: number, overflowStrategy: OverflowStrategy = OverflowStrategy.FAIL): Flow<A, A> {
+export function buffer<A>(size: number, overflowStrategy: OverflowStrategy = OverflowStrategy.FAIL): Flow<A, A, void> {
   return Flow.fromStageFactory(() => new BufferFlow(size, overflowStrategy))
 }
 
 declare module '../core/source' {
-  interface Source<O> {
-    buffer(size: number, overflowStrategy: OverflowStrategy = OverflowStrategy.FAIL): Source<O>
+  interface Source<O, M> {
+    buffer(size: number, overflowStrategy: OverflowStrategy): Source<O, M>
   }
 }
 
 declare module '../core/flow' {
-  interface Flow<I, O> {
-    buffer(size: number, overflowStrategy: OverflowStrategy = OverflowStrategy.FAIL): Flow<I, O>
+  interface Flow<I, O, M> {
+    buffer(size: number, overflowStrategy: OverflowStrategy): Flow<I, O, M>
   }
 }
 
 _registerFlow('buffer', buffer)
 
-class BufferFlow<A> extends FlowStage<A, A> {
+class BufferFlow<A> extends FlowStage<A, A, void> {
 
   buffer: Buffer<A>
   pendingComplete: boolean = false;

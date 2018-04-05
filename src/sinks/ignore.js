@@ -1,7 +1,9 @@
-import { _registerSink } from '../core/sink';
-import { forEach } from './for-each';
+import { _registerSink, Sink, BasicSinkStage } from '../core/sink';
 export function ignore() {
-    return forEach(() => { });
+    return Sink.fromStageFactory(() => new Ignore());
 }
 _registerSink('ignore', ignore);
+class Ignore extends BasicSinkStage {
+    onNext() { }
+}
 //# sourceMappingURL=ignore.js.map

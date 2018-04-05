@@ -41,7 +41,7 @@ export class TimedSource<A> {
   }
 }
 
-class WithTimeStage<I> extends FlowStage<I, [I, number]> {
+class WithTimeStage<I> extends FlowStage<I, [I, number], void> {
 
   startTime?: number
 
@@ -101,7 +101,7 @@ export function delayed<A>(duration: number, result: A): Promise<A> {
   return new Promise(resolve => setTimeout(() => resolve(result), duration));
 }
 
-export function delayedFlow<A>(duration: number): Flow<A, A> {
+export function delayedFlow<A>(duration: number): Flow<A, A, void> {
   return delay(duration, 1, OverflowStrategy.BACK_PRESSURE)
 }
 

@@ -1,4 +1,4 @@
-import { Graph, materializerFromGraphFactory } from './stream';
+import { Graph } from './stream';
 export class ClosedShape {
     constructor() {
         this.inputs = [];
@@ -7,11 +7,11 @@ export class ClosedShape {
 }
 ClosedShape.instance = new ClosedShape;
 export class RunnableGraph extends Graph {
-    static create(factory) {
-        return new RunnableGraph(materializerFromGraphFactory(factory));
+    constructor(materializer, attributes = {}) {
+        super(materializer, attributes);
     }
-    constructor(materializer) {
-        super(materializer);
+    static fromGraph(factory) {
+        return new RunnableGraph(factory.materializer, factory.attributes);
     }
     run() {
         const module = this.materialize();

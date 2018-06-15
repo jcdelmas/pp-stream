@@ -1,7 +1,7 @@
-import { _registerSink, BasicSinkStage, Sink } from '../core/sink'
+import { _registerSink, BasicSinkStage, Sink , createSink } from '../core/sink'
 
-export function reduce<I, R>(fn: (acc: R, x: I) => R, zero: R): Sink<I, Promise<R>> {
-  return Sink.fromStageFactory(() => new Reduce(fn, zero))
+export function reduce<I, R>(fn: (acc: R, x: I) => R, zero: R): Sink<I, R> {
+  return createSink(() => new Reduce(fn, zero))
 }
 
 _registerSink('reduce', reduce)

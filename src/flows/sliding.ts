@@ -1,12 +1,12 @@
-import { _registerFlow, Flow, FlowStage } from '../core/flow'
+import { _registerFlow, Flow, FlowStage , createFlow } from '../core/flow'
 
-export function sliding<A>(n: number, step: number = 1): Flow<A, A[], void> {
-  return Flow.fromStageFactory(() => new Sliding(n, step))
+export function sliding<A>(n: number, step: number = 1): Flow<A, A[]> {
+  return createFlow(() => new Sliding(n, step))
 }
 
 _registerFlow('sliding', sliding)
 
-class Sliding<A> extends FlowStage<A, A[], void> {
+class Sliding<A> extends FlowStage<A, A[]> {
   constructor(
     private readonly size: number,
     private readonly step: number = 1

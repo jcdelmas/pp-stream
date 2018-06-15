@@ -16,7 +16,7 @@ describe('routing', () => {
     result.should.be.eql([2, 3, 4])
   })
   it('with Sink', async() => {
-    const result = await fromArray([1, 2, 3]).runWith(map(x => x + 1).toMat(toArray(), keepRight))
+    const result = await fromArray([1, 2, 3]).runWith(map(x => x + 1).to(toArray()))
     result.should.be.eql([2, 3, 4])
   })
 })

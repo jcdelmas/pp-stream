@@ -1,12 +1,12 @@
-import { _registerFlow, Flow, FlowStage } from '../core/flow'
+import { _registerFlow, Flow, FlowStage , createFlow } from '../core/flow'
 
-export function drop<A>(n: number): Flow<A, A, void> {
-  return Flow.fromStageFactory<A, A, void>(() => new Drop<A>(n));
+export function drop<A>(n: number): Flow<A, A> {
+  return createFlow<A, A>(() => new Drop<A>(n));
 }
 
 _registerFlow('drop', drop);
 
-class Drop<A> extends FlowStage<A, A, void> {
+class Drop<A> extends FlowStage<A, A> {
 
   private count = 0
 

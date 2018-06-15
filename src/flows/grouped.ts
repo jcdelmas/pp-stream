@@ -1,12 +1,12 @@
-import { _registerFlow, Flow, FlowStage } from '../core/flow'
+import { _registerFlow, Flow, FlowStage , createFlow } from '../core/flow'
 
-export function grouped<A>(n: number): Flow<A, A[], void> {
-  return Flow.fromStageFactory(() => new Grouped<A>(n));
+export function grouped<A>(n: number): Flow<A, A[]> {
+  return createFlow(() => new Grouped<A>(n));
 }
 
 _registerFlow('grouped', grouped)
 
-class Grouped<A> extends FlowStage<A, A[], void> {
+class Grouped<A> extends FlowStage<A, A[]> {
   constructor(private readonly size: number) {
     super()
   }

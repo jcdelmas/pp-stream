@@ -1,19 +1,17 @@
-import {
-  DownstreamHandler,
-  Inlet,
-  Outlet,
-  Shape,
-  SingleInputStage,
-  SingleOutputStage,
-  Stage,
-  UpstreamHandler
-} from './stage'
-import { Graph, materializerFromStageFactory, StreamAttributes } from './stream'
+import { Inlet, Outlet, Shape, SingleInputStage, SingleOutputStage, Stage } from './stage'
+import { Graph, GraphBuilder, materializerFromGraph, materializerFromStageFactory, StreamAttributes } from './graph'
 import Module from './module'
 import { applyMixins } from '../utils/mixins'
-import { Sink, SinkShape } from './sink'
+import { createSinkFromGraph, Sink, SinkShape } from './sink'
 import { Source } from './source'
-import { keepLeft } from './keep'
+
+export function createFlow<I, O>(factory: () => FlowStage<I, O>): Flow<I, O> {
+  return new Flow(materializerFromStageFactory(factory))
+}
+
+export function createFlowFromGraph<I, O>(factory: (b: GraphBuilder) => FlowShape<I, O>): Flow<I, O> {
+  return new Flow(materializerFromGraph(factory))
+}
 
 export class FlowShape<I, O> implements Shape {
 
@@ -26,25 +24,48 @@ export class FlowShape<I, O> implements Shape {
   }
 }
 
-export function _registerFlow<I, O, M>(name: string, fn: (...args: any[]) => Flow<I, O, M>): void {
-  Source.prototype[name] = function(this: Source<I, M>, ...args: any[]): Source<O, M> {
+export function _registerFlow<I, O>(name: string, fn: (...args: any[]) => Flow<I, O>): void {
+  Source.prototype[name] = function(this: Source<I>, ...args: any[]): Source<O> {
     return this.pipe(fn(...args))
   }
-  Flow.prototype[name] = function<I2>(this: Flow<I2, I, M>, ...args: any[]): Flow<I2, O, M> {
+  Flow.prototype[name] = function<I2>(this: Flow<I2, I>, ...args: any[]): Flow<I2, O> {
     return this.pipe(fn(...args))
   }
 }
 
-export abstract class FlowStage<I, O, M> extends Stage<FlowShape<I, O>, M>
+export abstract class FlowStage<I, O> extends Stage<FlowShape<I, O>, void>
   implements
-    SingleInputStage<I, FlowShape<I, O>, M>,
-    SingleOutputStage<O, FlowShape<I, O>, M>,
-    DownstreamHandler, UpstreamHandler {
+    SingleInputStage<I, FlowShape<I, O>, void>,
+    SingleOutputStage<O, FlowShape<I, O>> {
+
+  returnValue: void = undefined
 
   shape = new FlowShape<I, O>(new Inlet<I>(this), new Outlet<O>(this))
 
-  constructor() {
-    super()
+  abstract onPush(): void
+
+  onError(e: any): void {
+    this.error(e)
+  }
+
+  onComplete(): void {
+    this.onStop()
+    this.complete()
+  }
+
+  onPull(): void {
+    this.pullIfAllowed()
+  }
+
+  onCancel(): void {
+    this.onStop()
+    this.cancel()
+  }
+
+  stop(): void {
+    this.cancel()
+    this.onStop()
+    this.complete()
   }
 
   grab: () => I
@@ -52,6 +73,16 @@ export abstract class FlowStage<I, O, M> extends Stage<FlowShape<I, O>, M>
   pull: () => void
 
   pullIfAllowed: () => void
+
+  cancel: () => void
+
+  push: (x: O) => void
+
+  pushAndComplete: (x: O) => void
+
+  complete: () => void
+
+  error: (e: any) => void
 
   isInputAvailable: () => boolean
 
@@ -61,57 +92,35 @@ export abstract class FlowStage<I, O, M> extends Stage<FlowShape<I, O>, M>
 
   isInputCanBePulled: () => boolean
 
-  push: (x: O) => void
-
-  pushAndComplete: (x: O) => void
-
   isOutputAvailable: () => boolean
 
   isOutputClosed: () => boolean
-
-  abstract onPush(): void
-
-  onPull(): void {
-    this.pullIfAllowed()
-  }
 }
 
 applyMixins(FlowStage, [SingleInputStage, SingleOutputStage])
 
-export class Flow<I, O, M> extends Graph<FlowShape<I, O>, M> {
+export class Flow<I, O> extends Graph<FlowShape<I, O>, void> {
 
-  static fromGraph<I, O, M>(factory: Graph<FlowShape<I, O>, M>): Flow<I, O, M> {
-    return new Flow<I, O, M>(factory.materializer, factory.attributes)
-  }
-
-  static fromStageFactory<I, O, M>(factory: () => FlowStage<I, O, M>): Flow<I, O, M> {
-    return new Flow<I, O, M>(materializerFromStageFactory(factory))
-  }
-
-  constructor(materializer: (attrs: StreamAttributes) => Module<FlowShape<I, O>, M>,
+  constructor(materializer: (attrs: StreamAttributes) => Module<FlowShape<I, O>, void>,
               attributes: StreamAttributes = {}) {
     super(materializer, attributes)
   }
 
-  pipe<O2>(flow: Graph<FlowShape<O, O2>, M>): Flow<I, O2, M> {
-    return this.pipeMat(flow, keepLeft)
-  }
-
-  pipeMat<O2, M2, M3>(flow: Graph<FlowShape<O, O2>, M2>, combine: (m1: M, m2: M2) => M3): Flow<I, O2, M3> {
-    return Flow.fromGraph(Graph.createWithMat2(this, flow, combine,(_, prev, next) => {
+  pipe<O2>(flow: Graph<FlowShape<O, O2>, any>): Flow<I, O2> {
+    return createFlowFromGraph(b => {
+      const prev = b.add(this)
+      const next = b.add(flow)
       prev.output.wire(next.input)
       return new FlowShape(prev.input, next.output)
-    }))
+    })
   }
 
-  to<M>(sink: Graph<SinkShape<O>, M>): Sink<I, M> {
-    return this.toMat(sink, keepLeft)
-  }
-
-  toMat<M2, M3>(sink: Graph<SinkShape<O>, M2>, combine: (m1: M, m2: M2) => M3): Sink<I, M3> {
-    return Sink.fromGraph(Graph.createWithMat2(this, sink, combine, (_, prev, next) => {
+  to<R>(sink: Sink<O, R>): Sink<I, R> {
+    return createSinkFromGraph(b => {
+      const prev = b.add(this)
+      const [next, result] = b.addAndGetResult(sink)
       prev.output.wire(next.input)
-      return new SinkShape(prev.input)
-    }))
+      return [new SinkShape(prev.input), result]
+    })
   }
 }

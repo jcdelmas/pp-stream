@@ -1,7 +1,7 @@
-import { _registerSink, Sink, BasicSinkStage } from '../core/sink'
+import { _registerSink, Sink, BasicSinkStage , createSink } from '../core/sink'
 
-export function last<I>(): Sink<I, Promise<I | undefined>> {
-  return Sink.fromStageFactory(() => new Last<I>())
+export function last<I>(): Sink<I, I | undefined> {
+  return createSink(() => new Last<I>())
 }
 
 _registerSink('last', last);

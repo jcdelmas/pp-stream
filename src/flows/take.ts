@@ -1,12 +1,24 @@
-import { _registerFlow, Flow, FlowStage } from '../core/flow'
+import { _registerFlow, createFlow, Flow, FlowStage } from '../core/flow'
 
-export function take<A>(n: number): Flow<A, A, void> {
-  return Flow.fromStageFactory(() => new Take<A>(n))
+export function take<A>(n: number): Flow<A, A> {
+  return createFlow(() => new Take<A>(n))
+}
+
+declare module 'core/source' {
+  interface Source<O> {
+    take<A>(n: number): Source<O>
+  }
+}
+
+declare module 'core/flow' {
+  interface Flow<I, O> {
+    take(n: number): Flow<I, O>
+  }
 }
 
 _registerFlow('take', take);
 
-export class Take<A> extends FlowStage<A, A, void> {
+export class Take<A> extends FlowStage<A, A> {
 
   private count: number = 0
 
@@ -20,7 +32,8 @@ export class Take<A> extends FlowStage<A, A, void> {
       this.push(this.grab());
     }
     if (this.count === this.nbr) {
-      this.finish();
+      this.cancel()
+      this.complete()
     }
   }
 }

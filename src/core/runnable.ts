@@ -1,6 +1,10 @@
 import { Inlet, Outlet, Shape } from './stage'
-import { Graph, StreamAttributes } from './stream'
+import { Graph, GraphBuilder, materializerFromGraphWithResult, StreamAttributes } from './graph'
 import Module from './module'
+
+export function createRunnableFromGraph<R>(factory: (b: GraphBuilder) => R): RunnableGraph<R> {
+  return new RunnableGraph<R>(materializerFromGraphWithResult((b) => [ClosedShape.instance, factory(b)]))
+}
 
 export class ClosedShape implements Shape {
   static instance: ClosedShape = new ClosedShape
@@ -9,19 +13,19 @@ export class ClosedShape implements Shape {
   readonly outputs: Outlet<any>[] = []
 }
 
-export class RunnableGraph<M> extends Graph<ClosedShape, M> {
-  static fromGraph<M>(factory: Graph<ClosedShape, M>): RunnableGraph<M> {
-    return new RunnableGraph<M>(factory.materializer, factory.attributes)
+export class RunnableGraph<R> extends Graph<ClosedShape, R> {
+  static fromGraph<R>(factory: Graph<ClosedShape, R>): RunnableGraph<R> {
+    return new RunnableGraph<R>(factory.materializer, factory.attributes)
   }
 
-  constructor(materializer: (attrs: StreamAttributes) => Module<ClosedShape, M>,
+  constructor(materializer: (attrs: StreamAttributes) => Module<ClosedShape, R>,
               attributes: StreamAttributes = {}) {
     super(materializer, attributes)
   }
 
-  run(): M {
+  run(): R {
     const module = this.materialize()
     module.start()
-    return module.materializedValue
+    return module.result
   }
 }

@@ -1,7 +1,7 @@
-import { _registerFlow, Flow, FlowStage } from '../core/flow'
+import { _registerFlow, Flow, FlowStage , createFlow } from '../core/flow'
 
-export function throttle<A>(duration: number, opts: ThrottleOptions<A> = {}): Flow<A, A, void> {
-  return Flow.fromStageFactory(() => new Throttle<A>(duration, opts));
+export function throttle<A>(duration: number, opts: ThrottleOptions<A> = {}): Flow<A, A> {
+  return createFlow(() => new Throttle<A>(duration, opts));
 }
 
 export type ThrottleOptions<A> = {
@@ -12,10 +12,22 @@ export type ThrottleOptions<A> = {
   elements?: number
 }
 
+declare module 'core/source' {
+  interface Source<O> {
+    throttle<A>(duration: number, opts?: ThrottleOptions<A>): Source<O>
+  }
+}
+
+declare module 'core/flow' {
+  interface Flow<I, O> {
+    throttle<A>(duration: number, opts?: ThrottleOptions<A>): Flow<I, O>
+  }
+}
+
 _registerFlow('throttle', throttle);
 
 
-class Throttle<A> extends FlowStage<A, A, void> {
+class Throttle<A> extends FlowStage<A, A> {
 
   private pending?: A
   private completePending: boolean = false
@@ -46,8 +58,8 @@ class Throttle<A> extends FlowStage<A, A, void> {
         this.push(this.pending);
         this.pending = null;
         if (this.completePending) {
-          this.complete();
-          this.doFinish();
+          this.onStop()
+          this.complete()
         }
       }
     }, this.duration);
@@ -68,12 +80,12 @@ class Throttle<A> extends FlowStage<A, A, void> {
     if (this.pending) {
       this.completePending = true;
     } else {
-      this.complete();
-      this.doFinish();
+      this.onStop()
+      this.complete()
     }
   }
 
-  doFinish(): void {
+  onStop() {
     if (this.timerId) {
       clearInterval(this.timerId);
     }

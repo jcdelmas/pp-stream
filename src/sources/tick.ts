@@ -1,11 +1,11 @@
 
-import { Source, SourceStage } from '../core/source';
+import { Source, SourceStage , createSource } from '../core/source';
 
-export function tick<O>(interval: number, value: O): Source<O, void> {
-  return Source.fromStageFactory(() => new Tick(interval, value));
+export function tick<O>(interval: number, value: O): Source<O> {
+  return createSource(() => new Tick(interval, value))
 }
 
-class Tick<O> extends SourceStage<O, void> {
+class Tick<O> extends SourceStage<O> {
 
   timerId?: NodeJS.Timer
 

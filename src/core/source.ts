@@ -1,18 +1,20 @@
 import Buffer, { OverflowStrategy } from './buffer'
 import { Inlet, Outlet, Shape, SingleOutputStage } from './stage'
-import {
-  Graph, 
-  materializerFromStageFactory,
-  StreamAttributes
-} from './stream'
+import { Graph, GraphBuilder, materializerFromGraph, materializerFromStageFactory, StreamAttributes } from './graph'
 import Module from './module'
 import { FlowShape } from './flow'
-import { SinkShape, SinkStage } from './sink'
-import { ClosedShape, RunnableGraph } from './runnable'
-import { Sink } from './sink'
-import { keepLeft, keepRight } from './keep'
+import { SinkShape } from './sink'
+import { createRunnableFromGraph, RunnableGraph } from './runnable'
 
-class SourceShape<O> implements Shape {
+export function createSource<O>(factory: () => SourceStage<O>): Source<O> {
+  return new Source(materializerFromStageFactory(factory))
+}
+
+export function createSourceFromGraph<O>(factory: (b: GraphBuilder) => SourceShape<O>): Source<O> {
+  return new Source(materializerFromGraph(factory))
+}
+
+export class SourceShape<O> implements Shape {
 
   inputs: Inlet<any>[] = []
   outputs: Outlet<any>[]
@@ -22,11 +24,14 @@ class SourceShape<O> implements Shape {
   }
 }
 
-export abstract class SourceStage<O, M> extends SingleOutputStage<O, SourceShape<O>, M> {
+export abstract class SourceStage<O> extends SingleOutputStage<O, SourceShape<O>> {
   shape = new SourceShape(new Outlet<O>(this))
+
+  onCancel(): void {
+  }
 }
 
-export class PushSourceStage<O, M> extends SourceStage<O, M> {
+export class PushSourceStage<O> extends SourceStage<O> {
 
   buffer: Buffer<O>
   completePending: boolean = false
@@ -63,48 +68,32 @@ export class PushSourceStage<O, M> extends SourceStage<O, M> {
   }
 }
 
-export class Source<O, M> extends Graph<SourceShape<O>, M> {
+export class Source<O> extends Graph<SourceShape<O>, void> {
 
-  static fromGraph<O, M>(factory: Graph<SourceShape<O>, M>): Source<O, M> {
-    return new Source<O, M>(factory.materializer, factory.attributes)
-  }
-
-  static fromStageFactory<O, M>(factory: () => SourceStage<O, M>): Source<O, M> {
-    return new Source(materializerFromStageFactory(factory))
-  }
-
-  constructor(materializer: (attrs: StreamAttributes) => Module<SourceShape<O>, M>,
+  constructor(materializer: (attrs: StreamAttributes) => Module<SourceShape<O>, void>,
               attributes: StreamAttributes = {}) {
     super(materializer, attributes)
   }
 
-  pipe<O2>(flow: Graph<FlowShape<O, O2>, M>): Source<O2, M> {
-    return this.pipeMat(flow, keepLeft)
-  }
-
-  pipeMat<O2, M2, M3>(flow: Graph<FlowShape<O, O2>, M2>, combine: (m1: M, m2: M2) => M3): Source<O2, M3> {
-    return Source.fromGraph(Graph.createWithMat2(this, flow, combine,(_, prev, next) => {
+  pipe<O2>(flow: Graph<FlowShape<O, O2>, any>): Source<O2> {
+    return createSourceFromGraph(b => {
+      const prev = b.add(this)
+      const next = b.add(flow)
       prev.output.wire(next.input)
       return new SourceShape(next.output)
-    }))
+    })
   }
 
-  to(sink: Graph<SinkShape<O>, M>): RunnableGraph<M> {
-    return this.toMat(sink, keepLeft)
-  }
-
-  toMat<M2, M3>(sink: Graph<SinkShape<O>, M2>, combine: (m1: M, m2: M2) => M3): RunnableGraph<M3> {
-    return RunnableGraph.fromGraph(Graph.createWithMat2(this, sink, combine, (_, prev, next) => {
+  to<R>(sink: Graph<SinkShape<O>, R>): RunnableGraph<R> {
+    return createRunnableFromGraph(b => {
+      const prev = b.add(this)
+      const [next, result] = b.addAndGetResult(sink)
       prev.output.wire(next.input)
-      return ClosedShape.instance
-    }))
+      return result
+    })
   }
 
-  runWith<M2>(sink: Graph<SinkShape<O>, M2>): M2 {
-    return this.toMat(sink, keepRight).run()
-  }
-
-  runWithLastStage<M2>(sinkStage: SinkStage<O, M2>): M2 {
-    return this.runWith(Sink.fromStageFactory(() => sinkStage))
+  runWith<R>(sink: Graph<SinkShape<O>, R>): R {
+    return this.to(sink).run()
   }
 }

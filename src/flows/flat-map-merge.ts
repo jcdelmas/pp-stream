@@ -1,60 +1,60 @@
-import { _registerFlow, Flow, FlowStage } from '../core/flow'
-import { SinkStage } from '../core/sink'
-import { Source } from '../core/source'
+import { _registerFlow, Flow, FlowStage , createFlow } from '../core/flow'
+import { SinkStage, createSink } from 'core/sink'
+import { Source } from 'core/source'
+import { Sink } from '..'
 
-export function flatMapMerge<I, O>(fn: (x: I) => Source<O, void>, breadth: number = 16): Flow<I, O, void> {
-  return Flow.fromStageFactory(() => new FlatMapMerge(fn, breadth))
+export function flatMapMerge<I, O>(fn: (x: I) => Source<O>, breadth: number = 16): Flow<I, O> {
+  return createFlow(() => new FlatMapMerge(fn, breadth))
 }
 
 _registerFlow('flatMapMerge', flatMapMerge);
 
-class FlatMapMerge<I, O> extends FlowStage<I, O, void> {
+class FlatMapMerge<I, O> extends FlowStage<I, O> {
   constructor(
-    private readonly fn: (x: I) => Source<O, void>,
+    private readonly fn: (x: I) => Source<O>,
     private readonly breadth: number = 16
   ) {
     super()
   }
 
-  stages: FlatMapSink<O>[] = [];
+  sources: FlatMapSink<O>[] = [];
+  queue: FlatMapSink<O>[] = [];
 
-  completePending: boolean = false;
+  sink: Sink<O, void> = createSink(() => {
+    const stage = new FlatMapSink(this)
+    this.sources.push(stage)
+    return stage
+  })
 
   onPush() {
-    const source = this.fn(this.grab());
+    this.fn(this.grab()).runWith(this.sink)
 
-    const stage = new FlatMapSink(this)
-    this.stages.push(stage);
-    source.runWithLastStage(stage);
-
-    if (this.stages.length < this.breadth) {
-      this.pull();
-    }
-  }
-
-  onPull() {
-    if (this.stages.length > 0) {
-      const availableStage = this.stages.find(stage => stage.isInputAvailable())
-      if (availableStage) {
-        this.push(availableStage.grab())
-      }
-      this.stages.forEach(stage => stage.pullIfAllowed())
-    } else {
+    if (this.sources.length < this.breadth) {
       this.pull()
     }
   }
 
+  onPull() {
+    const source = this.queue.shift()
+    if (source) {
+      this.push(source.grab())
+      source.pullIfAllowed()
+    }
+  }
+
   onCancel() {
-    this.stages.forEach(stage => stage.cancel())
+    this.sources.forEach(stage => stage.cancel())
     this.cancel()
   }
 
   onComplete() {
-    if (this.stages.length === 0) {
+    if (this.sources.length === 0) {
       this.complete()
-    } else {
-      this.completePending = true
     }
+  }
+
+  onStart() {
+    this.pull()
   }
 }
 
@@ -65,22 +65,29 @@ class FlatMapSink<I> extends SinkStage<I, void> {
   }
 
   onPush() {
-    this.parent.push(this.grab())
-  }
-
-  onComplete() {
-    const i = this.parent.stages.indexOf(this);
-    this.parent.stages.splice(i, 1);
-
-    if (this.parent.completePending && this.parent.stages.length === 0) {
-      this.parent.complete();
-    } else if (!this.parent.isInputClosed()) {
-      this.parent.pull();
+    if (this.parent.isOutputAvailable()) {
+      this.parent.push(this.grab())
+      this.pullIfAllowed()
+    } else {
+      this.parent.queue.push(this)
     }
   }
 
-  onStart() {
-    this.pull();
+  onComplete() {
+    this.parent.sources.splice(this.parent.sources.indexOf(this), 1)
+
+    if (this.parent.isInputClosed() && this.parent.sources.length === 0) {
+      this.parent.complete()
+    } else {
+      this.parent.pullIfAllowed()
+    }
   }
 
+  onError(e: any): void {
+    this.parent.error(e)
+  }
+
+  onStart() {
+    this.pull()
+  }
 }

@@ -1,15 +1,15 @@
-import { _registerFlow, Flow, FlowStage } from '../core/flow'
-import { SinkStage } from '../core/sink'
-import { Source } from '../core/source'
+import { _registerFlow, createFlow, FlowStage } from 'core/flow'
+import { SinkStage, createSink } from 'core/sink'
+import { Source } from 'core/source'
 
-export function flatMapConcat<I, O>(fn: (x: I) => Source<O, any>) {
-  return Flow.fromStageFactory(() => new FlatMapConcat<I, O>(fn));
+export function flatMapConcat<I, O>(fn: (x: I) => Source<O>) {
+  return createFlow(() => new FlatMapConcat<I, O>(fn));
 }
 
 _registerFlow('flatMapConcat', flatMapConcat);
 
-class FlatMapConcat<I, O> extends FlowStage<I, O, void> {
-  constructor(private readonly fn: (x: I) => Source<O, void>) {
+class FlatMapConcat<I, O> extends FlowStage<I, O> {
+  constructor(private readonly fn: (x: I) => Source<O>) {
     super()
   }
 
@@ -19,7 +19,7 @@ class FlatMapConcat<I, O> extends FlowStage<I, O, void> {
   onPush() {
     const source = this.fn(this.grab());
     this.current = new FlatMapSink<O>(this)
-    source.runWithLastStage(this.current);
+    source.runWith(createSink(() => this.current));
   }
 
   onPull() {
@@ -32,14 +32,14 @@ class FlatMapConcat<I, O> extends FlowStage<I, O, void> {
 
   onCancel() {
     if (this.current) {
-      this.current.finish()
+      this.current.cancel()
     }
     this.cancel();
   }
 
   onComplete() {
     if (!this.current) {
-      this.complete();
+      this.complete()
     } else {
       this.completePending = true;
     }
@@ -61,6 +61,10 @@ class FlatMapSink<I> extends SinkStage<I, void> {
     if (this.parent.completePending) {
       this.parent.complete()
     }
+  }
+
+  onError(e: any): void {
+    this.parent.error(e)
   }
 
   onStart() {

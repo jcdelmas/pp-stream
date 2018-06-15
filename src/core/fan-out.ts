@@ -1,59 +1,73 @@
-import { Stage, UpstreamHandler } from './stage'
-import Stream from './stream';
-import Flow from './flow';
-import Sink from './sink';
+import { Inlet, Outlet, Shape, SingleInputStage, UpstreamHandler } from './stage'
+import { range } from 'lodash'
 
-export function createFanOut<I, O>(size: number, stageFactory: (number) => FanOutStage<I, O>) {
-  return Stream.fromStageFactory<I, O>(() => stageFactory(size), 1, size);
+export abstract class FanOutShape<I> implements Shape {
+
+  outputs: Outlet<any>[]
+  inputs: Inlet<I>[]
+
+  constructor(public input: Inlet<I>) {
+    this.inputs = [input]
+  }
 }
 
-const FanOut = {
-  create: createFanOut
-};
+export class UniformFanOutShape<I, O> implements FanOutShape<I> {
 
-export function _registerFanOut(name, stageFactory) {
-  FanOut[name] = size => createFanOut(size, stageFactory);
-  Sink[name] = (...sinks) => Flow[name](...sinks);
-  Stream.prototype[name] = function (...streams) {
-    return this.pipe(FanOut[name](streams.length)).pipe(Stream.groupStreams(streams));
-  };
+  inputs: Inlet<I>[]
+
+  constructor(public input: Inlet<I>, public outputs: Outlet<O>[]) {
+    this.inputs = [input]
+  }
 }
 
-export default FanOut;
+export abstract class FanOutStage<I, S extends FanOutShape<I>> extends SingleInputStage<I, S, void> {
 
-export abstract class FanOutStage<I, O> extends Stage<I, O> {
+  returnValue: void = undefined
 
-  constructor(outputs: number) {
-    super({ outputs })
+  finish(): void {
+    this.cancel()
+    this.complete()
   }
 
-  createUpstreamHandler(index: number): UpstreamHandler {
-    throw new Error('Not implemented');
+  onError(e: any): void {
+    this.error(e)
   }
 
-  // Not allowed methods
-
-  onPull(): void {
-    throw new Error('Not supported');
+  onComplete(): void {
+    this.onStop()
+    this.complete()
   }
 
-  onCancel(): void {
-    throw new Error('Not supported');
+  complete(): void {
+    this.shape.outputs.forEach(output => {
+      if (!output.isClosed()) {
+        output.complete();
+      }
+    });
   }
 
-  push(x: O): void {
-    throw new Error('Not supported');
+  error(e: any): void {
+    this.shape.outputs.forEach(output => {
+      if (!output.isClosed()) {
+        output.error(e);
+      }
+    });
+  }
+}
+
+export abstract class UniformFanOutStage<I, O> extends FanOutStage<I, UniformFanOutShape<I, O>> {
+
+  shape: UniformFanOutShape<I, O>
+
+  constructor(protected outCount: number) {
+    super()
+    const outputs = range(0, outCount).map(i => new Outlet<O>(this.createUpstreamHandler(i)))
+    this.shape = new UniformFanOutShape(new Inlet<I>(this), outputs)
   }
 
-  pushAndComplete(x: O): void {
-    throw new Error('Not supported');
+  protected output(i: number): Outlet<O> {
+    return this.shape.outputs[i]
   }
 
-  isOutputAvailable(): boolean {
-    throw new Error('Not supported');
-  }
-
-  isOutputClosed(): boolean {
-    throw new Error('Not supported');
-  }
+  abstract createUpstreamHandler(index: number): UpstreamHandler
 }

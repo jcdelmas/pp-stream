@@ -1,12 +1,13 @@
-import { _registerSink, Sink, SinkStageWithPromise } from '../core/sink'
+import { _registerSink, Sink , createSink } from '../core/sink'
+import { SinkStage } from '..'
 
-export function forEach<I>(cb: (x: I) => void): Sink<any, Promise<void>> {
-  return Sink.fromStageFactory(() => new ForEach(cb))
+export function forEach<I>(cb: (x: I) => void): Sink<I, void> {
+  return createSink(() => new ForEach(cb))
 }
 
 _registerSink('forEach', forEach)
 
-class ForEach<I> extends SinkStageWithPromise<I, undefined> {
+class ForEach<I> extends SinkStage<I, void> {
 
   constructor(private readonly cb: (x: I) => void) {
     super()

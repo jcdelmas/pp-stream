@@ -80,9 +80,6 @@ export class Inlet<A> {
   }
 }
 
-/**
- * @interface
- */
 export class Outlet<A> {
 
   private _wire?: Wire<A>
@@ -307,9 +304,9 @@ export interface UpstreamHandler {
   onCancel(): void
 }
 
-export abstract class Stage<S extends Shape, M> implements Startable {
+export abstract class Stage<S extends Shape, R> implements Startable {
 
-  materializedValue: M
+  returnValue: R
 
   abstract shape: S
 
@@ -318,74 +315,42 @@ export abstract class Stage<S extends Shape, M> implements Startable {
   onStart(): void {
   }
 
-  doFinish(): void {
+  onStop(): void {
   }
 
   // General command methods
 
-  finish(): void {
-    this.cancel();
-    this.doFinish();
-    this.complete();
-  }
-
   start(): void {
     this.onStart();
   }
-
-  cancel(): void {
-    this.shape.inputs.forEach(input => {
-      if (!input.isClosed()) {
-        input.cancel();
-      }
-    });
-  }
-
-  complete(): void {
-    this.shape.outputs.forEach(output => {
-      if (!output.isClosed()) {
-        output.complete();
-      }
-    });
-  }
-
-  error(e: any): void {
-    this.shape.outputs.forEach(output => {
-      if (!output.isClosed()) {
-        output.error(e);
-      }
-    });
-  }
 }
 
-export abstract class SingleInputStage<I, S extends { input: Inlet<I> } & Shape, M> extends Stage<S, M> implements DownstreamHandler {
+export abstract class SingleInputStage<I, S extends { input: Inlet<I> } & Shape, R> extends Stage<S, R> implements DownstreamHandler {
 
   // Downstream handler methods
 
   abstract onPush(): void
 
-  onError(e: any) {
-    this.doFinish()
-    this.error(e)
-  }
+  abstract onError(e: any): void
 
-  onComplete(): void {
-    this.doFinish()
-    this.complete()
-  }
+  abstract onComplete(): void
 
   // Single input command methods
 
   grab(): I {
-    return this.shape.input.grab();
+    return this.shape.input.grab()
   }
 
   pull(): void {
-    this.shape.input.pull();
+    this.shape.input.pull()
   }
 
   pullIfAllowed(): void {
-    this.shape.input.pullIfAllowed();
+    this.shape.input.pullIfAllowed()
+  }
+
+  cancel(): void {
+    this.shape.input.cancel()
   }
 
   // Single input query methods
@@ -407,24 +372,31 @@ export abstract class SingleInputStage<I, S extends { input: Inlet<I> } & Shape,
   }
 }
 
-export abstract class SingleOutputStage<O, S extends { output: Outlet<O> } & Shape, M> extends Stage<S, M> implements UpstreamHandler {
+export abstract class SingleOutputStage<O, S extends { output: Outlet<O> } & Shape> extends Stage<S, void> implements UpstreamHandler {
+
+  returnValue: void = undefined
 
   abstract onPull(): void
 
-  onCancel(): void {
-    this.cancel();
-    this.doFinish();
-  }
+  abstract onCancel(): void
 
   // Single output command methods
 
   push(x: O): void {
-    this.shape.output.push(x);
+    this.shape.output.push(x)
   }
 
   pushAndComplete(x: O): void {
-    this.push(x);
-    this.complete();
+    this.push(x)
+    this.complete()
+  }
+
+  complete(): void {
+    this.shape.output.complete()
+  }
+
+  error(e: any): void {
+    this.shape.output.error(e)
   }
 
   // Single output query methods

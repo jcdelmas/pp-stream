@@ -1,13 +1,24 @@
+import { _registerFlow, Flow, FlowStage , createFlow } from '../core/flow'
 
-import { _registerFlow, Flow, FlowStage } from '../core/flow'
+export function map<I, O>(fn: (x: I) => O): Flow<I, O> {
+  return createFlow(() => new Map(fn))
+}
 
-export function map<I, O>(fn: (x: I) => O): Flow<I, O, void> {
-  return Flow.fromStageFactory(() => new Map(fn))
+declare module '../core/source' {
+  interface Source<O> {
+    map<O2>(fn: (x: O) => O2): Source<O2>
+  }
+}
+
+declare module '../core/flow' {
+  interface Flow<I, O> {
+    map<O2>(fn: (x: O) => O2): Flow<I, O2>
+  }
 }
 
 _registerFlow('map', map)
 
-class Map<I, O> extends FlowStage<I, O, void> {
+class Map<I, O> extends FlowStage<I, O> {
 
   constructor (private readonly fn: (x: I) => O) {
     super()

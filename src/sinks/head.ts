@@ -1,12 +1,12 @@
-import { _registerSink, Sink, SinkStageWithPromise } from '../core/sink'
+import { _registerSink, Sink, SinkStage, createSink } from '../core/sink'
 
-export function head<I>(): Sink<I, Promise<I | undefined>> {
-  return Sink.fromStageFactory(() => new Head<I>())
+export function head<I>(): Sink<I, I | undefined> {
+  return createSink(() => new Head<I>())
 }
 
 _registerSink('head', head);
 
-class Head<I> extends SinkStageWithPromise<I, I | undefined> {
+class Head<I> extends SinkStage<I, I | undefined> {
 
   onPush() {
     this.result = this.grab();

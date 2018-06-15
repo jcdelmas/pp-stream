@@ -1,78 +1,95 @@
-import { DownstreamHandler, Stage } from './stage'
-import Source from './source';
-import Stream from './stream';
+import { DownstreamHandler, Inlet, Outlet, Shape, SingleOutputStage } from './stage'
+import { range } from 'lodash'
+import { createFlowFromGraph, Flow, FlowShape } from './flow'
+import { Graph } from './graph'
+import { Source } from './source'
 
-export function createFanIn<I, O>(size: number, stageFactory: (number) => FanInStage<I, O>): Stream<I, O> {
-  return Stream.fromStageFactory(() => stageFactory(size), size);
+export abstract class FanInShape<O> implements Shape {
+
+  outputs: Outlet<O>[]
+  inputs: Inlet<any>[]
+
+  constructor(public output: Outlet<O>) {
+    this.outputs = [output]
+  }
 }
 
-const FanIn = {
-  create: createFanIn
-};
+export class FanInShape2<I1, I2, O> implements Shape {
 
-export function _registerSimpleFanIn(name, fanInName, stageFactory) {
-  const fanInStreams = streams => Stream.groupStreams(streams)[fanInName]();
-  Source[name] = (...sources) => fanInStreams(sources);
-  FanIn[name] = size => createFanIn(size, stageFactory);
-  Stream.prototype[name] = function (source) {
-    return fanInStreams([this, source]);
-  };
-  Stream.prototype[fanInName] = function () {
-    return this.fanIn(FanIn[name]);
-  };
+  outputs: Outlet<O>[]
+  inputs: Inlet<any>[]
+
+  constructor(public in1: Inlet<I1>, public in2: Inlet<I2>, public output: Outlet<O>) {
+    this.inputs = [in1, in2]
+    this.outputs = [output]
+  }
 }
 
-export default FanIn;
+export class FanInShape3<I1, I2, I3, O> implements Shape {
 
-export abstract class FanInStage<I, O> extends Stage<I, O> {
+  outputs: Outlet<O>[]
+  inputs: Inlet<any>[]
 
-  constructor(inputs: number) {
-    super({ inputs });
+  constructor(public in1: Inlet<I1>,
+              public in2: Inlet<I2>,
+              public in3: Inlet<I3>,
+              public output: Outlet<O>) {
+    this.inputs = [in1, in2, in3]
+    this.outputs = [output]
+  }
+}
+
+export class UniformFanInShape<I, O> implements FanInShape<O> {
+
+  outputs: Outlet<any>[]
+
+  constructor(public inputs: Inlet<I>[], public output: Outlet<O>) {
+    this.outputs = [output]
+  }
+}
+
+export function fanInFlow<A>(source: Source<A>, graphFactory: (size: number) => Graph<UniformFanInShape<A, A>, void>): Flow<A, A> {
+  return createFlowFromGraph(b => {
+    const s = b.add(source)
+    const merge = b.add(graphFactory(2))
+    s.output.wire(merge.inputs[1])
+    return new FlowShape(merge.inputs[0], merge.output)
+  })
+}
+
+export abstract class FanInStage<O, S extends FanInShape<O>> extends SingleOutputStage<O, S> {
+
+  finish(): void {
+    this.cancel()
+    this.complete()
   }
 
-  createDownstreamHandler(index): DownstreamHandler {
-    throw new Error('Not implemented');
+  onCancel(): void {
+    this.cancel()
   }
 
-  // Not allowed methods
+  cancel(): void {
+    this.shape.inputs.forEach(input => {
+      if (!input.isClosed()) {
+        input.cancel()
+      }
+    })
+  }
+}
 
-  onPush(): void {
-    throw new Error('Not supported');
+export abstract class UniformFanInStage<I, O> extends FanInStage<O, UniformFanInShape<I, O>> {
+
+  shape: UniformFanInShape<I, O>
+
+  constructor(protected inCount: number) {
+    super()
+    const inputs = range(0, inCount).map(i => new Inlet<I>(this.createDownstreamHandler(i)))
+    this.shape = new UniformFanInShape(inputs, new Outlet<O>(this))
   }
 
-  onError(e): void {
-    throw new Error('Not supported');
+  protected input(i: number): Inlet<I> {
+    return this.shape.inputs[i]
   }
 
-  onComplete(): void {
-    throw new Error('Not supported');
-  }
-
-  grab(): void {
-    throw new Error('Not supported');
-  }
-
-  pull(): void {
-    throw new Error('Not supported');
-  }
-
-  pullIfAllowed(): void {
-    throw new Error('Not supported');
-  }
-
-  isInputAvailable(): void {
-    throw new Error('Not supported');
-  }
-
-  isInputClosed(): boolean {
-    throw new Error('Not supported');
-  }
-
-  isInputHasBeenPulled(): boolean {
-    throw new Error('Not supported');
-  }
-
-  isInputCanBePulled(): boolean {
-    throw new Error('Not supported');
-  }
+  abstract createDownstreamHandler(index: number): DownstreamHandler
 }

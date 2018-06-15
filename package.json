@@ -39,7 +39,7 @@
     "check": "run-s lint test",
     "build": "babel src --out-dir dist",
     "release": "run-s clean check build",
-    "typescript": "tsc --project ."
+    "typescript": "tsc --outDir dist --project ."
   },
   "repository": {
     "type": "git",
@@ -50,7 +50,8 @@
       "^.+\\.tsx?$": "ts-jest",
       "^.+\\.jsx?$": "babel-jest"
     },
-    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "testRegex": "\\.spec\\.(js|ts)$",
+    "testPathIgnorePatterns": ["/dist/", "/node_modules/"],
     "moduleFileExtensions": [
       "ts",
       "tsx",
@@ -58,6 +59,9 @@
       "jsx",
       "json",
       "node"
+    ],
+    "modulePaths": [
+      "./src"
     ]
   },
   "keywords": [

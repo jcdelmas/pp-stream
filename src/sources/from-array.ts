@@ -1,11 +1,11 @@
 
-import { Source, SourceStage } from '../core/source'
+import { Source, SourceStage , createSource } from '../core/source'
 
-export function fromArray<O>(items: O[]): Source<O, void> {
-  return Source.fromStageFactory(() => new ArraySourceStage(items))
+export function fromArray<O>(items: O[]): Source<O> {
+  return createSource(() => new ArraySourceStage(items))
 }
 
-class ArraySourceStage<O> extends SourceStage<O, void> {
+class ArraySourceStage<O> extends SourceStage<O> {
 
   index = 0
 

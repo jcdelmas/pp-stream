@@ -1,26 +1,26 @@
 
 import Buffer, { OverflowStrategy } from '../core/buffer'
-import { _registerFlow, Flow, FlowStage } from '../core/flow'
+import { _registerFlow, Flow, FlowStage , createFlow } from '../core/flow'
 
-export function delay<A>(duration: number, bufferSize: number = 16, overflowStrategy: OverflowStrategy = OverflowStrategy.FAIL): Flow<A, A, void> {
-  return Flow.fromStageFactory<A, A, void>(() => new Delay<A>(duration, bufferSize, overflowStrategy))
+export function delay<A>(duration: number, bufferSize: number = 16, overflowStrategy: OverflowStrategy = OverflowStrategy.FAIL): Flow<A, A> {
+  return createFlow<A, A>(() => new Delay<A>(duration, bufferSize, overflowStrategy))
 }
 
-export function debounce<A>(duration: number): Flow<A, A, void> {
-  return Flow.fromStageFactory<A, A, void>(() => new Delay<A>(duration, 1, OverflowStrategy.DROP_BUFFER))
+export function debounce<A>(duration: number): Flow<A, A> {
+  return createFlow<A, A>(() => new Delay<A>(duration, 1, OverflowStrategy.DROP_BUFFER))
 }
 
 declare module '../core/source' {
-  interface Source<O, M> {
-    delay(duration: number, bufferSize: number, overflowStrategy: OverflowStrategy): Source<O, M>
-    debounce(duration: number): Source<O, M>
+  interface Source<O> {
+    delay(duration: number, bufferSize: number, overflowStrategy: OverflowStrategy): Source<O>
+    debounce(duration: number): Source<O>
   }
 }
 
 declare module '../core/flow' {
-  interface Flow<I, O, M> {
-    delay(duration: number, bufferSize: number, overflowStrategy: OverflowStrategy): Flow<I, O, M>
-    debounce(duration: number): Flow<I, O, M>
+  interface Flow<I, O> {
+    delay(duration: number, bufferSize: number, overflowStrategy: OverflowStrategy): Flow<I, O>
+    debounce(duration: number): Flow<I, O>
   }
 }
 
@@ -28,7 +28,7 @@ _registerFlow('delay', delay);
 _registerFlow('debounce', debounce);
 
 
-export class Delay<A> extends FlowStage<A, A, void> {
+export class Delay<A> extends FlowStage<A, A> {
 
   buffer: Buffer<DelayedValue<A>>
 

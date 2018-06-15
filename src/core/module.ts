@@ -1,13 +1,13 @@
 import { some } from 'lodash'
 import { Startable, Shape } from './stage'
-import { StreamAttributes } from './stream'
+import { StreamAttributes } from './graph'
 
-export default class Module<S extends Shape, M> implements Startable {
+export default class Module<S extends Shape, R> implements Startable {
 
   constructor(public readonly shape: S,
               public readonly submodules: Startable[],
               public readonly attrs: StreamAttributes,
-              public readonly materializedValue: M) {
+              public readonly result: R) {
   }
 
   start(): void {

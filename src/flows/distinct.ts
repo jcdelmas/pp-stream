@@ -1,12 +1,12 @@
-import { _registerFlow, Flow, FlowStage } from '../core/flow'
+import { _registerFlow, Flow, FlowStage, createFlow } from '../core/flow'
 
-export function distinct<A>(): Flow<A, A, void> {
-  return Flow.fromStageFactory<A, A, void>(() => new Distinct<A>())
+export function distinct<A>(): Flow<A, A> {
+  return createFlow<A, A>(() => new Distinct<A>())
 }
 
 _registerFlow('distinct', distinct);
 
-export class Distinct<A> extends FlowStage<A, A, void> {
+export class Distinct<A> extends FlowStage<A, A> {
 
   last?: A = null
 

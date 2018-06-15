@@ -1,10 +1,10 @@
-import { Source, SourceStage } from '../core/source'
+import { Source, SourceStage , createSource } from '../core/source'
 
-export function fromPausedReadable(readable: NodeJS.ReadableStream): Source<string | Buffer, void> {
-  return Source.fromStageFactory(() => new PausedReadableSource(readable));
+export function fromPausedReadable(readable: NodeJS.ReadableStream): Source<string | Buffer> {
+  return createSource(() => new PausedReadableSource(readable))
 }
 
-class PausedReadableSource extends SourceStage<string | Buffer, void> {
+class PausedReadableSource extends SourceStage<string | Buffer> {
 
   constructor(private readable: NodeJS.ReadableStream) {
     super();

@@ -1,12 +1,12 @@
-import { _registerFlow, Flow, FlowStage } from '../core/flow'
+import { _registerFlow, Flow, FlowStage , createFlow } from '../core/flow'
 
-export function mapConcat<I, O>(fn: (x: I) => O[]): Flow<I, O, void> {
-  return Flow.fromStageFactory(() => new MapConcat<I, O>(fn))
+export function mapConcat<I, O>(fn: (x: I) => O[]): Flow<I, O> {
+  return createFlow(() => new MapConcat<I, O>(fn))
 }
 
 _registerFlow('mapConcat', mapConcat)
 
-export class MapConcat<I, O> extends FlowStage<I, O, void> {
+export class MapConcat<I, O> extends FlowStage<I, O> {
   constructor(private readonly fn: (x: I) => O[]) {
     super()
   }

@@ -4,7 +4,7 @@ import {
   delay,
   OverflowStrategy,
   FlowStage,
-  fromCallback
+  fromCallback, createFlow
 } from '../src'
 
 type TimeStep<A> = {
@@ -41,7 +41,7 @@ export class TimedSource<A> {
   }
 }
 
-class WithTimeStage<I> extends FlowStage<I, [I, number], void> {
+class WithTimeStage<I> extends FlowStage<I, [I, number]> {
 
   startTime?: number
 
@@ -59,7 +59,7 @@ class WithTimeStage<I> extends FlowStage<I, [I, number], void> {
 }
 
 export function withTime<A>() {
-  return Flow.fromStageFactory(() => new WithTimeStage<A>())
+  return createFlow(() => new WithTimeStage<A>())
 }
 
 type TimedEvent = {
@@ -101,7 +101,7 @@ export function delayed<A>(duration: number, result: A): Promise<A> {
   return new Promise(resolve => setTimeout(() => resolve(result), duration));
 }
 
-export function delayedFlow<A>(duration: number): Flow<A, A, void> {
+export function delayedFlow<A>(duration: number): Flow<A, A> {
   return delay(duration, 1, OverflowStrategy.BACK_PRESSURE)
 }
 

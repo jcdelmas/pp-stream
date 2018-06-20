@@ -6,7 +6,7 @@ import { repeat, fromArray } from '../../src/index'
 describe('throttle', () => {
   it('simple', async() => {
     const startTime = new Date().getTime();
-    const result = await repeat(1).throttle(100).take(4).map(x => new Date().getTime() - startTime).runToArray();
+    const result = await repeat(1).throttle(100).take(4).map(() => new Date().getTime() - startTime).runToArray()
     result.should.have.length(4);
     result.forEach((time, i) => {
       checkTime(time, i * 100);
@@ -16,7 +16,7 @@ describe('throttle', () => {
     const startTime = new Date().getTime();
     const result = await repeat(1).take(4)
       .throttle(200, { elements: 2 })
-      .map(x => new Date().getTime() - startTime)
+      .map(() => new Date().getTime() - startTime)
       .runToArray();
     result.should.have.length(4);
     checkTime(result[0], 0);
@@ -35,7 +35,7 @@ describe('throttle', () => {
       [0, 6]
     ])
       .throttle(100, { maximumBurst: 2 })
-      .map(x => new Date().getTime() - startTime)
+      .map(() => new Date().getTime() - startTime)
       .runToArray();
 
     result.should.have.length(6);
@@ -57,7 +57,7 @@ describe('throttle', () => {
       [12, 13]
     ])
       .throttle(100, { cost: 3, maximumBurst: 6, costCalculation: xs => xs.length })
-      .map(x => new Date().getTime() - startTime)
+      .map(() => new Date().getTime() - startTime)
       .runToArray();
     result.should.have.length(6);
     checkTime(result[0], 0);

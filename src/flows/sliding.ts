@@ -4,6 +4,18 @@ export function sliding<A>(n: number, step: number = 1): Flow<A, A[]> {
   return createFlow(() => new Sliding(n, step))
 }
 
+declare module '../core/source' {
+  interface Source<O> {
+    sliding(n: number, step?: number): Source<O[]>
+  }
+}
+
+declare module '../core/flow' {
+  interface Flow<I, O> {
+    sliding(n: number, step?: number): Flow<I, O[]>
+  }
+}
+
 _registerFlow('sliding', sliding)
 
 class Sliding<A> extends FlowStage<A, A[]> {

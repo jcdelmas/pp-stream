@@ -9,7 +9,7 @@ describe('reduce', () => {
   });
 
   it('check side effects', async() => {
-    const sink = reduce((acc, x) => x + acc, 0);
+    const sink = reduce((acc: number, x: number) => x + acc, 0);
 
     await fromArray([1, 2, 3]).runWith(sink);
     const result = await fromArray([1, 2, 3]).runWith(sink);

@@ -19,8 +19,8 @@ describe('recover', () => {
         throw new Error();
       }
       return x;
-    }).recover(() => 'error').runToArray();
-    result.should.be.eql([1, 'error', 3, 'error', 5]);
+    }).recover(() => 0).runToArray();
+    result.should.be.eql([1, 0, 3, 0, 5]);
   });
 
   it('with rethrow', async () => {
@@ -31,10 +31,10 @@ describe('recover', () => {
       return x;
     }).recover(err => {
       if (err.message === 'error2') {
-        return 'first';
+        return -1;
       }
       throw err;
-    }).recover(() => 'second').runToArray();
-    result.should.be.eql([1, 'first', 3, 'second', 5]);
+    }).recover(() => -2).runToArray();
+    result.should.be.eql([1, -1, 3, -2, 5]);
   });
 });

@@ -8,6 +8,20 @@ export function mapAsyncUnordered<I, O>(fn: (x: I) => Promise<O>, parallelism = 
   return createFlow(() => new MapAsyncUnordered(fn, parallelism));
 }
 
+declare module '../core/source' {
+  interface Source<O> {
+    mapAsync<O2>(fn: (x: O) => Promise<O2>, parallelism?: number): Source<O2>
+    mapAsyncUnordered<O2>(fn: (x: O) => Promise<O2>, parallelism?: number): Source<O2>
+  }
+}
+
+declare module '../core/flow' {
+  interface Flow<I, O> {
+    mapAsync<O2>(fn: (x: O) => Promise<O2>, parallelism?: number): Flow<I, O2>
+    mapAsyncUnordered<O2>(fn: (x: O) => Promise<O2>, parallelism?: number): Flow<I, O2>
+  }
+}
+
 _registerFlow('mapAsync', mapAsync);
 _registerFlow('mapAsyncUnordered', mapAsyncUnordered);
 

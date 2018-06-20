@@ -58,7 +58,7 @@ class WithTimeStage<I> extends FlowStage<I, [I, number]> {
   }
 }
 
-export function withTime<A>() {
+export function withTime<A>(): Flow<A, [A, number]> {
   return createFlow(() => new WithTimeStage<A>())
 }
 

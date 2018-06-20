@@ -1,7 +1,7 @@
 
 import { Source, SourceStage , createSource } from '../core/source';
 
-export function unfold<O, S>(fn: (x: S) => [S, O], zero: S): Source<O> {
+export function unfold<O, S>(fn: (x: S) => [S, O] | undefined, zero: S): Source<O> {
   return createSource(() => new Unfold(fn, zero))
 }
 

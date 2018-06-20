@@ -4,7 +4,7 @@ import { fromArray } from '../../src'
 
 describe('errors', () => {
   it('simple', async() => {
-    const log = [];
+    const log: number[] = [];
     try {
       await fromArray([1, 2, 3]).map(x => {
         log.push(x);

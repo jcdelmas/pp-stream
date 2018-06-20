@@ -6,6 +6,18 @@ export function flatMapConcat<I, O>(fn: (x: I) => Source<O>) {
   return createFlow(() => new FlatMapConcat<I, O>(fn));
 }
 
+declare module '../core/source' {
+  interface Source<O> {
+    flatMapConcat<O2>(fn: (x: O) => Source<O2>): Source<O2>
+  }
+}
+
+declare module '../core/flow' {
+  interface Flow<I, O> {
+    flatMapConcat<O2>(fn: (x: O) => Source<O2>): Flow<I, O2>
+  }
+}
+
 _registerFlow('flatMapConcat', flatMapConcat);
 
 class FlatMapConcat<I, O> extends FlowStage<I, O> {

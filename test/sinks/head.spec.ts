@@ -9,7 +9,7 @@ describe('head', () => {
   });
 
   it('check cancel', async () => {
-    const log = [];
+    const log: string[] = [];
     await fromArray(['foo', 'bar', 'baz']).map(x => {
       log.push(x);
       return x;

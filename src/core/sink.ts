@@ -29,6 +29,7 @@ export class SinkShape<I> implements Shape {
 }
 
 export function _registerSink<I, R>(name: string, fn: (...args: any[]) => Sink<I, R>): void {
+  // @ts-ignore: no index signature error
   Source.prototype['run' + upperFirst(name)] = function (...args: any[]) {
     return this.runWith(fn(...args))
   }

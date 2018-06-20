@@ -1,7 +1,19 @@
-import { _registerFlow, Flow, FlowStage, createFlow } from '../core/flow'
+import { _registerFlow, createFlow, Flow, FlowStage } from '../core/flow'
 
 export function distinct<A>(): Flow<A, A> {
   return createFlow<A, A>(() => new Distinct<A>())
+}
+
+declare module '../core/source' {
+  interface Source<O> {
+    distinct(): Source<O>
+  }
+}
+
+declare module '../core/flow' {
+  interface Flow<I, O> {
+    distinct(): Flow<I, O>
+  }
 }
 
 _registerFlow('distinct', distinct);

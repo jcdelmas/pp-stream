@@ -5,6 +5,18 @@ export function recover<A>(fn: (error: any) => A | undefined = () => undefined):
   return createFlow(() => new Recover(fn))
 }
 
+declare module '../core/source' {
+  interface Source<O> {
+    recover(fn?: (error: any) => O | undefined): Source<O>
+  }
+}
+
+declare module '../core/flow' {
+  interface Flow<I, O> {
+    recover(fn?: (error: any) => O | undefined): Flow<I, O>
+  }
+}
+
 _registerFlow('recover', recover)
 
 class Recover<A> extends FlowStage<A, A> {

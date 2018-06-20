@@ -4,6 +4,18 @@ export function takeWhile<A>(fn: (x: A) => boolean): Flow<A, A> {
   return createFlow<A, A>(() => new TakeWhile(fn))
 }
 
+declare module '../core/source' {
+  interface Source<O> {
+    takeWhile(fn: (x: O) => boolean): Source<O>
+  }
+}
+
+declare module '../core/flow' {
+  interface Flow<I, O> {
+    takeWhile(fn: (x: O) => boolean): Flow<I, O>
+  }
+}
+
 _registerFlow('takeWhile', takeWhile)
 
 export class TakeWhile<A> extends FlowStage<A, A> {

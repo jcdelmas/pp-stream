@@ -1,7 +1,7 @@
 
 import { Source, SourceStage , createSource } from '../core/source';
 
-export function unfoldAsync<O, S>(fn: (x: S) => Promise<[S, O]>, zero: S): Source<O> {
+export function unfoldAsync<O, S>(fn: (x: S) => Promise<[S, O] | undefined>, zero: S): Source<O> {
   return createSource(() => new UnfoldAsync(fn, zero))
 }
 

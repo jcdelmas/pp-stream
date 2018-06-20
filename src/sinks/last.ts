@@ -4,6 +4,12 @@ export function last<I>(): Sink<I, I | undefined> {
   return createSink(() => new Last<I>())
 }
 
+declare module 'core/source' {
+  interface Source<O> {
+    runLast(): Promise<O>
+  }
+}
+
 _registerSink('last', last);
 
 class Last<I> extends BasicSinkStage<I, I | undefined> {

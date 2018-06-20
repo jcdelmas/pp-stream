@@ -4,6 +4,18 @@ export function grouped<A>(n: number): Flow<A, A[]> {
   return createFlow(() => new Grouped<A>(n));
 }
 
+declare module '../core/source' {
+  interface Source<O> {
+    grouped(n: number): Source<O>
+  }
+}
+
+declare module '../core/flow' {
+  interface Flow<I, O> {
+    grouped(n: number): Flow<I, O>
+  }
+}
+
 _registerFlow('grouped', grouped)
 
 class Grouped<A> extends FlowStage<A, A[]> {

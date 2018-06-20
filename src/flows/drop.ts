@@ -4,6 +4,18 @@ export function drop<A>(n: number): Flow<A, A> {
   return createFlow<A, A>(() => new Drop<A>(n));
 }
 
+declare module '../core/source' {
+  interface Source<O> {
+    drop(n: number): Source<O>
+  }
+}
+
+declare module '../core/flow' {
+  interface Flow<I, O> {
+    drop(n: number): Flow<I, O>
+  }
+}
+
 _registerFlow('drop', drop);
 
 class Drop<A> extends FlowStage<A, A> {

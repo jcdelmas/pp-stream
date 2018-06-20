@@ -4,6 +4,12 @@ export function reduce<I, R>(fn: (acc: R, x: I) => R, zero: R): Sink<I, R> {
   return createSink(() => new Reduce(fn, zero))
 }
 
+declare module 'core/source' {
+  interface Source<O> {
+    runReduce<R>(fn: (acc: R, x: O) => R, zero: R): Promise<R>
+  }
+}
+
 _registerSink('reduce', reduce)
 
 class Reduce<I, R> extends BasicSinkStage<I, R> {

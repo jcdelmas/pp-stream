@@ -7,6 +7,18 @@ export function flatMapMerge<I, O>(fn: (x: I) => Source<O>, breadth: number = 16
   return createFlow(() => new FlatMapMerge(fn, breadth))
 }
 
+declare module '../core/source' {
+  interface Source<O> {
+    flatMapMerge<O2>(fn: (x: O) => Source<O2>, breadth?: number): Source<O2>
+  }
+}
+
+declare module '../core/flow' {
+  interface Flow<I, O> {
+    flatMapMerge<O2>(fn: (x: O) => Source<O2>, breadth?: number): Flow<I, O2>
+  }
+}
+
 _registerFlow('flatMapMerge', flatMapMerge);
 
 class FlatMapMerge<I, O> extends FlowStage<I, O> {

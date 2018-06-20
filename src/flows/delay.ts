@@ -12,14 +12,14 @@ export function debounce<A>(duration: number): Flow<A, A> {
 
 declare module '../core/source' {
   interface Source<O> {
-    delay(duration: number, bufferSize: number, overflowStrategy: OverflowStrategy): Source<O>
+    delay(duration: number, bufferSize?: number, overflowStrategy?: OverflowStrategy): Source<O>
     debounce(duration: number): Source<O>
   }
 }
 
 declare module '../core/flow' {
   interface Flow<I, O> {
-    delay(duration: number, bufferSize: number, overflowStrategy: OverflowStrategy): Flow<I, O>
+    delay(duration: number, bufferSize?: number, overflowStrategy?: OverflowStrategy): Flow<I, O>
     debounce(duration: number): Flow<I, O>
   }
 }

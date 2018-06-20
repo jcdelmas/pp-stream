@@ -14,13 +14,13 @@ export type ThrottleOptions<A> = {
 
 declare module 'core/source' {
   interface Source<O> {
-    throttle<A>(duration: number, opts?: ThrottleOptions<A>): Source<O>
+    throttle(duration: number, opts?: ThrottleOptions<O>): Source<O>
   }
 }
 
 declare module 'core/flow' {
   interface Flow<I, O> {
-    throttle<A>(duration: number, opts?: ThrottleOptions<A>): Flow<I, O>
+    throttle(duration: number, opts?: ThrottleOptions<O>): Flow<I, O>
   }
 }
 

@@ -25,9 +25,11 @@ export class FlowShape<I, O> implements Shape {
 }
 
 export function _registerFlow<I, O>(name: string, fn: (...args: any[]) => Flow<I, O>): void {
+  // @ts-ignore: no index signature error
   Source.prototype[name] = function(this: Source<I>, ...args: any[]): Source<O> {
     return this.pipe(fn(...args))
   }
+  // @ts-ignore: no index signature error
   Flow.prototype[name] = function<I2>(this: Flow<I2, I>, ...args: any[]): Flow<I2, O> {
     return this.pipe(fn(...args))
   }

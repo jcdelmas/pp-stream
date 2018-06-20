@@ -4,6 +4,18 @@ export function dropWhile<A>(fn: (x: A) => boolean): Flow<A, A> {
   return createFlow(() => new DropWhile<A>(fn))
 }
 
+declare module '../core/source' {
+  interface Source<O> {
+    dropWhile(fn: (x: O) => boolean): Source<O>
+  }
+}
+
+declare module '../core/flow' {
+  interface Flow<I, O> {
+    dropWhile(fn: (x: O) => boolean): Flow<I, O>
+  }
+}
+
 _registerFlow('dropWhile', dropWhile);
 
 class DropWhile<A> extends FlowStage<A, A> {

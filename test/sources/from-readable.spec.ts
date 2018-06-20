@@ -1,12 +1,12 @@
 
 import 'babel-polyfill'
 import 'should'
-import fs from 'fs'
+import { createReadStream } from 'fs'
 import { fromPausedReadable } from '../../src/index'
 
 describe('fromPausedReadable', () => {
   it('fromFile', async() => {
-    const readable = fs.createReadStream(__dirname + '/../resources/test.txt', {
+    const readable = createReadStream(__dirname + '/../resources/test.txt', {
       flags: 'r',
       encoding: 'UTF-8',
       autoClose: true

@@ -5,6 +5,18 @@ export function filter<A>(fn: (x: A) => boolean): Flow<A, A> {
   return createFlow(() => new Filter(fn))
 }
 
+declare module '../core/source' {
+  interface Source<O> {
+    filter(fn: (x: O) => boolean): Source<O>
+  }
+}
+
+declare module '../core/flow' {
+  interface Flow<I, O> {
+    filter(fn: (x: O) => boolean): Flow<I, O>
+  }
+}
+
 _registerFlow('filter', filter)
 
 class Filter<A> extends FlowStage<A, A> {

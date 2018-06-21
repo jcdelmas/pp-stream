@@ -1,4 +1,6 @@
 import { isUndefined } from 'lodash'
+import MaterializedGraph from './materialized-graph'
+import { some } from 'lodash'
 
 export interface Startable {
   start(): void
@@ -304,11 +306,10 @@ export interface UpstreamHandler {
   onCancel(): void
 }
 
-export abstract class Stage<S extends Shape, R> implements Startable {
+export abstract class Stage<S extends Shape, R> implements MaterializedGraph<S, R> {
 
-  returnValue: R
-
-  abstract shape: S
+  abstract readonly shape: S
+  abstract readonly resultValue: R
 
   // Lifecycle methods
 
@@ -321,6 +322,12 @@ export abstract class Stage<S extends Shape, R> implements Startable {
   // General command methods
 
   start(): void {
+    if (some(this.shape.inputs, i => !i.isReady())) {
+      throw new Error('Not wired input');
+    }
+    if (some(this.shape.outputs, o => !o.isReady())) {
+      throw new Error('Not wired input');
+    }
     this.onStart();
   }
 }
@@ -374,7 +381,7 @@ export abstract class SingleInputStage<I, S extends { input: Inlet<I> } & Shape,
 
 export abstract class SingleOutputStage<O, S extends { output: Outlet<O> } & Shape> extends Stage<S, void> implements UpstreamHandler {
 
-  returnValue: void = undefined
+  resultValue: void = undefined
 
   abstract onPull(): void
 

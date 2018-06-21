@@ -22,7 +22,7 @@ export class UniformFanOutShape<I, O> implements FanOutShape<I> {
 
 export abstract class FanOutStage<I, S extends FanOutShape<I>> extends SingleInputStage<I, S, void> {
 
-  returnValue: void = undefined
+  resultValue: void = undefined
 
   finish(): void {
     this.cancel()

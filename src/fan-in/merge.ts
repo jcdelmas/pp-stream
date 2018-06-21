@@ -3,7 +3,7 @@ import { Flow, Graph, Inlet, Source } from '../index'
 import { combineSources } from '../sources/combine'
 
 export function merge<A>(size: number = 2): Graph<UniformFanInShape<A, A>, void> {
-  return Graph.fromStageFactory<UniformFanInShape<A, A>, void>(() => new Merge<A>(size))
+  return Graph.fromMaterializer<UniformFanInShape<A, A>, void>(() => new Merge<A>(size))
 }
 
 export function mergeSources<O>(...sources: Source<O>[]): Source<O> {

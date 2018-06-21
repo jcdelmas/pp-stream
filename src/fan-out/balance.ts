@@ -5,7 +5,7 @@ import { Graph, Sink } from '../'
 import { combineSinks } from '../sinks/combine'
 
 export function balance<A>(size: number): Graph<UniformFanOutShape<A, A>, void> {
-  return Graph.fromStageFactory(() => new Balance<A>(size))
+  return Graph.fromMaterializer(() => new Balance<A>(size))
 }
 
 export function balanceSinks<A>(...sinks: Sink<A, any>[]): Sink<A, void> {

@@ -1,12 +1,12 @@
 import Buffer, { OverflowStrategy } from './buffer'
 import { Inlet, Outlet, Shape, SingleOutputStage } from './stage'
-import { Graph, GraphBuilder, Materializer, materializerFromGraph, materializerFromStageFactory } from './graph'
+import { Graph, GraphBuilder, Materializer, materializerFromGraph } from './graph'
 import { FlowShape } from './flow'
 import { SinkShape } from './sink'
 import { createRunnableFromGraph, RunnableGraph } from './runnable'
 
-export function createSource<O>(factory: () => SourceStage<O>): Source<O> {
-  return new Source(materializerFromStageFactory(factory))
+export function createSource<O>(factory: Materializer<SourceShape<O>, void>): Source<O> {
+  return new Source(factory)
 }
 
 export function createSourceFromGraph<O>(factory: (b: GraphBuilder) => SourceShape<O>): Source<O> {

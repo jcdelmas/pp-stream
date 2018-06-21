@@ -1,16 +1,10 @@
 import { Inlet, Outlet, Shape, SingleInputStage } from './stage'
 import { upperFirst } from 'lodash'
-import {
-  Graph,
-  GraphBuilder,
-  Materializer,
-  materializerFromGraphWithResult,
-  materializerFromStageFactory
-} from './graph'
+import { Graph, GraphBuilder, Materializer, materializerFromGraphWithResult } from './graph'
 import { Source } from './source'
 
-export function createSink<I, R>(factory: () => SinkStage<I, R>): Sink<I, R> {
-  return new Sink<I, R>(materializerFromStageFactory(factory))
+export function createSink<I, R>(factory: Materializer<SinkShape<I>, Promise<R>>): Sink<I, R> {
+  return new Sink<I, R>(factory)
 }
 
 export function createSinkFromGraph<I, R>(factory: (b: GraphBuilder) => [SinkShape<I>, Promise<R>]): Sink<I, R> {
@@ -43,7 +37,7 @@ export abstract class SinkStage<I, R> extends SingleInputStage<I, SinkShape<I>, 
   private resolve?: (result: R) => void
   private reject?: (error: any) => void
 
-  returnValue = new Promise<R>((resolve, reject) => {
+  resultValue = new Promise<R>((resolve, reject) => {
     this.resolve = resolve
     this.reject = reject
   })

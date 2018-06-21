@@ -1,11 +1,11 @@
 import { Inlet, Outlet, Shape, SingleInputStage, SingleOutputStage, Stage } from './stage'
-import { Graph, GraphBuilder, Materializer, materializerFromGraph, materializerFromStageFactory } from './graph'
+import { Graph, GraphBuilder, Materializer, materializerFromGraph } from './graph'
 import { applyMixins } from '../utils/mixins'
 import { createSinkFromGraph, Sink, SinkShape } from './sink'
 import { Source } from './source'
 
-export function createFlow<I, O>(factory: () => FlowStage<I, O>): Flow<I, O> {
-  return new Flow(materializerFromStageFactory(factory))
+export function createFlow<I, O>(factory: Materializer<FlowShape<I, O>, void>): Flow<I, O> {
+  return new Flow(factory)
 }
 
 export function createFlowFromGraph<I, O>(factory: (b: GraphBuilder) => FlowShape<I, O>): Flow<I, O> {
@@ -39,7 +39,7 @@ export abstract class FlowStage<I, O> extends Stage<FlowShape<I, O>, void>
     SingleInputStage<I, FlowShape<I, O>, void>,
     SingleOutputStage<O, FlowShape<I, O>> {
 
-  returnValue: void = undefined
+  resultValue: void = undefined
 
   shape = new FlowShape<I, O>(new Inlet<I>(this), new Outlet<O>(this))
 

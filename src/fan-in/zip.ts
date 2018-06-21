@@ -6,11 +6,11 @@ import { SourceShape, Source } from '../core/source'
 import { createFlowFromGraph, createSourceFromGraph } from '..'
 
 export function zip<I1, I2>(): Graph<FanInShape2<I1, I2, [I1, I2]>, void> {
-  return Graph.fromStageFactory(() => new Zip<I1, I2>())
+  return Graph.fromMaterializer(() => new Zip<I1, I2>())
 }
 
 export function zip3<I1, I2, I3>(): Graph<FanInShape3<I1, I2, I3, [I1, I2, I3]>, void> {
-  return Graph.fromStageFactory(() => new Zip3<I1, I2, I3>())
+  return Graph.fromMaterializer(() => new Zip3<I1, I2, I3>())
 }
 
 export function zipSources<O1, O2>(s1: Source<O1>, s2: Source<O2>): Source<[O1, O2]> {

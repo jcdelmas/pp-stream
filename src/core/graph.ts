@@ -1,18 +1,18 @@
-import Module from './module'
-import { Startable, Shape, Stage } from './stage'
+import MaterializedGraph from './materialized-graph'
+import { Shape, Startable } from './stage'
 
 export class GraphBuilder {
-  submodules: Startable[] = []
+  subgraphs: Startable[] = []
 
-  _addModule<S extends Shape>(s: Graph<S, any>): Module<S, any> {
+  _addModule<S extends Shape>(s: Graph<S, any>): MaterializedGraph<S, any> {
     const module = s.materialize()
-    this.submodules.push(module)
+    this.subgraphs.push(module)
     return module
   }
 
   addAndGetResult<S extends Shape, R>(s: Graph<S, R>): [S, R] {
     const module = this._addModule(s)
-    return [module.shape, module.result]
+    return [module.shape, module.resultValue]
   }
 
   add<S extends Shape>(s: Graph<S, any>): S {
@@ -20,34 +20,21 @@ export class GraphBuilder {
   }
 }
 
-export interface GraphFactory<S extends Shape> {
-  (b: GraphBuilder): S
-}
-
 export interface Materializer<S extends Shape, R> {
-  (): Module<S, R>
-}
-
-export function materializerFromStageFactory<S extends Shape, R>(stageFactory: () => Stage<S, R>): Materializer<S, R> {
-  return () => {
-    const stage = stageFactory();
-    return new Module(
-      stage.shape,
-      [stage],
-      stage.returnValue
-    )
-  }
+  (): MaterializedGraph<S, R>
 }
 
 export function materializerFromGraphWithResult<S extends Shape, R>(factory: (b: GraphBuilder) => [S, R]): Materializer<S, R> {
   return () => {
     const builder = new GraphBuilder()
-    const [shape, result] = factory(builder)
-    return new Module(
+    const [shape, resultValue] = factory(builder)
+    return {
       shape,
-      builder.submodules,
-      result
-    )
+      resultValue,
+      start() {
+        builder.subgraphs.forEach(s => s.start())
+      }
+    }
   }
 }
 
@@ -59,15 +46,15 @@ export class Graph<S extends Shape, R> {
   constructor(public materializer: Materializer<S, R>) {
   }
 
-  static fromStageFactory<S extends Shape, R>(stageFactory: () => Stage<S, R>): Graph<S, R> {
-    return new Graph(materializerFromStageFactory(stageFactory))
+  static fromMaterializer<S extends Shape, R>(materializer: Materializer<S, R>): Graph<S, R> {
+    return new Graph(materializer)
   }
 
   static create<S extends Shape>(factory: (b: GraphBuilder) => S): Graph<S, void> {
     return new Graph(materializerFromGraph(factory))
   }
 
-  materialize(): Module<S, R> {
+  materialize(): MaterializedGraph<S, R> {
     return this.materializer()
   }
 }

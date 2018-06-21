@@ -21,6 +21,6 @@ export class RunnableGraph<R> extends Graph<ClosedShape, R> {
   run(): R {
     const module = this.materialize()
     module.start()
-    return module.result
+    return module.resultValue
   }
 }

@@ -1,40 +1,49 @@
 import 'babel-polyfill'
-import { expect } from 'chai'
-import { fromArray } from '../../src/index'
+import { expect, use } from 'chai'
+import * as chaiAsPromised from 'chai-as-promised'
+import { fromArray, map } from '../../src/index'
+
+use(chaiAsPromised)
 
 describe('recover', () => {
-  it('without message', async () => {
-    const result = await fromArray([1, 2, 3, 4, 5]).map(x => {
-      if (x % 2 === 0) {
-        throw new Error();
-      }
-      return x;
-    }).recover().runToArray();
-    expect(result).to.eql([1, 3, 5]);
-  });
+  it('on source', async () => {
+    const result = await fromArray([1, 2, 3, 4, 5])
+      .map(x => {
+        if (x === 3) {
+          throw new Error()
+        }
+        return x
+      })
+      .recover(() => -1)
+      .runToArray()
+    expect(result).to.eql([1, 2, -1])
+  })
 
-  it('with message', async () => {
-    const result = await fromArray([1, 2, 3, 4, 5]).map(x => {
-      if (x % 2 === 0) {
-        throw new Error();
-      }
-      return x;
-    }).recover(() => 0).runToArray();
-    expect(result).to.eql([1, 0, 3, 0, 5]);
-  });
+  it('on flow', async () => {
+    const result = await fromArray([1, 2, 3, 4, 5])
+      .pipe(
+        map(x => {
+          if (x === 3) {
+            throw new Error()
+          }
+          return x
+        })
+          .recover(() => -1)
+      )
+      .runToArray()
+    expect(result).to.eql([1, 2, -1])
+  })
 
   it('with rethrow', async () => {
-    const result = await fromArray([1, 2, 3, 4, 5]).map(x => {
-      if (x % 2 === 0) {
-        throw new Error('error' + x);
-      }
-      return x;
-    }).recover(err => {
-      if (err.message === 'error2') {
-        return -1;
-      }
-      throw err;
-    }).recover(() => -2).runToArray();
-    expect(result).to.eql([1, -1, 3, -2, 5]);
-  });
-});
+    const result = fromArray([1, 2, 3, 4, 5])
+      .map(x => {
+        if (x === 3) {
+          throw new Error('error' + x)
+        }
+        return x
+      })
+      .recover(err => throw new Error('New Error'))
+      .runToArray()
+    await expect(result).to.be.eventually.rejectedWith('New Error')
+  })
+})

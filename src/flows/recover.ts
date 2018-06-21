@@ -1,19 +1,18 @@
-import { _registerFlow, Flow, FlowStage , createFlow } from '../core/flow'
-import { isUndefined } from 'util'
+import { _registerFlow, createFlow, Flow, FlowStage } from '../core/flow'
 
-export function recover<A>(fn: (error: any) => A | undefined = () => undefined): Flow<A, A> {
+export function recover<A>(fn: (error: any) => A): Flow<A, A> {
   return createFlow(() => new Recover(fn))
 }
 
 declare module '../core/source' {
   interface Source<O> {
-    recover(fn?: (error: any) => O | undefined): Source<O>
+    recover(fn: (error: any) => O): Source<O>
   }
 }
 
 declare module '../core/flow' {
   interface Flow<I, O> {
-    recover(fn?: (error: any) => O | undefined): Flow<I, O>
+    recover(fn: (error: any) => O): Flow<I, O>
   }
 }
 
@@ -21,7 +20,7 @@ _registerFlow('recover', recover)
 
 class Recover<A> extends FlowStage<A, A> {
 
-  constructor (private readonly fn: (error: any) => A | undefined) {
+  constructor (private readonly fn: (error: any) => A) {
     super()
   }
 
@@ -31,15 +30,10 @@ class Recover<A> extends FlowStage<A, A> {
 
   onError(e: any) {
     try {
-      const result = this.fn(e)
-      if (!isUndefined(result)) {
-        this.push(result);
-      } else {
-        this.pull();
-      }
+      this.push(this.fn(e))
+      this.stop()
     } catch (e) {
-      this.error(e);
+      this.error(e)
     }
   }
-
 }

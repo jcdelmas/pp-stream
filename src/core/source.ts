@@ -1,7 +1,6 @@
 import Buffer, { OverflowStrategy } from './buffer'
 import { Inlet, Outlet, Shape, SingleOutputStage } from './stage'
-import { Graph, GraphBuilder, materializerFromGraph, materializerFromStageFactory, StreamAttributes } from './graph'
-import Module from './module'
+import { Graph, GraphBuilder, Materializer, materializerFromGraph, materializerFromStageFactory } from './graph'
 import { FlowShape } from './flow'
 import { SinkShape } from './sink'
 import { createRunnableFromGraph, RunnableGraph } from './runnable'
@@ -70,9 +69,8 @@ export class PushSourceStage<O> extends SourceStage<O> {
 
 export class Source<O> extends Graph<SourceShape<O>, void> {
 
-  constructor(materializer: (attrs: StreamAttributes) => Module<SourceShape<O>, void>,
-              attributes: StreamAttributes = {}) {
-    super(materializer, attributes)
+  constructor(materializer: Materializer<SourceShape<O>, void>) {
+    super(materializer)
   }
 
   pipe<O2>(flow: Graph<FlowShape<O, O2>, any>): Source<O2> {

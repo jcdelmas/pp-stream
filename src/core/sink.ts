@@ -5,8 +5,7 @@ import {
   GraphBuilder,
   Materializer,
   materializerFromGraphWithResult,
-  materializerFromStageFactory,
-  StreamAttributes
+  materializerFromStageFactory
 } from './graph'
 import { Source } from './source'
 
@@ -82,8 +81,7 @@ export abstract class BasicSinkStage<I, R> extends SinkStage<I, R> {
 
 export class Sink<I, R> extends Graph<SinkShape<I>, Promise<R>> {
 
-  constructor(materializer: Materializer<SinkShape<I>, Promise<R>>,
-              attributes: StreamAttributes = {}) {
-    super(materializer, attributes)
+  constructor(materializer: Materializer<SinkShape<I>, Promise<R>>) {
+    super(materializer)
   }
 }

@@ -1,6 +1,5 @@
 import { Inlet, Outlet, Shape, SingleInputStage, SingleOutputStage, Stage } from './stage'
-import { Graph, GraphBuilder, materializerFromGraph, materializerFromStageFactory, StreamAttributes } from './graph'
-import Module from './module'
+import { Graph, GraphBuilder, Materializer, materializerFromGraph, materializerFromStageFactory } from './graph'
 import { applyMixins } from '../utils/mixins'
 import { createSinkFromGraph, Sink, SinkShape } from './sink'
 import { Source } from './source'
@@ -103,9 +102,8 @@ applyMixins(FlowStage, [SingleInputStage, SingleOutputStage])
 
 export class Flow<I, O> extends Graph<FlowShape<I, O>, void> {
 
-  constructor(materializer: (attrs: StreamAttributes) => Module<FlowShape<I, O>, void>,
-              attributes: StreamAttributes = {}) {
-    super(materializer, attributes)
+  constructor(materializer: Materializer<FlowShape<I, O>, void>) {
+    super(materializer)
   }
 
   pipe<O2>(flow: Graph<FlowShape<O, O2>, any>): Flow<I, O2> {

@@ -22,7 +22,7 @@ describe('recover', () => {
   it('on flow', async () => {
     const result = await fromArray([1, 2, 3, 4, 5])
       .pipe(
-        map(x => {
+        map((x: number) => {
           if (x === 3) {
             throw new Error()
           }
@@ -42,7 +42,9 @@ describe('recover', () => {
         }
         return x
       })
-      .recover(err => throw new Error('New Error'))
+      .recover(() => {
+        throw new Error('New Error')
+      })
       .runToArray()
     await expect(result).to.be.eventually.rejectedWith('New Error')
   })

@@ -24,32 +24,28 @@ export interface GraphFactory<S extends Shape> {
   (b: GraphBuilder): S
 }
 
-export type StreamAttributes = {}
-
 export interface Materializer<S extends Shape, R> {
-  (attrs: StreamAttributes): Module<S, R>
+  (): Module<S, R>
 }
 
 export function materializerFromStageFactory<S extends Shape, R>(stageFactory: () => Stage<S, R>): Materializer<S, R> {
-  return (attrs: StreamAttributes) => {
+  return () => {
     const stage = stageFactory();
     return new Module(
       stage.shape,
       [stage],
-      attrs,
       stage.returnValue
     )
   }
 }
 
 export function materializerFromGraphWithResult<S extends Shape, R>(factory: (b: GraphBuilder) => [S, R]): Materializer<S, R> {
-  return (attrs: StreamAttributes) => {
+  return () => {
     const builder = new GraphBuilder()
     const [shape, result] = factory(builder)
     return new Module(
       shape,
       builder.submodules,
-      attrs,
       result
     )
   }
@@ -60,37 +56,18 @@ export function materializerFromGraph<S extends Shape>(factory: (b: GraphBuilder
 }
 
 export class Graph<S extends Shape, R> {
-  constructor(public materializer: Materializer<S, R>,
-              public attributes: StreamAttributes = {}) {
+  constructor(public materializer: Materializer<S, R>) {
   }
 
   static fromStageFactory<S extends Shape, R>(stageFactory: () => Stage<S, R>): Graph<S, R> {
     return new Graph(materializerFromStageFactory(stageFactory))
   }
 
-  private static createGraph<S extends Shape, R>(factory: (b: GraphBuilder) => [S, R]): Graph<S, R> {
-    return new Graph(materializerFromGraphWithResult(factory))
-  }
-
   static create<S extends Shape>(factory: (b: GraphBuilder) => S): Graph<S, void> {
     return new Graph(materializerFromGraph(factory))
   }
 
-  static createWithMat<S extends Shape, S1 extends Shape, M>(g1: Graph<S1, M>, factory: (b: GraphBuilder, s1: S1) => S): Graph<S, M> {
-    return this.createGraph(builder => {
-      const [s, materializedValue] = builder.addAndGetResult(g1)
-      return [factory(builder, s), materializedValue]
-    })
-  }
-
   materialize(): Module<S, R> {
-    return this.materializer(this.attributes)
-  }
-
-  withAttributes(attrs: StreamAttributes): Graph<S, R> {
-    return new Graph<S, R>(
-      this.materializer,
-      { ...this.attributes, ...attrs }
-    )
+    return this.materializer()
   }
 }

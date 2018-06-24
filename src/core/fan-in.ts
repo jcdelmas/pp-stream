@@ -1,6 +1,6 @@
 import { DownstreamHandler, Inlet, Outlet, Shape, SingleOutputStage } from './stage'
 import { range } from 'lodash'
-import { createFlowFromGraph, Flow, FlowShape } from './flow'
+import { complexFlow, Flow, FlowShape } from './flow'
 import { Graph } from './graph'
 import { Source } from './source'
 
@@ -49,7 +49,7 @@ export class UniformFanInShape<I, O> implements FanInShape<O> {
 }
 
 export function fanInFlow<A>(source: Source<A>, graphFactory: (size: number) => Graph<UniformFanInShape<A, A>, void>): Flow<A, A> {
-  return createFlowFromGraph(b => {
+  return complexFlow(b => {
     const s = b.add(source)
     const merge = b.add(graphFactory(2))
     s.output.wire(merge.inputs[1])

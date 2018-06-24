@@ -1,8 +1,8 @@
-import { _registerSink, Sink , createSink } from '../core/sink'
+import { _registerSink, Sink , sink } from '../core/sink'
 import { SinkStage } from '..'
 
 export function forEach<I>(cb: (x: I) => void): Sink<I, void> {
-  return createSink(() => new ForEach(cb))
+  return sink(() => new ForEach(cb))
 }
 
 declare module 'core/source' {

@@ -1,10 +1,10 @@
-import { _registerFlow, Flow, FlowStage , createFlow } from '../core/flow'
-import { SinkStage, createSink } from 'core/sink'
+import { _registerFlow, Flow, FlowStage , flow } from '../core/flow'
+import { SinkStage, sink } from 'core/sink'
 import { Source } from 'core/source'
 import { Sink } from '..'
 
 export function flatMapMerge<I, O>(fn: (x: I) => Source<O>, breadth: number = 16): Flow<I, O> {
-  return createFlow(() => new FlatMapMerge(fn, breadth))
+  return flow(() => new FlatMapMerge(fn, breadth))
 }
 
 declare module '../core/source' {
@@ -32,7 +32,7 @@ class FlatMapMerge<I, O> extends FlowStage<I, O> {
   sources: FlatMapSink<O>[] = [];
   queue: FlatMapSink<O>[] = [];
 
-  sink: Sink<O, void> = createSink(() => {
+  sink: Sink<O, void> = sink(() => {
     const stage = new FlatMapSink(this)
     this.sources.push(stage)
     return stage

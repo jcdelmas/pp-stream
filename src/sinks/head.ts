@@ -1,7 +1,7 @@
-import { _registerSink, Sink, SinkStage, createSink } from '../core/sink'
+import { _registerSink, Sink, SinkStage, sink } from '../core/sink'
 
 export function head<I>(): Sink<I, I | undefined> {
-  return createSink(() => new Head<I>())
+  return sink(() => new Head<I>())
 }
 
 declare module 'core/source' {

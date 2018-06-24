@@ -1,9 +1,9 @@
-import { _registerFlow, createFlow, FlowStage } from 'core/flow'
-import { SinkStage, createSink } from 'core/sink'
+import { _registerFlow, flow, FlowStage } from 'core/flow'
+import { SinkStage, sink } from 'core/sink'
 import { Source } from 'core/source'
 
 export function flatMapConcat<I, O>(fn: (x: I) => Source<O>) {
-  return createFlow(() => new FlatMapConcat<I, O>(fn));
+  return flow(() => new FlatMapConcat<I, O>(fn));
 }
 
 declare module '../core/source' {
@@ -31,7 +31,7 @@ class FlatMapConcat<I, O> extends FlowStage<I, O> {
   onPush() {
     const source = this.fn(this.grab());
     this.current = new FlatMapSink<O>(this)
-    source.runWith(createSink(() => this.current));
+    source.runWith(sink(() => this.current));
   }
 
   onPull() {

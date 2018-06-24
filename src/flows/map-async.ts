@@ -1,11 +1,11 @@
-import { _registerFlow, Flow, FlowStage , createFlow } from '../core/flow'
+import { _registerFlow, Flow, FlowStage , flow } from '../core/flow'
 
 export function mapAsync<I, O>(fn: (x: I) => Promise<O>, parallelism: number = 1): Flow<I, O> {
-  return createFlow<I, O>(() => new MapAsync(fn, parallelism));
+  return flow<I, O>(() => new MapAsync(fn, parallelism));
 }
 
 export function mapAsyncUnordered<I, O>(fn: (x: I) => Promise<O>, parallelism = 1): Flow<I, O> {
-  return createFlow(() => new MapAsyncUnordered(fn, parallelism));
+  return flow(() => new MapAsyncUnordered(fn, parallelism));
 }
 
 declare module '../core/source' {

@@ -1,7 +1,7 @@
-import { _registerFlow, Flow, FlowStage , createFlow } from '../core/flow'
+import { _registerFlow, Flow, FlowStage , flow } from '../core/flow'
 
 export function grouped<A>(n: number): Flow<A, A[]> {
-  return createFlow(() => new Grouped<A>(n));
+  return flow(() => new Grouped<A>(n));
 }
 
 declare module '../core/source' {

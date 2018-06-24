@@ -1,7 +1,7 @@
-import { _registerFlow, Flow, FlowStage , createFlow } from '../core/flow'
+import { _registerFlow, Flow, FlowStage , flow } from '../core/flow'
 
 export function map<I, O>(fn: (x: I) => O): Flow<I, O> {
-  return createFlow(() => new Map(fn))
+  return flow(() => new Map(fn))
 }
 
 declare module '../core/source' {

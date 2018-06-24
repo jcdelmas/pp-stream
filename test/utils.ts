@@ -4,7 +4,7 @@ import {
   delay,
   OverflowStrategy,
   FlowStage,
-  fromCallback, createFlow
+  fromCallback, flow
 } from '../src'
 
 type TimeStep<A> = {
@@ -59,7 +59,7 @@ class WithTimeStage<I> extends FlowStage<I, [I, number]> {
 }
 
 export function withTime<A>(): Flow<A, [A, number]> {
-  return createFlow(() => new WithTimeStage<A>())
+  return flow(() => new WithTimeStage<A>())
 }
 
 type TimedEvent = {

@@ -1,15 +1,15 @@
 import { Inlet, Outlet, Shape, SingleInputStage, SingleOutputStage, Stage } from './stage'
-import { Graph, GraphBuilder, Materializer, materializerFromGraph } from './graph'
+import { Graph, GraphBuilder, GraphInstanciator, complexGraphInstanciator } from './graph'
 import { applyMixins } from '../utils/mixins'
-import { createSinkFromGraph, Sink, SinkShape } from './sink'
+import { complexSink, Sink, SinkShape } from './sink'
 import { Source } from './source'
 
-export function createFlow<I, O>(factory: Materializer<FlowShape<I, O>, void>): Flow<I, O> {
-  return new Flow(factory)
+export function flow<I, O>(instanciator: GraphInstanciator<FlowShape<I, O>, void>): Flow<I, O> {
+  return new Flow(instanciator)
 }
 
-export function createFlowFromGraph<I, O>(factory: (b: GraphBuilder) => FlowShape<I, O>): Flow<I, O> {
-  return new Flow(materializerFromGraph(factory))
+export function complexFlow<I, O>(factory: (b: GraphBuilder) => FlowShape<I, O>): Flow<I, O> {
+  return new Flow(complexGraphInstanciator(factory))
 }
 
 export class FlowShape<I, O> implements Shape {
@@ -102,12 +102,12 @@ applyMixins(FlowStage, [SingleInputStage, SingleOutputStage])
 
 export class Flow<I, O> extends Graph<FlowShape<I, O>, void> {
 
-  constructor(materializer: Materializer<FlowShape<I, O>, void>) {
-    super(materializer)
+  constructor(instanciator: GraphInstanciator<FlowShape<I, O>, void>) {
+    super(instanciator)
   }
 
   pipe<O2>(flow: Graph<FlowShape<O, O2>, any>): Flow<I, O2> {
-    return createFlowFromGraph(b => {
+    return complexFlow(b => {
       const prev = b.add(this)
       const next = b.add(flow)
       prev.output.wire(next.input)
@@ -116,7 +116,7 @@ export class Flow<I, O> extends Graph<FlowShape<I, O>, void> {
   }
 
   to<R>(sink: Sink<O, R>): Sink<I, R> {
-    return createSinkFromGraph(b => {
+    return complexSink(b => {
       const prev = b.add(this)
       const [next, result] = b.addAndGetResult(sink)
       prev.output.wire(next.input)

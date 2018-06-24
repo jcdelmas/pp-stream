@@ -1,8 +1,8 @@
 import Buffer, { OverflowStrategy } from '../core/buffer'
-import { _registerFlow, Flow, FlowStage, createFlow } from '../core/flow'
+import { _registerFlow, Flow, FlowStage, flow } from '../core/flow'
 
 export function buffer<A>(size: number, overflowStrategy: OverflowStrategy = OverflowStrategy.FAIL): Flow<A, A> {
-  return createFlow(() => new BufferFlow(size, overflowStrategy))
+  return flow(() => new BufferFlow(size, overflowStrategy))
 }
 
 declare module 'core/source' {

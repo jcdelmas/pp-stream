@@ -1,8 +1,8 @@
 import { Inlet, Outlet, Shape } from './stage'
-import { Graph, GraphBuilder, Materializer, materializerFromGraphWithResult } from './graph'
+import { Graph, GraphBuilder, GraphInstanciator, complexGraphInstanciatorWithResult } from './graph'
 
-export function createRunnableFromGraph<R>(factory: (b: GraphBuilder) => R): RunnableGraph<R> {
-  return new RunnableGraph<R>(materializerFromGraphWithResult((b) => [ClosedShape.instance, factory(b)]))
+export function complexRunnableGraph<R>(factory: (b: GraphBuilder) => R): RunnableGraph<R> {
+  return new RunnableGraph<R>(complexGraphInstanciatorWithResult((b) => [ClosedShape.instance, factory(b)]))
 }
 
 export class ClosedShape implements Shape {
@@ -14,12 +14,12 @@ export class ClosedShape implements Shape {
 
 export class RunnableGraph<R> extends Graph<ClosedShape, R> {
 
-  constructor(materializer: Materializer<ClosedShape, R>) {
-    super(materializer)
+  constructor(instanciator: GraphInstanciator<ClosedShape, R>) {
+    super(instanciator)
   }
 
   run(): R {
-    const module = this.materialize()
+    const module = this._instanciate()
     module.start()
     return module.resultValue
   }

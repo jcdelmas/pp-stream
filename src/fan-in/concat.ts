@@ -4,7 +4,7 @@ import { Flow, Graph, Source } from '../'
 import { combineSources } from '../sources/combine'
 
 export function concat<A>(size: number = 2): Graph<UniformFanInShape<A, A>, void> {
-  return Graph.fromMaterializer<UniformFanInShape<A, A>, void>(() => new Concat<A>(size))
+  return new Graph<UniformFanInShape<A, A>, void>(() => new Concat<A>(size))
 }
 
 export function concatSources<O>(...sources: Source<O>[]): Source<O> {

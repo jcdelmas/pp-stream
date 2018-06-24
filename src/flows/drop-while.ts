@@ -1,7 +1,7 @@
-import { _registerFlow, Flow, FlowStage , createFlow } from '../core/flow'
+import { _registerFlow, Flow, FlowStage , flow } from '../core/flow'
 
 export function dropWhile<A>(fn: (x: A) => boolean): Flow<A, A> {
-  return createFlow(() => new DropWhile<A>(fn))
+  return flow(() => new DropWhile<A>(fn))
 }
 
 declare module '../core/source' {

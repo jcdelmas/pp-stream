@@ -1,7 +1,7 @@
-import { _registerFlow, Flow, FlowStage , createFlow } from '../core/flow'
+import { _registerFlow, Flow, FlowStage , flow } from '../core/flow'
 
 export function mapConcat<I, O>(fn: (x: I) => O[]): Flow<I, O> {
-  return createFlow(() => new MapConcat<I, O>(fn))
+  return flow(() => new MapConcat<I, O>(fn))
 }
 
 declare module '../core/source' {

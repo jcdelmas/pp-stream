@@ -1,8 +1,8 @@
 
-import { Source, SourceStage , createSource } from '../core/source'
+import { Source, SourceStage , source } from '../core/source'
 
 export function repeat<O>(x: O): Source<O> {
-  return createSource(() => new Repeat(x))
+  return source(() => new Repeat(x))
 }
 
 class Repeat<O> extends SourceStage<O> {

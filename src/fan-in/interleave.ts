@@ -6,7 +6,7 @@ import { Flow } from 'core/flow'
 import { combineSources } from 'sources/combine'
 
 export function interleave<A>(segmentSize: number = 1): (size: number) => Graph<UniformFanInShape<A, A>, void> {
-  return size => Graph.fromMaterializer<UniformFanInShape<A, A>, void>(() => new Interleave<A>(size, segmentSize))
+  return size => new Graph<UniformFanInShape<A, A>, void>(() => new Interleave<A>(size, segmentSize))
 }
 
 export function interleaveSources<O>(segmentSize: number = 1): (...sources: Source<O>[]) => Source<O> {

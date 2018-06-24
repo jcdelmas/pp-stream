@@ -1,7 +1,7 @@
-import { _registerFlow, Flow, FlowStage , createFlow } from '../core/flow'
+import { _registerFlow, Flow, FlowStage , flow } from '../core/flow'
 
 export function scan<I, O>(fn: (acc: O, x: I) => O, zero: O): Flow<I, O> {
-  return createFlow<I, O>(() => new Scan(fn, zero))
+  return flow<I, O>(() => new Scan(fn, zero))
 }
 
 declare module '../core/source' {

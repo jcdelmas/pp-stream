@@ -1,7 +1,7 @@
-import { _registerFlow, Flow, FlowStage , createFlow } from '../core/flow'
+import { _registerFlow, Flow, FlowStage , flow } from '../core/flow'
 
 export function drop<A>(n: number): Flow<A, A> {
-  return createFlow<A, A>(() => new Drop<A>(n));
+  return flow<A, A>(() => new Drop<A>(n));
 }
 
 declare module '../core/source' {

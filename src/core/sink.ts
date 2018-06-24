@@ -1,14 +1,14 @@
 import { Inlet, Outlet, Shape, SingleInputStage } from './stage'
 import { upperFirst } from 'lodash'
-import { Graph, GraphBuilder, Materializer, materializerFromGraphWithResult } from './graph'
+import { Graph, GraphBuilder, GraphInstanciator, complexGraphInstanciatorWithResult } from './graph'
 import { Source } from './source'
 
-export function createSink<I, R>(factory: Materializer<SinkShape<I>, Promise<R>>): Sink<I, R> {
+export function sink<I, R>(factory: GraphInstanciator<SinkShape<I>, Promise<R>>): Sink<I, R> {
   return new Sink<I, R>(factory)
 }
 
-export function createSinkFromGraph<I, R>(factory: (b: GraphBuilder) => [SinkShape<I>, Promise<R>]): Sink<I, R> {
-  return new Sink(materializerFromGraphWithResult(factory))
+export function complexSink<I, R>(factory: (b: GraphBuilder) => [SinkShape<I>, Promise<R>]): Sink<I, R> {
+  return new Sink(complexGraphInstanciatorWithResult(factory))
 }
 
 export class SinkShape<I> implements Shape {
@@ -75,7 +75,7 @@ export abstract class BasicSinkStage<I, R> extends SinkStage<I, R> {
 
 export class Sink<I, R> extends Graph<SinkShape<I>, Promise<R>> {
 
-  constructor(materializer: Materializer<SinkShape<I>, Promise<R>>) {
-    super(materializer)
+  constructor(instanciator: GraphInstanciator<SinkShape<I>, Promise<R>>) {
+    super(instanciator)
   }
 }

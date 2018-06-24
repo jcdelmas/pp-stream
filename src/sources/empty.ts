@@ -1,6 +1,6 @@
-import { Source, SourceStage , createSource } from '../core/source'
+import { Source, SourceStage , source } from '../core/source'
 
-export const emptySource: Source<never> = createSource(() => new Empty())
+export const emptySource: Source<never> = source(() => new Empty())
 
 class Empty extends SourceStage<never> {
   onPull() {

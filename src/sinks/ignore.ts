@@ -1,7 +1,7 @@
-import { _registerSink, Sink, BasicSinkStage, createSink } from '../core/sink'
+import { _registerSink, Sink, BasicSinkStage, sink } from '../core/sink'
 
 export function ignore(): Sink<any, void> {
-  return createSink(() => new Ignore())
+  return sink(() => new Ignore())
 }
 
 declare module 'core/source' {

@@ -1,13 +1,13 @@
 
 import Buffer, { OverflowStrategy } from '../core/buffer'
-import { _registerFlow, Flow, FlowStage , createFlow } from '../core/flow'
+import { _registerFlow, Flow, FlowStage , flow } from '../core/flow'
 
 export function delay<A>(duration: number, bufferSize: number = 16, overflowStrategy: OverflowStrategy = OverflowStrategy.FAIL): Flow<A, A> {
-  return createFlow<A, A>(() => new Delay<A>(duration, bufferSize, overflowStrategy))
+  return flow<A, A>(() => new Delay<A>(duration, bufferSize, overflowStrategy))
 }
 
 export function debounce<A>(duration: number): Flow<A, A> {
-  return createFlow<A, A>(() => new Delay<A>(duration, 1, OverflowStrategy.DROP_BUFFER))
+  return flow<A, A>(() => new Delay<A>(duration, 1, OverflowStrategy.DROP_BUFFER))
 }
 
 declare module '../core/source' {

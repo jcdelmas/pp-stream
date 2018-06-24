@@ -1,8 +1,8 @@
 
-import { Source, SourceStage , createSource } from '../core/source'
+import { Source, SourceStage , source } from '../core/source'
 
 export function fromArray<O>(items: O[]): Source<O> {
-  return createSource(() => new ArraySourceStage(items))
+  return source(() => new ArraySourceStage(items))
 }
 
 class ArraySourceStage<O> extends SourceStage<O> {

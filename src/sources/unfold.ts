@@ -1,8 +1,8 @@
 
-import { Source, SourceStage , createSource } from '../core/source';
+import { Source, SourceStage , source } from '../core/source';
 
 export function unfold<O, S>(fn: (x: S) => [S, O] | undefined, zero: S): Source<O> {
-  return createSource(() => new Unfold(fn, zero))
+  return source(() => new Unfold(fn, zero))
 }
 
 class Unfold<O, S> extends SourceStage<O> {

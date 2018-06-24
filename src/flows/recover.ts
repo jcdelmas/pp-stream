@@ -1,7 +1,7 @@
-import { _registerFlow, createFlow, Flow, FlowStage } from '../core/flow'
+import { _registerFlow, flow, Flow, FlowStage } from '../core/flow'
 
 export function recover<A>(fn: (error: any) => A): Flow<A, A> {
-  return createFlow(() => new Recover(fn))
+  return flow(() => new Recover(fn))
 }
 
 declare module '../core/source' {

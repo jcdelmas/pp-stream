@@ -2,33 +2,34 @@ import { FanInShape, FanInShape2, FanInShape3, FanInStage } from '../core/fan-in
 import { Inlet, Outlet } from '../core/stage'
 import { Flow, FlowShape } from '../core/flow'
 import { Graph } from '../core/graph'
-import { SourceShape, Source } from '../core/source'
-import { createFlowFromGraph, createSourceFromGraph } from '..'
+import { Source } from '../core/source'
+import { complexSource } from '../core/source'
+import { complexFlow } from '../core/flow'
 
 export function zip<I1, I2>(): Graph<FanInShape2<I1, I2, [I1, I2]>, void> {
-  return Graph.fromMaterializer(() => new Zip<I1, I2>())
+  return new Graph(() => new Zip<I1, I2>())
 }
 
 export function zip3<I1, I2, I3>(): Graph<FanInShape3<I1, I2, I3, [I1, I2, I3]>, void> {
-  return Graph.fromMaterializer(() => new Zip3<I1, I2, I3>())
+  return new Graph(() => new Zip3<I1, I2, I3>())
 }
 
 export function zipSources<O1, O2>(s1: Source<O1>, s2: Source<O2>): Source<[O1, O2]> {
-  return createSourceFromGraph(b => {
+  return complexSource(b => {
     const merge = b.add(zip<O1, O2>())
     b.add(s1).output.wire(merge.in1)
     b.add(s2).output.wire(merge.in2)
-    return new SourceShape(merge.output)
+    return merge.output
   })
 }
 
 export function zip3Sources<O1, O2, O3>(s1: Source<O1>, s2: Source<O2>, s3: Source<O3>): Source<[O1, O2, O3]> {
-  return createSourceFromGraph(b => {
+  return complexSource(b => {
     const merge = b.add(zip3<O1, O2, O3>())
     b.add(s1).output.wire(merge.in1)
     b.add(s2).output.wire(merge.in2)
     b.add(s3).output.wire(merge.in3)
-    return new SourceShape(merge.output)
+    return merge.output
   })
 }
 
@@ -45,7 +46,7 @@ declare module '../core/flow' {
 }
 
 export function zipFlow<I1, I2>(source: Source<I2>): Flow<I1, [I1, I2]> {
-  return createFlowFromGraph(b => {
+  return complexFlow(b => {
     const s = b.add(source)
     const merge = b.add(zip<I1, I2>())
     s.output.wire(merge.in2)

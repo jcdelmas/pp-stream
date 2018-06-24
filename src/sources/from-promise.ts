@@ -1,8 +1,8 @@
 
-import { Source, SourceStage , createSource } from '../core/source'
+import { Source, SourceStage , source } from '../core/source'
 
 export function fromPromise<O>(promise: Promise<O>): Source<O> {
-  return createSource(() => new PromiseSource(promise))
+  return source(() => new PromiseSource(promise))
 }
 
 class PromiseSource<O> extends SourceStage<O> {

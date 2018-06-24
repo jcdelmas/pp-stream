@@ -1,4 +1,4 @@
-import { Flow, FlowShape, createFlowFromGraph } from '../core/flow'
+import { Flow, FlowShape, complexFlow } from '../core/flow'
 import { Source } from '../core/source'
 import { UniformFanInShape } from '../core/fan-in'
 import { UniformFanOutShape } from '../core/fan-out'
@@ -35,7 +35,7 @@ Flow.prototype.fanOutAndFanIn = function<I, O, A>(this: Flow<I, O>, fanOutFactor
 export function fanOutAndFanIn<I, A>(fanOutFactory: (size: number) => Graph<UniformFanOutShape<I, A>, any>): <B>(...flows: Flow<A, B>[]) => <O>(fanInFactory: (size: number) => Graph<UniformFanInShape<B, O>, any>) => Flow<I, O> {
   return <B>(...flows: Flow<A, B>[]) => {
     return <O>(fanInFactory: (size: number) => Graph<UniformFanInShape<B, O>, any>) => {
-      return createFlowFromGraph(b => {
+      return complexFlow(b => {
         const bcast = b.add(fanOutFactory(flows.length))
         const merge = b.add(fanInFactory(flows.length))
 

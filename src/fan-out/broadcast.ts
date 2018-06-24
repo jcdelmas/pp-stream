@@ -4,7 +4,7 @@ import { Graph, Sink } from '../index'
 import { combineSinks } from '../sinks/combine'
 
 export function broadcast<A>(size: number): Graph<UniformFanOutShape<A, A>, void> {
-  return Graph.fromMaterializer(() => new Broadcast<A>(size))
+  return new Graph(() => new Broadcast<A>(size))
 }
 
 export function broadcastSinks<A>(...sinks: Sink<A, any>[]): Sink<A, void> {

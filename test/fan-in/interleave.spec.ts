@@ -1,6 +1,15 @@
 import 'babel-polyfill'
 import { expect } from 'chai'
-import { broadcast, FlowShape, fromArray, Graph, GraphBuilder, map, OverflowStrategy } from '../../src/index'
+import {
+  broadcast,
+  complexFlow,
+  FlowShape,
+  fromArray,
+  Graph,
+  GraphBuilder,
+  map,
+  OverflowStrategy
+} from '../../src/index'
 
 import { interleave, interleaveSources, interleaveWith } from '../../src/fan-in/interleave'
 
@@ -29,7 +38,7 @@ describe('interleave', () => {
     expect(result).to.eql([1, 4, 7, 2, 5, 8, 3, 6, 9])
   });
   it('with broadcast', async () => {
-    const result = await fromArray([1, 2, 3]).pipe(Graph.create((b: GraphBuilder) => {
+    const result = await fromArray([1, 2, 3]).pipe(complexFlow((b: GraphBuilder) => {
       const flow1 = b.add(map<number, number>(x => x).buffer(1, OverflowStrategy.BACK_PRESSURE))
       const flow2 = b.add(map<number, number>(x => x * 2).buffer(1, OverflowStrategy.BACK_PRESSURE))
       const flow3 = b.add(map<number, number>(x => x * 3).buffer(1, OverflowStrategy.BACK_PRESSURE))

@@ -1,7 +1,7 @@
-import { _registerFlow, Flow, FlowStage , createFlow } from '../core/flow'
+import { _registerFlow, Flow, FlowStage , flow } from '../core/flow'
 
 export function throttle<A>(duration: number, opts: ThrottleOptions<A> = {}): Flow<A, A> {
-  return createFlow(() => new Throttle<A>(duration, opts));
+  return flow(() => new Throttle<A>(duration, opts));
 }
 
 export type ThrottleOptions<A> = {

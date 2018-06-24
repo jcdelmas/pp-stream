@@ -1,8 +1,8 @@
 
-import { _registerFlow, FlowStage, Flow , createFlow } from '../core/flow'
+import { _registerFlow, FlowStage, Flow , flow } from '../core/flow'
 
 export function filter<A>(fn: (x: A) => boolean): Flow<A, A> {
-  return createFlow(() => new Filter(fn))
+  return flow(() => new Filter(fn))
 }
 
 declare module '../core/source' {

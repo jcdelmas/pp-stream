@@ -1,7 +1,7 @@
-import { _registerSink, Sink, BasicSinkStage , createSink } from '../core/sink'
+import { _registerSink, Sink, BasicSinkStage , sink } from '../core/sink'
 
 export function last<I>(): Sink<I, I | undefined> {
-  return createSink(() => new Last<I>())
+  return sink(() => new Last<I>())
 }
 
 declare module 'core/source' {

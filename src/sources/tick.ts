@@ -1,8 +1,8 @@
 
-import { Source, SourceStage , createSource } from '../core/source';
+import { Source, SourceStage , source } from '../core/source';
 
 export function tick<O>(interval: number, value: O): Source<O> {
-  return createSource(() => new Tick(interval, value))
+  return source(() => new Tick(interval, value))
 }
 
 class Tick<O> extends SourceStage<O> {

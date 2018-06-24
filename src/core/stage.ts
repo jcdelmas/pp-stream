@@ -1,5 +1,5 @@
 import { isUndefined } from 'lodash'
-import MaterializedGraph from './materialized-graph'
+import GraphInstance from './graph-instance'
 import { some } from 'lodash'
 
 export interface Startable {
@@ -306,7 +306,7 @@ export interface UpstreamHandler {
   onCancel(): void
 }
 
-export abstract class Stage<S extends Shape, R> implements MaterializedGraph<S, R> {
+export abstract class Stage<S extends Shape, R> implements GraphInstance<S, R> {
 
   abstract readonly shape: S
   abstract readonly resultValue: R

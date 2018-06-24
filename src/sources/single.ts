@@ -1,8 +1,8 @@
 
-import { Source, SourceStage , createSource } from '../core/source'
+import { Source, SourceStage , source } from '../core/source'
 
 export function single<O>(x: O): Source<O> {
-  return createSource(() => new Single(x))
+  return source(() => new Single(x))
 }
 
 class Single<O> extends SourceStage<O> {

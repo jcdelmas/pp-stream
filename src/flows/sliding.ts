@@ -1,7 +1,7 @@
-import { _registerFlow, Flow, FlowStage , createFlow } from '../core/flow'
+import { _registerFlow, Flow, FlowStage , flow } from '../core/flow'
 
 export function sliding<A>(n: number, step: number = 1): Flow<A, A[]> {
-  return createFlow(() => new Sliding(n, step))
+  return flow(() => new Sliding(n, step))
 }
 
 declare module '../core/source' {

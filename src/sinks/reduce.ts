@@ -1,7 +1,7 @@
-import { _registerSink, BasicSinkStage, Sink , createSink } from '../core/sink'
+import { _registerSink, BasicSinkStage, Sink , sink } from '../core/sink'
 
 export function reduce<I, R>(fn: (acc: R, x: I) => R, zero: R): Sink<I, R> {
-  return createSink(() => new Reduce(fn, zero))
+  return sink(() => new Reduce(fn, zero))
 }
 
 declare module 'core/source' {

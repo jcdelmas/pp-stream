@@ -1,16 +1,16 @@
 import Buffer, { OverflowStrategy } from './buffer'
 import { Inlet, Outlet, Shape, SingleOutputStage } from './stage'
-import { Graph, GraphBuilder, Materializer, materializerFromGraph } from './graph'
+import { Graph, GraphBuilder, GraphInstanciator, complexGraphInstanciator } from './graph'
 import { FlowShape } from './flow'
 import { SinkShape } from './sink'
-import { createRunnableFromGraph, RunnableGraph } from './runnable'
+import { complexRunnableGraph, RunnableGraph } from './runnable'
 
-export function createSource<O>(factory: Materializer<SourceShape<O>, void>): Source<O> {
+export function source<O>(factory: GraphInstanciator<SourceShape<O>, void>): Source<O> {
   return new Source(factory)
 }
 
-export function createSourceFromGraph<O>(factory: (b: GraphBuilder) => SourceShape<O>): Source<O> {
-  return new Source(materializerFromGraph(factory))
+export function complexSource<O>(factory: (b: GraphBuilder) => Outlet<O>): Source<O> {
+  return new Source(complexGraphInstanciator(b => new SourceShape(factory(b))))
 }
 
 export class SourceShape<O> implements Shape {
@@ -69,21 +69,21 @@ export class PushSourceStage<O> extends SourceStage<O> {
 
 export class Source<O> extends Graph<SourceShape<O>, void> {
 
-  constructor(materializer: Materializer<SourceShape<O>, void>) {
-    super(materializer)
+  constructor(instanciator: GraphInstanciator<SourceShape<O>, void>) {
+    super(instanciator)
   }
 
   pipe<O2>(flow: Graph<FlowShape<O, O2>, any>): Source<O2> {
-    return createSourceFromGraph(b => {
+    return complexSource(b => {
       const prev = b.add(this)
       const next = b.add(flow)
       prev.output.wire(next.input)
-      return new SourceShape(next.output)
+      return next.output
     })
   }
 
   to<R>(sink: Graph<SinkShape<O>, R>): RunnableGraph<R> {
-    return createRunnableFromGraph(b => {
+    return complexRunnableGraph(b => {
       const prev = b.add(this)
       const [next, result] = b.addAndGetResult(sink)
       prev.output.wire(next.input)

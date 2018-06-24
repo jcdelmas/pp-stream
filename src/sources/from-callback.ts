@@ -1,11 +1,11 @@
 
-import { Source, PushSourceStage , createSource } from '../core/source';
+import { Source, PushSourceStage , source } from '../core/source';
 import { OverflowStrategy } from '../core/buffer';
 
 type Callbacks<O> = (push: (x: O) => void, done: () => void, error: (error: any) => void) => void
 
 export function fromCallback<O>(callback: Callbacks<O>, bufferSize = 16, bufferOverflowStrategy = OverflowStrategy.FAIL): Source<O> {
-  return createSource(() => new CallbackSourceStage(callback, bufferSize, bufferOverflowStrategy));
+  return source(() => new CallbackSourceStage(callback, bufferSize, bufferOverflowStrategy));
 }
 
 

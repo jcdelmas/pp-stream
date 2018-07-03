@@ -1,4 +1,4 @@
-import { complexSource, Graph, Source, SourceShape } from '../'
+import { complexSource, Graph, Source } from '../'
 import { UniformFanInShape } from '../core/fan-in'
 
 type FanInFactory<I, O> = (size: number) => Graph<UniformFanInShape<I, O>, void>

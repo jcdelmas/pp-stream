@@ -5,7 +5,6 @@ import {
   complexFlow,
   FlowShape,
   fromArray,
-  Graph,
   GraphBuilder,
   map,
   OverflowStrategy

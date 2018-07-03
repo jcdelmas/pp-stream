@@ -1,5 +1,4 @@
-import { _registerFlow, flow, FlowStage } from 'core/flow'
-import { SinkStage, sink } from 'core/sink'
+import { _registerFlow } from 'core/flow'
 import { Source } from 'core/source'
 import { flatMapMerge } from './flat-map-merge'
 

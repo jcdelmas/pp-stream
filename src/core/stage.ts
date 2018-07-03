@@ -114,7 +114,7 @@ export class Outlet<A> {
     }
     if (!inlet._downstreamHandler) {
       throw new Error('No downstream handler!')
-    } 
+    }
     this._wire = new Wire(this._upstreamHandler, inlet._downstreamHandler)
     inlet._setWire(this._wire)
   }
@@ -142,6 +142,11 @@ export class Outlet<A> {
       throw new Error('Not ready!')
     }
     this._wire.push(x);
+  }
+
+  pushAndComplete(x: A): void {
+    this.push(x)
+    this.complete()
   }
 
   error(e: any): void {
@@ -414,8 +419,7 @@ export abstract class SingleOutputStage<O, S extends { output: Outlet<O> } & Sha
   }
 
   pushAndComplete(x: O): void {
-    this.push(x)
-    this.complete()
+    this.shape.output.pushAndComplete(x)
   }
 
   complete(): void {

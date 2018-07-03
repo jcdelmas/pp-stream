@@ -1,5 +1,5 @@
 import Buffer, { OverflowStrategy } from './buffer'
-import { Inlet, Outlet, Shape, SingleOutputStage } from './stage'
+import { Inlet, Outlet, Shape, SingleOutputStage, Startable, UpstreamHandler } from './stage'
 import { Graph, GraphBuilder, GraphInstanciator, complexGraphInstanciator } from './graph'
 import { FlowShape } from './flow'
 import { SinkShape } from './sink'
@@ -11,6 +11,19 @@ export function source<O>(factory: GraphInstanciator<SourceShape<O>, void>): Sou
 
 export function complexSource<O>(factory: (b: GraphBuilder) => Outlet<O>): Source<O> {
   return new Source(complexGraphInstanciator(b => new SourceShape(factory(b))))
+}
+
+export function simpleSource<O>(factory: (output: Outlet<O>) => { onPull: () => void, onCancel?: () => void, onStart?: () => void }): Source<O> {
+  return new Source(() => {
+    const output = new Outlet<O>()
+    const { onPull, onCancel = () => {}, onStart = () => {} } = factory(output)
+    output._setUpstreamHandler({ onPull, onCancel })
+    return {
+      start: onStart,
+      shape: new SourceShape(output),
+      resultValue: undefined
+    }
+  })
 }
 
 export class SourceShape<O> implements Shape {

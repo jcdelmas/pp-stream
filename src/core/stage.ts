@@ -14,8 +14,15 @@ export class Inlet<A> {
   /**
    * @param downstreamHandler
    */
-  constructor(downstreamHandler: DownstreamHandler) {
+  constructor(downstreamHandler?: DownstreamHandler) {
     this._downstreamHandler = downstreamHandler;
+  }
+
+  _setDownstreamHandler(downstreamHandler: DownstreamHandler) {
+    if (this._downstreamHandler) {
+      throw new Error('Already have downstream handler!')
+    }
+    this._downstreamHandler = downstreamHandler
   }
 
   _setWire(wire: Wire<A>): void {
@@ -87,14 +94,27 @@ export class Outlet<A> {
   private _wire?: Wire<A>
   _upstreamHandler: UpstreamHandler
 
-  constructor(upstreamHandler: UpstreamHandler) {
+  constructor(upstreamHandler?: UpstreamHandler) {
     this._upstreamHandler = upstreamHandler;
+  }
+
+  _setUpstreamHandler(upstreamHandler: UpstreamHandler) {
+    if (this._upstreamHandler) {
+      throw new Error('Already have upstream handler!')
+    }
+    this._upstreamHandler = upstreamHandler
   }
 
   wire(inlet: Inlet<A>) {
     if (this._wire) {
       throw new Error('Already wired!')
     }
+    if (!this._upstreamHandler) {
+      throw new Error('No upstream handler!')
+    }
+    if (!inlet._downstreamHandler) {
+      throw new Error('No downstream handler!')
+    } 
     this._wire = new Wire(this._upstreamHandler, inlet._downstreamHandler)
     inlet._setWire(this._wire)
   }

@@ -95,7 +95,7 @@ export class Outlet<A> {
     if (this._wire) {
       throw new Error('Already wired!')
     }
-    this._wire = new Wire(this, inlet)
+    this._wire = new Wire(this._upstreamHandler, inlet._downstreamHandler)
     inlet._setWire(this._wire)
   }
 
@@ -149,9 +149,9 @@ class Wire<A> {
   private _downstreamHandler: DownstreamHandler
   private _upstreamHandler: UpstreamHandler
 
-  constructor(outlet: Outlet<A>, inlet: Inlet<A>) {
-    this._downstreamHandler = inlet._downstreamHandler;
-    this._upstreamHandler = outlet._upstreamHandler;
+  constructor(upstreamHandler: UpstreamHandler, downstreamHandler: DownstreamHandler) {
+    this._upstreamHandler = upstreamHandler;
+    this._downstreamHandler = downstreamHandler;
   }
 
   waitingForPush: boolean = false;

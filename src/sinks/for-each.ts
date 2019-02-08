@@ -1,8 +1,15 @@
-import { _registerSink, Sink , sink } from '../core/sink'
-import { SinkStage } from '..'
+import { _registerSink, Sink, simpleSink } from '../core/sink'
 
 export function forEach<I>(cb: (x: I) => void): Sink<I, void> {
-  return sink(() => new ForEach(cb))
+  return simpleSink<I>(input => ({
+    onPush() {
+      cb(input.grab())
+      input.pull()
+    },
+    onStart() {
+      input.pull()
+    }
+  }))
 }
 
 declare module 'core/source' {
@@ -12,19 +19,3 @@ declare module 'core/source' {
 }
 
 _registerSink('forEach', forEach)
-
-class ForEach<I> extends SinkStage<I, void> {
-
-  constructor(private readonly cb: (x: I) => void) {
-    super()
-  }
-  
-  onPush() {
-    this.cb(this.grab());
-    this.pull();
-  }
-  
-  onStart() {
-    this.pull();
-  }
-}

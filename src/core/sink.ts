@@ -1,7 +1,7 @@
 import { Inlet, Outlet, Shape, SingleInputStage } from './stage'
 import { upperFirst } from 'lodash'
 import { Graph, GraphBuilder, GraphInstanciator, complexGraphInstanciatorWithResult } from './graph'
-import { Source } from './source'
+import { Source, SourceShape } from './source'
 
 export function sink<I, R>(factory: GraphInstanciator<SinkShape<I>, Promise<R>>): Sink<I, R> {
   return new Sink<I, R>(factory)
@@ -9,6 +9,20 @@ export function sink<I, R>(factory: GraphInstanciator<SinkShape<I>, Promise<R>>)
 
 export function complexSink<I, R>(factory: (b: GraphBuilder) => [SinkShape<I>, Promise<R>]): Sink<I, R> {
   return new Sink(complexGraphInstanciatorWithResult(factory))
+}
+
+export function simpleSink<I>(factory: (input: Inlet<I>) => { onPush: () => void, onStart?: () => void }): Sink<I, void> {
+  return new Sink<I, void>(() => {
+    const input = new Inlet<I>()
+    const { onPush, onStart = () => {} } = factory(input)
+    return {
+      start: onStart,
+      shape: new SinkShape(input),
+      resultValue: new Promise((resolve, reject) => {
+        input._setDownstreamHandler({ onPush, onComplete: () => resolve(), onError: (e: any) => reject(e) })
+      })
+    }
+  })
 }
 
 export class SinkShape<I> implements Shape {
